@@ -531,7 +531,7 @@ export default function PassGeniLanding() {
           <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:999,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 clamp(20px,5vw,60px)",height:64,background:"rgba(6,6,8,0.92)",backdropFilter:"blur(24px) saturate(1.5)",borderBottom:"1px solid #1e1e1e"}} aria-label="Main navigation">
             <div style={{display:"flex",alignItems:"center",gap:20}}>
               <a href="/" style={{textDecoration:"none"}}>
-                <div style={{fontFamily:"'Outfit'",fontWeight:800,fontSize:20,color:"#fff",letterSpacing:"-0.02em"}}>Pass<span style={{color:"#C8FF00"}}>Geni</span></div>
+                <img src="/logo.svg" alt="PassGeni" style={{height:"32px",display:"block"}}/>
               </a>
               {/* NAV TRUST CHIPS */}
               <div className="nav-trust-row" aria-label="Security badges">
@@ -694,7 +694,7 @@ export default function PassGeniLanding() {
         <footer style={{borderTop:"1px solid #1e1e1e",padding:"40px clamp(20px,5vw,60px)",maxWidth:1200,margin:"0 auto"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:32,marginBottom:28}}>
             <div>
-              <div style={{fontFamily:"'Outfit'",fontWeight:800,fontSize:18,color:"#fff",letterSpacing:"-0.02em",marginBottom:10}}>Pass<span style={{color:"#C8FF00"}}>Geni</span></div>
+              <img src="/logo.svg" alt="PassGeni" style={{height:"28px",display:"block",marginBottom:10}}/>
               <p style={{fontFamily:"'DM Sans'",fontSize:12,color:"#666",maxWidth:260,lineHeight:1.75}}>AI-powered password generator. Zero knowledge architecture. Built for humans who value security without the friction.</p>
             </div>
             <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
