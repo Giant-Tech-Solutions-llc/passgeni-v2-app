@@ -1,70 +1,121 @@
-# Getting Started with Create React App
+# PassGeni V2 — Next.js Setup Guide
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Quick Start
 
-## Available Scripts
+### 1. Copy files to your local machine
+Download and extract to your project folder, replacing the old `passgeni-frontend` folder.
 
-In the project directory, you can run:
+### 2. Install dependencies
+```bash
+cd passgeni
+npm install
+```
 
-### `npm start`
+### 3. Set up environment variables
+Create a `.env.local` file in the project root:
+```
+RESEND_API_KEY=your_resend_api_key_here
+RESEND_AUDIENCE_ID=your_resend_audience_id_here
+TEAM_API_KEYS=key1,key2,key3
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+**Never commit `.env.local` to Git.**
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+In Vercel dashboard → Settings → Environment Variables, add the same three variables.
 
-### `npm test`
+### 4. Run locally
+```bash
+npm run dev
+```
+Open http://localhost:3000
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 5. Deploy to Vercel
+```bash
+npx vercel --prod
+```
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Project Structure — Where To Find Everything
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```
+passgeni/
+│
+├── content/                    ← EDIT TEXT HERE
+│   ├── copy.js                 ← Every word on the site
+│   └── professions.js          ← Profession seeds and keywords
+│
+├── data/                       ← Configuration
+│   ├── compliance.js           ← HIPAA, PCI, SOC2 presets
+│   └── characters.js           ← Character sets, word lists
+│
+├── lib/                        ← Business logic (no UI)
+│   ├── generator.js            ← Password generation
+│   └── strength.js             ← Entropy, DNA Score, crack time
+│
+├── components/                 ← UI building blocks
+│   ├── generator/              ← Generator widget components
+│   ├── layout/                 ← Header, Footer, Ticker, Logo
+│   ├── sections/               ← Homepage sections
+│   └── ui/                     ← Buttons, chips, strength bar
+│
+├── pages/                      ← Next.js pages (URLs)
+│   ├── index.js                ← Homepage (passgeni.ai)
+│   ├── guides/                 ← Guide pages
+│   ├── blog/                   ← Blog pages
+│   ├── tools/                  ← Tool pages
+│   └── api/                    ← API routes
+│       ├── waitlist.js         ← Email capture
+│       └── v1/generate.js      ← Password generation API
+│
+├── styles/
+│   └── globals.css             ← All styles + design tokens
+│
+└── seo/
+    └── schema.js               ← Schema.org structured data
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## How To Edit Content Without Technical Knowledge
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Change any text on the site
+Open `content/copy.js` — every headline, button label, and body copy is here. Change the text and save. Done.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Add a new profession
+Open `content/professions.js` — add a new entry to `PROFESSION_KEYWORD_MAP`:
+```js
+yourprofession: ["seedword1", "seedword2"],
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Change pricing
+Open `content/copy.js` — find the `PRICING` section. Edit plan names, prices, features.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Add a compliance preset
+Open `data/compliance.js` — copy an existing preset and customize it.
 
-## Learn More
+### Change colors or fonts
+Open `styles/globals.css` — edit the `:root` CSS variables at the top.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Environment Variables Reference
 
-### Code Splitting
+| Variable             | Required | Description                        |
+|----------------------|----------|------------------------------------|
+| RESEND_API_KEY       | Yes      | From resend.com dashboard          |
+| RESEND_AUDIENCE_ID   | No       | Your Resend audience/list ID       |
+| TEAM_API_KEYS        | No       | Comma-separated team API keys      |
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+---
 
-### Analyzing the Bundle Size
+## Deployment Checklist
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- [ ] `npm install` completed
+- [ ] `.env.local` created with Resend API key
+- [ ] Environment variables added to Vercel
+- [ ] `npm run build` succeeds locally
+- [ ] `npx vercel --prod` deployed
+- [ ] Verify waitlist form sends emails
+- [ ] Verify password generator works
+- [ ] Verify API endpoint responds: `POST /api/v1/generate`
