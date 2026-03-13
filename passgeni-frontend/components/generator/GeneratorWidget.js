@@ -42,6 +42,7 @@ export default function GeneratorWidget() {
   const [opts,         setOpts]         = useState({ upper: true, num: true, sym: true });
   const [compliance,   setCompliance]   = useState("none");
   const [quantumMode,  setQuantumMode]  = useState(false);
+  const [language,     setLanguage]     = useState("latin");
 
   // ── Custom profession state ──
   const [showOtherInput, setShowOtherInput] = useState(false);
@@ -51,6 +52,7 @@ export default function GeneratorWidget() {
 
   // ── Output state ──
   const [password,    setPassword]    = useState("");
+  const [isNew,       setIsNew]       = useState(false);
   const [generating,  setGenerating]  = useState(false);
   const [history,     setHistory]     = useState([]);
   const [auditRecord, setAuditRecord] = useState(null);
@@ -68,12 +70,41 @@ export default function GeneratorWidget() {
   const crackTime  = getCrackTime(password);
   const activePreset = COMPLIANCE_PRESETS[compliance];
 
+  // ── Language char pools ──────────────────────────────────
+  const LANG_SEEDS = {
+    arabic:     "أبتثجحخدذرزسشصضطظعغفقكلمنهوي",
+    french:     "àâæçéèêëîïôœùûüÿ",
+    german:     "äöüßÄÖÜ",
+    spanish:    "áéíóúñü¿¡",
+    portuguese: "ãõâêôçáéíóú",
+    russian:    "абвгдеёжзийклмнопрстуфхцчшщъыьэюя",
+    japanese:   "あいうえおかきくけこさしすせそたちつてとなにぬねの",
+    chinese:    "安好中大学工人月日年时国地会来出",
+    greek:      "αβγδεζηθικλμνξοπρστυφχψω",
+    hindi:      "अआइईउऊएऐओऔकखगघचछजझटठडढणतथदधनपफबभमयरलवशषसह",
+    korean:     "가나다라마바사아자차카타파하",
+    latin:      "",
+  };
+
   // ── Generate password ──────────────────────────────────────
   const generate = (seedsOverride) => {
     setGenerating(true);
+    setIsNew(false);
     setTimeout(() => {
       const seeds  = seedsOverride !== undefined ? seedsOverride : customSeeds;
-      const newPw  = buildPassword(length, profession, opts, seeds, quantumMode);
+      let newPw    = buildPassword(length, profession, opts, seeds, quantumMode);
+      // Inject language characters if non-latin selected
+      const langPool = LANG_SEEDS[language] || "";
+      if (langPool && newPw.length > 4) {
+        const arr    = newPw.split("");
+        const inject = Math.min(3, Math.floor(newPw.length / 5));
+        for (let i = 0; i < inject; i++) {
+          const pos = Math.floor(Math.random() * arr.length);
+          const ch  = langPool[Math.floor(Math.random() * langPool.length)];
+          arr[pos]  = ch;
+        }
+        newPw = arr.join("");
+      }
       const audit  = generateAuditRecord(newPw, {
         seed:       seeds ? seeds[0] : profession,
         compliance: compliance !== "none" ? compliance : null,
@@ -84,6 +115,8 @@ export default function GeneratorWidget() {
       setAuditRecord(audit);
       setHistory((h) => [newPw, ...h.filter((x) => x !== newPw)].slice(0, 10));
       setGenerating(false);
+      setIsNew(true);
+      setTimeout(() => setIsNew(false), 2000);
     }, 200);
   };
 
@@ -161,6 +194,7 @@ export default function GeneratorWidget() {
                 strength={strength}
                 entropy={entropy}
                 crackTime={crackTime}
+                isNew={isNew}
               />
 
               {/* Panel toggles */}
@@ -205,27 +239,32 @@ export default function GeneratorWidget() {
                 />
               </div>
 
-              {/* Character options */}
-              <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }} role="group" aria-label="Character options">
+              {/* Character options + Language */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap", alignItems: "center" }} role="group" aria-label="Character options">
                 {[["sym", "Symbols"], ["num", "Numbers"], ["upper", "A-Z"]].map(([k, label]) => (
                   <TogglePill key={k} label={label} active={opts[k]} onClick={() => toggleOpt(k)} />
                 ))}
+                {/* Language selector */}
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  style={{ background: "#0c0c0e", border: "1px solid #222", borderRadius: 100, padding: "6px 14px", fontFamily: "var(--font-mono)", fontSize: 10, color: "#aaa", cursor: "pointer", outline: "none", letterSpacing: "0.06em" }}
+                  title="Password character language / script"
+                >
+                  <option value="latin">🌐 Latin (Default)</option>
+                  <option value="arabic">🇦🇪 Arabic</option>
+                  <option value="french">🇫🇷 French</option>
+                  <option value="german">🇩🇪 German</option>
+                  <option value="spanish">🇪🇸 Spanish</option>
+                  <option value="portuguese">🇧🇷 Portuguese</option>
+                  <option value="russian">🇷🇺 Russian</option>
+                  <option value="japanese">🇯🇵 Japanese</option>
+                  <option value="chinese">🇨🇳 Chinese</option>
+                  <option value="greek">🇬🇷 Greek</option>
+                  <option value="hindi">🇮🇳 Hindi</option>
+                  <option value="korean">🇰🇷 Korean</option>
+                </select>
               </div>
-
-              {/* Profession selector */}
-              <ProfessionSelector
-                profession={profession}
-                customSeeds={customSeeds}
-                customLabel={customLabel}
-                showOtherInput={showOtherInput}
-                otherValue={otherValue}
-                inputRef={inputRef}
-                onSelectProfession={handleProfessionClick}
-                onShowOther={() => { setShowOtherInput(true); setTimeout(() => inputRef.current?.focus(), 60); }}
-                onOtherChange={(v) => setOtherValue(v)}
-                onOtherSubmit={handleCustomSubmit}
-                onOtherCancel={() => { setShowOtherInput(false); setOtherValue(""); }}
-              />
 
               {/* Generate button */}
               <button className="btn-primary" style={{ width: "100%", justifyContent: "center" }} onClick={() => generate()}>

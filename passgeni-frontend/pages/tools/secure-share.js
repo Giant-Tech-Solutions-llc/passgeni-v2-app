@@ -169,19 +169,29 @@ function ShareForm() {
 function DecryptView({ fragData }) {
   const [revealed, setRevealed] = useState(false);
   const [secret,   setSecret]   = useState(null);
+  const [expired,  setExpired]  = useState(false);
   const [error,    setError]    = useState("");
   const [loading,  setLoading]  = useState(false);
   const [copied,   setCopied]   = useState(false);
 
+  // Check sessionStorage to see if this link was already used in this session
+  const USED_KEY = "pg_used_" + (typeof window !== "undefined" ? window.location.hash.slice(1, 20) : "");
+
   const reveal = async () => {
+    // Mark as used — clear the fragment so Back button can't replay it
+    try { sessionStorage.setItem(USED_KEY, "1"); } catch {}
     setLoading(true);
     try {
       const raw  = await decrypt(fragData.payloadB64, fragData.keyB64);
       const data = JSON.parse(raw);
       setSecret(data);
       setRevealed(true);
+      // Destroy the URL fragment so it can't be reused from address bar
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, "", window.location.pathname + "?expired=1");
+      }
     } catch {
-      setError("Could not decrypt. The link may be invalid or corrupted.");
+      setError("Could not decrypt. The link may be invalid or expired.");
     }
     setLoading(false);
   };
@@ -189,8 +199,29 @@ function DecryptView({ fragData }) {
   const copy = async () => {
     await navigator.clipboard.writeText(secret.password);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    // After copying, wipe the displayed password for security
+    setTimeout(() => {
+      setCopied(false);
+      setExpired(true);
+    }, 1500);
   };
+
+  // If already expired (navigated back or reloaded after use)
+  if (expired) {
+    return (
+      <div style={{ background: "#0a0a0c", border: "1px solid #ff444433", borderRadius: 16, padding: "40px 32px", textAlign: "center" }}>
+        <div style={{ fontSize: 40, marginBottom: 20 }}>🔒</div>
+        <div style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 22, color: "#fff", marginBottom: 12 }}>This link has expired</div>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "#888", lineHeight: 1.8, maxWidth: 400, margin: "0 auto 24px" }}>
+          For security, secrets can only be viewed once. This link was already opened and the secret has been cleared from memory.
+          Ask the sender to create a new secure link.
+        </p>
+        <a href="/tools/secure-share" className="btn-ghost" style={{ display: "inline-flex", fontSize: 13, padding: "10px 24px" }}>
+          Create a new secure link →
+        </a>
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: "#0a0a0c", border: "1px solid #C8FF0033", borderRadius: 16, padding: "32px", animation: "fadeIn 0.3s ease" }}>
@@ -199,7 +230,8 @@ function DecryptView({ fragData }) {
       </div>
       <p style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "#aaa", lineHeight: 1.8, marginBottom: 24 }}>
         Someone shared an encrypted secret with you using PassGeni. Click the button below to decrypt and reveal it.
-        The decryption key is embedded in this URL and never leaves your browser.
+        The decryption key is embedded in this URL and never leaves your browser.{" "}
+        <strong style={{ color: "#ff8888" }}>This secret can only be viewed once — save it immediately after revealing.</strong>
       </p>
       {!revealed ? (
         <button onClick={reveal} disabled={loading} className="btn-primary" style={{ fontSize: 15, padding: "14px 32px" }}>
@@ -214,7 +246,7 @@ function DecryptView({ fragData }) {
             </div>
           )}
           <div>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#888", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Password</div>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#888", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Password — copy it now, it will disappear</div>
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
               <div style={{ background: "#060608", border: "1px solid #C8FF0033", borderRadius: 8, padding: "14px 18px", fontFamily: "var(--font-mono)", fontSize: 14, color: "#C8FF00", flex: 1, wordBreak: "break-all" }}>
                 {secret.password}
@@ -226,7 +258,7 @@ function DecryptView({ fragData }) {
           </div>
           <div style={{ padding: "12px 16px", background: "#1a0505", border: "1px solid #ff444422", borderRadius: 8 }}>
             <p style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "#ff8888", margin: 0 }}>
-              ⚠️ Save this password now and close this tab. For maximum security, share via a fresh link next time and do not reuse this URL.
+              ⚠️ Save this password now. Once you click COPY or close this tab, this secret is gone permanently. The link cannot be reopened.
             </p>
           </div>
         </div>
@@ -261,6 +293,7 @@ export default function SecureSharePage() {
       canonical="https://passgeni.ai/tools/secure-share"
       schema={schema}
       toolName="Secure Share"
+      testimonialKey="share"
       eyebrow="Free security tool"
       headline={fragData ? "Decrypt your shared secret." : "Share passwords without exposing them."}
       subheadline={fragData

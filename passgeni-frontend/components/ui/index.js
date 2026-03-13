@@ -25,7 +25,8 @@ export function TrustChip({ label, type = "shield" }) {
 
 // ─── COPY BUTTON ─────────────────────────────────────────────
 // Copies text to clipboard. Shows "COPIED" confirmation for 2s.
-export function CopyBtn({ text }) {
+// pulse=true creates a lime glow to grab attention on new password.
+export function CopyBtn({ text, pulse = false }) {
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
@@ -37,9 +38,10 @@ export function CopyBtn({ text }) {
 
   return (
     <button
-      className={`copy-btn ${copied ? "copied" : ""}`}
+      className={`copy-btn ${copied ? "copied" : ""} ${pulse && !copied ? "pulse" : ""}`}
       onClick={copy}
       aria-label="Copy to clipboard"
+      style={pulse && !copied ? { borderColor: "#C8FF00", color: "#C8FF00", boxShadow: "0 0 12px #C8FF0066", animation: "copyPulse 1s ease infinite" } : {}}
     >
       {copied ? "✓ COPIED" : "COPY"}
     </button>

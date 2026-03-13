@@ -60,9 +60,18 @@ body {
   background:  var(--color-bg);
   color:       var(--color-text);
   font-family: var(--font-body);
-  line-height: 1.6;
+  font-size:   16px;
+  line-height: 1.7;
   -webkit-font-smoothing: antialiased;
 }
+
+/* ─── INTERNAL LINKS ─────────────────────────────────────────── */
+a[href^="/"] {
+  color: #C8FF00;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+a[href^="/"]:hover { opacity: 0.8; text-decoration: underline; }
 
 /* ─── SELECTION ──────────────────────────────────────────────── */
 ::selection {
@@ -131,6 +140,14 @@ body {
 @keyframes inputSlideIn {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes copyPulse {
+  0%, 100% { box-shadow: 0 0 8px #C8FF0044; border-color: #C8FF0088; }
+  50%       { box-shadow: 0 0 20px #C8FF0099; border-color: #C8FF00; }
+}
+@keyframes scrollLeft {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 /* ─── ANIMATION UTILITY CLASSES ─────────────────────────────── */

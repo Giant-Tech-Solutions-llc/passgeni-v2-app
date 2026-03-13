@@ -141,6 +141,7 @@ export default function WifiQRPage() {
       canonical="https://passgeni.ai/tools/wifi-qr"
       schema={schema}
       toolName="WiFi QR Generator"
+      testimonialKey="wifi"
       eyebrow="Free tool"
       headline="Generate a WiFi QR code."
       subheadline="Create a QR code for your WiFi network. Anyone scans it to connect instantly — no password typing needed. Everything happens in your browser. Your password is never sent anywhere."

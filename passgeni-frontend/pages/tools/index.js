@@ -146,6 +146,32 @@ export default function ToolsIndexPage() {
             No account, no tracking, no servers involved in processing your passwords.
           </p>
         </div>
+
+        {/* Testimonials */}
+        <div style={{ marginTop: 80 }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#888", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 24 }}>
+            What users say about the tools
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>
+            {[
+              { name: "Jake F.",   role: "Small biz owner",       text: "The Password Audit Tool found three weak passwords across my team I didn't know about. Breach check, entropy score, pattern detection — all in one run." },
+              { name: "Ben A.",    role: "Freelance copywriter",  text: "Secure Share is the feature I didn't know I needed. Sent my client their CMS login via a PassGeni encrypted link. Way better than texting passwords." },
+              { name: "Layla S.", role: "Marketing manager",     text: "WiFi QR Generator at our agency. Thirty seconds, QR printed, no one asks for the WiFi password at meetings. Genuinely improves the workday." },
+              { name: "Nina P.",  role: "UX researcher",          text: "Strength Checker gave me actual data — entropy in bits, crack time, improvements to make. Not just a vague red/green bar. Actual useful feedback." },
+              { name: "Elena V.", role: "HR director",            text: "Generated a complete HIPAA-aligned password policy PDF in two minutes using the Policy Generator. IT stopped arguing with us instantly." },
+              { name: "Hana J.", role: "Data analyst",            text: "Breach checker k-anonymity is real. Only 5 chars of my SHA-1 hash go to HIBP. I checked the network tab. My password never left the browser." },
+            ].map((t) => (
+              <div key={t.name} style={{ background: "#0c0c0e", border: "1px solid #141416", borderRadius: 12, padding: "22px 24px" }}>
+                <div style={{ display: "flex", gap: 2, marginBottom: 10 }}>
+                  {[1,2,3,4,5].map(i => <span key={i} style={{ color: "#C8FF00", fontSize: 11 }}>★</span>)}
+                </div>
+                <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#999", lineHeight: 1.75, marginBottom: 14 }}>"{t.text}"</p>
+                <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 12, color: "#fff" }}>{t.name}</div>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#555", marginTop: 3 }}>{t.role}</div>
+              </div>
+            ))}
+          </div>
+        </div>
       </main>
     </PageLayout>
   );

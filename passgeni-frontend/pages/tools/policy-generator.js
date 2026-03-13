@@ -188,6 +188,7 @@ export default function PolicyGeneratorPage() {
       canonical="https://passgeni.ai/tools/policy-generator"
       schema={schema}
       toolName="Policy Generator"
+      testimonialKey="policy"
       eyebrow="Free compliance tool"
       headline="Generate your company password policy."
       subheadline="Fill in the form below and we'll generate a complete, audit-ready password policy document aligned with your compliance framework. Download as text."

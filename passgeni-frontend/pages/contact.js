@@ -1,0 +1,93 @@
+import { useState } from "react";
+import PageLayout from "../components/layout/PageLayout.js";
+
+const LINK = { color: "#C8FF00", textDecoration: "none" };
+
+export default function ContactPage() {
+  const [sent, setSent] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [loading, setLoading] = useState(false);
+
+  const update = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    // Since we have no contact form backend, mailto fallback
+    window.location.href = `mailto:hello@passgeni.ai?subject=${encodeURIComponent(form.subject || "PassGeni inquiry")}&body=${encodeURIComponent(`Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`)}`;
+    setTimeout(() => { setSent(true); setLoading(false); }, 500);
+  };
+
+  const INPUT = {
+    width: "100%", background: "#060608", border: "1px solid #1a1a1a", borderRadius: 8,
+    padding: "14px 18px", fontFamily: "var(--font-body)", fontSize: 15, color: "#fff",
+    outline: "none", boxSizing: "border-box", marginBottom: 16,
+  };
+
+  return (
+    <PageLayout
+      title="Contact PassGeni — Get in Touch"
+      description="Contact the PassGeni team. Questions about the Team API, billing, security, or just want to say hi."
+      canonical="https://passgeni.ai/contact"
+    >
+      <main style={{ maxWidth: 720, margin: "0 auto", padding: "80px var(--page-pad) 120px" }}>
+        <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#555", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 16 }}>Get in touch</div>
+        <h1 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(28px,4vw,48px)", color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 16 }}>Contact us</h1>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: 16, color: "#bbb", lineHeight: 1.85, marginBottom: 48 }}>
+          We're a small team and we read every email. Usually respond within 1 business day.
+        </p>
+
+        {/* Contact options */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 48 }}>
+          {[
+            { icon: "💬", label: "General questions",     email: "hello@passgeni.ai" },
+            { icon: "🔧", label: "API & Team plan",       email: "api@passgeni.ai" },
+            { icon: "💳", label: "Billing & refunds",     email: "billing@passgeni.ai" },
+            { icon: "🔒", label: "Security disclosures",  email: "security@passgeni.ai" },
+          ].map(({ icon, label, email }) => (
+            <a key={email} href={`mailto:${email}`} style={{ background: "#0a0a0c", border: "1px solid #141416", borderRadius: 12, padding: "20px 22px", textDecoration: "none", display: "block", transition: "border-color 0.2s" }}
+              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#C8FF0044")}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#141416")}
+            >
+              <div style={{ fontSize: 22, marginBottom: 10 }}>{icon}</div>
+              <div style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#888", marginBottom: 6 }}>{label}</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#C8FF00" }}>{email}</div>
+            </a>
+          ))}
+        </div>
+
+        {/* Quick form */}
+        <div style={{ background: "#0a0a0c", border: "1px solid #141416", borderRadius: 16, padding: "32px" }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#888", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 24 }}>
+            Send a message
+          </div>
+          {sent ? (
+            <div style={{ textAlign: "center", padding: "32px 0" }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>✓</div>
+              <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 20, color: "#C8FF00", marginBottom: 8 }}>Message sent</div>
+              <p style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "#888" }}>Your email client should have opened. If not, email us directly at <a href="mailto:hello@passgeni.ai" style={LINK}>hello@passgeni.ai</a>.</p>
+            </div>
+          ) : (
+            <form onSubmit={submit}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 0 }}>
+                <input type="text" placeholder="Your name" value={form.name} onChange={update("name")} required style={INPUT} />
+                <input type="email" placeholder="Your email" value={form.email} onChange={update("email")} required style={INPUT} />
+              </div>
+              <input type="text" placeholder="Subject" value={form.subject} onChange={update("subject")} style={INPUT} />
+              <textarea placeholder="Your message…" value={form.message} onChange={update("message")} required rows={6}
+                style={{ ...INPUT, resize: "vertical", lineHeight: 1.7 }} />
+              <button type="submit" className="btn-primary" disabled={loading} style={{ fontSize: 15, padding: "14px 32px" }}>
+                {loading ? "Opening mail client…" : "Send message →"}
+              </button>
+            </form>
+          )}
+        </div>
+
+        <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#555", marginTop: 24, lineHeight: 1.75 }}>
+          For security vulnerability disclosures, please use PGP if possible. Our security contact is <a href="mailto:security@passgeni.ai" style={LINK}>security@passgeni.ai</a>.
+          We take all security reports seriously and aim to respond within 24 hours.
+        </p>
+      </main>
+    </PageLayout>
+  );
+}

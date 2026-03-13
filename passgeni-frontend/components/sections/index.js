@@ -42,9 +42,13 @@ export function HowItWorks() {
           {HOW_IT_WORKS.headline}
         </h2>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "1px", background: "#1a1a1a" }} className="features-grid">
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, background: "transparent" }} className="features-grid">
         {HOW_IT_WORKS.steps.map(({ step, title, body, accent }) => (
-          <article key={step} style={{ background: "#0a0a0c", padding: "40px 36px" }} className="feature-card">
+          <article key={step} style={{ background: "#0a0a0c", border: "1px solid #1a1a1a", borderRadius: 12, padding: "40px 36px", transition: "border-color 0.2s, transform 0.2s" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = "#C8FF0044"; e.currentTarget.style.transform = "translateY(-4px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = "#1a1a1a"; e.currentTarget.style.transform = "translateY(0)"; }}
+            className="feature-card"
+          >
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--color-accent)", letterSpacing: "0.1em", marginBottom: 20 }}>{step}</div>
             <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 20, color: "#fff", marginBottom: 14, letterSpacing: "-0.01em" }}>{title}</h3>
             <p style={{ fontSize: 14, color: "#aaa", lineHeight: 1.8, marginBottom: 24 }}>{body}</p>
@@ -165,26 +169,70 @@ export function PricingSection() {
 
 // ─── TESTIMONIALS ────────────────────────────────────────────
 export function TestimonialsSection() {
+  // Split into 3 rows, alternating scroll direction
+  const items = TESTIMONIALS.items;
+  const third = Math.ceil(items.length / 3);
+  const rows  = [items.slice(0, third), items.slice(third, third * 2), items.slice(third * 2)];
+
   return (
-    <section style={{ padding: "0 var(--page-pad) var(--section-pad)", maxWidth: 1200, margin: "0 auto" }}>
-      <div style={{ marginBottom: 48 }}>
+    <section style={{ padding: "0 0 var(--section-pad)", overflow: "hidden" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 var(--page-pad)", marginBottom: 48 }}>
         <Eyebrow>{TESTIMONIALS.eyebrow}</Eyebrow>
         <Headline>{TESTIMONIALS.headline}</Headline>
       </div>
-      <div className="proof-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 16 }}>
-        {TESTIMONIALS.items.map(({ name, role, stars, text }) => (
-          <article key={name} style={{ background: "#0c0c0e", border: "1px solid #141416", borderRadius: 12, padding: 28, transition: "border-color 0.2s" }}>
-            <div style={{ display: "flex", gap: 2, marginBottom: 14 }}>
-              {Array(stars).fill("★").map((s, i) => <span key={i} style={{ color: "var(--color-accent)", fontSize: 13 }}>{s}</span>)}
+
+      {rows.map((row, rowIdx) => {
+        const doubled = [...row, ...row]; // duplicate for seamless loop
+        const dur = [38, 46, 42][rowIdx];
+        const dir = rowIdx % 2 === 1 ? "reverse" : "normal";
+        return (
+          <div key={rowIdx} style={{ marginBottom: 16, position: "relative" }}>
+            {/* Fade edges */}
+            <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 80, background: "linear-gradient(to right, #060608, transparent)", zIndex: 2, pointerEvents: "none" }} />
+            <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 80, background: "linear-gradient(to left, #060608, transparent)", zIndex: 2, pointerEvents: "none" }} />
+
+            <div
+              style={{
+                display: "flex",
+                gap: 16,
+                width: "max-content",
+                animation: `scrollLeft ${dur}s linear infinite`,
+                animationDirection: dir,
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.animationPlayState = "paused")}
+              onMouseLeave={(e) => (e.currentTarget.style.animationPlayState = "running")}
+            >
+              {doubled.map((t, i) => (
+                <article
+                  key={i}
+                  style={{
+                    background: "#0c0c0e",
+                    border: "1px solid #141416",
+                    borderRadius: 12,
+                    padding: "22px 24px",
+                    width: 300,
+                    flexShrink: 0,
+                    transition: "border-color 0.2s",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#C8FF0033")}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#141416")}
+                >
+                  <div style={{ display: "flex", gap: 2, marginBottom: 12 }}>
+                    {Array(t.stars).fill("★").map((s, si) => (
+                      <span key={si} style={{ color: "var(--color-accent)", fontSize: 11 }}>{s}</span>
+                    ))}
+                  </div>
+                  <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#999", lineHeight: 1.75, marginBottom: 16 }}>"{t.text}"</p>
+                  <div>
+                    <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 13, color: "#fff" }}>{t.name}</div>
+                    <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#555", marginTop: 3, letterSpacing: "0.06em" }}>{t.role}</div>
+                  </div>
+                </article>
+              ))}
             </div>
-            <p style={{ fontSize: 14, color: "#999", lineHeight: 1.8, marginBottom: 20, fontStyle: "italic" }}>"{text}"</p>
-            <div>
-              <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 13, color: "#fff" }}>{name}</div>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#888", marginTop: 4, letterSpacing: "0.06em" }}>{role}</div>
-            </div>
-          </article>
-        ))}
-      </div>
+          </div>
+        );
+      })}
     </section>
   );
 }
@@ -219,7 +267,50 @@ export function FAQSection() {
   );
 }
 
-// ─── WAITLIST SECTION ────────────────────────────────────────
+// ─── FEATURED BLOG SECTION ───────────────────────────────────
+export function FeaturedBlogSection() {
+  // Import inline to avoid circular deps — hardcoded 3 featured picks
+  const posts = [
+    { slug: "pci-dss-v4-password-changes-explained", title: "PCI-DSS v4.0 Raised the Password Bar. Here's What You Missed.", excerpt: "The March 2024 deadline passed. If you haven't updated your authentication controls for PCI-DSS v4.0, here is what changed and what auditors will check.", category: "Compliance", color: "#ffb74d", readTime: 6, date: "Jan 10, 2025" },
+    { slug: "why-password-complexity-rules-backfire", title: "Why Password Complexity Rules Make You Less Secure", excerpt: "Requiring uppercase, a number, and a symbol teaches users to choose P@ssw0rd. The research on why complexity rules backfire — and what NIST recommends instead.", category: "Research", color: "#ce93d8", readTime: 5, date: "Jan 14, 2025" },
+    { slug: "announcing-passgeni-v2", title: "PassGeni V2: DNA Score, Compliance Presets, and 6 New Tools", excerpt: "Everything that shipped in V2 — the DNA Score, six new free tools, HIPAA and PCI-DSS presets, passphrase mode, and the Profession-aware AI seeding engine.", category: "Product", color: "#81c784", readTime: 4, date: "Jan 20, 2025" },
+  ];
+
+  return (
+    <section style={{ padding: "0 var(--page-pad) var(--section-pad)", maxWidth: 1200, margin: "0 auto" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 48, flexWrap: "wrap", gap: 16 }}>
+        <div>
+          <Eyebrow>From the blog</Eyebrow>
+          <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(24px,3.5vw,40px)", color: "#fff", letterSpacing: "-0.02em", margin: 0 }}>
+            Latest posts.
+          </h2>
+        </div>
+        <a href="/blog" style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#C8FF00", textDecoration: "none", letterSpacing: "0.08em", opacity: 0.8 }}>
+          View all posts →
+        </a>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 16 }}>
+        {posts.map((p) => (
+          <a
+            key={p.slug}
+            href={`/blog/${p.slug}`}
+            style={{ display: "flex", flexDirection: "column", background: "#0a0a0c", border: "1px solid #141416", borderRadius: 14, padding: 28, textDecoration: "none", transition: "border-color 0.2s, transform 0.2s" }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#C8FF0044"; e.currentTarget.style.transform = "translateY(-4px)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#141416"; e.currentTarget.style.transform = "translateY(0)"; }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: p.color, letterSpacing: "0.12em", textTransform: "uppercase", background: p.color + "18", padding: "4px 10px", borderRadius: 100 }}>{p.category}</span>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#555", letterSpacing: "0.06em" }}>{p.readTime} min · {p.date}</span>
+            </div>
+            <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 17, color: "#fff", lineHeight: 1.35, marginBottom: 14, letterSpacing: "-0.01em", flex: 1 }}>{p.title}</h3>
+            <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#777", lineHeight: 1.75, marginBottom: 20 }}>{p.excerpt}</p>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#C8FF00", letterSpacing: "0.06em" }}>Read more →</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
 export function WaitlistSection() {
   const [email,     setEmail]     = useState("");
   const [submitted, setSubmitted] = useState(false);

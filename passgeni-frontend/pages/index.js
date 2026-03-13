@@ -20,6 +20,7 @@ import PricingSection    from "../components/sections/Pricing.js";
 import TestimonialsSection from "../components/sections/Testimonials.js";
 import FAQSection        from "../components/sections/FAQ.js";
 import WaitlistSection   from "../components/sections/Waitlist.js";
+import { FeaturedBlogSection } from "../components/sections/index.js";
 import { getSiteSchema, getFAQSchema, getHowToSchema } from "../seo/schema.js";
 import { FAQ }           from "../content/copy.js";
 
@@ -80,6 +81,7 @@ export default function HomePage() {
           <ToolsPreview />
           <PricingSection />
           <TestimonialsSection />
+          <FeaturedBlogSection />
           <FAQSection />
           <WaitlistSection />
         </main>

@@ -158,6 +158,7 @@ export default function BreachCheckerPage() {
       canonical="https://passgeni.ai/tools/breach-checker"
       schema={schema}
       toolName="Breach Checker"
+      testimonialKey="breach"
       eyebrow="Free security tool"
       headline="Has your password been in a breach?"
       subheadline="Check against 900 million+ compromised passwords. Your password never leaves your browser — we use k-anonymity so even the checking service never sees it."

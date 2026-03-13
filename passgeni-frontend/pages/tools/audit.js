@@ -222,6 +222,7 @@ export default function AuditToolPage() {
       canonical="https://passgeni.ai/tools/audit"
       schema={schema}
       toolName="Password Audit"
+      testimonialKey="audit"
       eyebrow="Free security tool"
       headline="Audit up to 10 passwords at once."
       subheadline="Batch-check existing passwords for breaches, strength, and common patterns. Everything runs in your browser — nothing is sent to any server."

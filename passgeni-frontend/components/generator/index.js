@@ -10,7 +10,7 @@ import { getStrength, getEntropy, getCrackTime, getDNAScore } from "../../lib/st
 import { CopyBtn, TogglePill, StrengthBar, TrustChip } from "../ui/index.js";
 
 // ─── PASSWORD DISPLAY ─────────────────────────────────────────
-export function PasswordDisplay({ password, generating, strength, entropy, crackTime }) {
+export function PasswordDisplay({ password, generating, strength, entropy, crackTime, isNew }) {
   return (
     <div style={{ background: "#08080a", border: "1px solid #141416", borderRadius: 10, padding: "20px 24px", position: "relative", overflow: "hidden" }} aria-live="polite">
       {/* Scan line animation */}
@@ -30,7 +30,7 @@ export function PasswordDisplay({ password, generating, strength, entropy, crack
             : <span style={{ color: "#aaa" }}>click generate —</span>
           }
         </div>
-        <CopyBtn text={password} />
+        <CopyBtn text={password} pulse={isNew} />
       </div>
 
       {/* Strength bar */}

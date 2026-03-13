@@ -156,6 +156,7 @@ export default function StrengthCheckerPage() {
       canonical="https://passgeni.ai/tools/strength-checker"
       schema={schema}
       toolName="Strength Checker"
+      testimonialKey="strength"
       eyebrow="Free security tool"
       headline="How strong is your password?"
       subheadline="Paste any password for an instant analysis: entropy in bits, estimated crack time, a 7-point DNA quality audit, and specific improvement suggestions."

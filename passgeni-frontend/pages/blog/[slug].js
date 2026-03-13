@@ -9,6 +9,7 @@
 
 import PageLayout from "../../components/layout/PageLayout.js";
 import { ALL_POSTS, getPostBySlug, getRelatedPosts } from "../../content/blog.js";
+import { getFAQSchema } from "../../seo/schema.js";
 
 // ─── SHARED PROSE COMPONENTS ─────────────────────────────────
 // (Same primitives as guide pages)
@@ -29,7 +30,25 @@ function PostMeta({ post }) {
   );
 }
 
-function RelatedPosts({ posts }) {
+// ─── BLOG FAQ SECTION ─────────────────────────────────────────
+function BlogFAQ({ items }) {
+  if (!items?.length) return null;
+  return (
+    <section aria-label="Frequently asked questions" style={{ marginTop: 56, paddingTop: 40, borderTop: "1px solid #141416" }}>
+      <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 22, color: "#fff", marginBottom: 28, letterSpacing: "-0.02em" }}>
+        Frequently asked questions
+      </h2>
+      {items.map(({ q, a }, i) => (
+        <div key={i} style={{ borderBottom: "1px solid #111", padding: "18px 0" }}>
+          <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 16, color: "#fff", marginBottom: 8 }}>{q}</h3>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: 15, color: "#aaa", lineHeight: 1.8, margin: 0 }}>{a}</p>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+
   if (!posts?.length) return null;
   return (
     <section style={{ marginTop: 64, paddingTop: 40, borderTop: "1px solid #141416" }}>
@@ -65,17 +84,20 @@ export default function BlogPostPage({ post, related, contentHtml }) {
     );
   }
 
-  const schema = {
-    "@context":      "https://schema.org",
-    "@type":         "BlogPosting",
-    "headline":      post.title,
-    "description":   post.metaDescription,
-    "url":           `https://passgeni.ai/blog/${post.slug}`,
-    "datePublished": post.publishedAt,
-    "dateModified":  post.publishedAt,
-    "author":        { "@type": "Organization", "name": "PassGeni", "url": "https://passgeni.ai" },
-    "publisher":     { "@type": "Organization", "name": "PassGeni", "logo": { "@type": "ImageObject", "url": "https://passgeni.ai/logo.png" } },
-  };
+  const schema = [
+    {
+      "@context":      "https://schema.org",
+      "@type":         "BlogPosting",
+      "headline":      post.title,
+      "description":   post.metaDescription,
+      "url":           `https://passgeni.ai/blog/${post.slug}`,
+      "datePublished": post.publishedAt,
+      "dateModified":  post.publishedAt,
+      "author":        { "@type": "Organization", "name": "PassGeni", "url": "https://passgeni.ai" },
+      "publisher":     { "@type": "Organization", "name": "PassGeni", "logo": { "@type": "ImageObject", "url": "https://passgeni.ai/logo.png" } },
+    },
+    ...(post.faq?.length ? [getFAQSchema(post.faq)] : []),
+  ];
 
   return (
     <PageLayout title={post.metaTitle} description={post.metaDescription} canonical={`https://passgeni.ai/blog/${post.slug}`} schema={schema}>
@@ -112,6 +134,8 @@ export default function BlogPostPage({ post, related, contentHtml }) {
             )
           }
         </article>
+
+        <BlogFAQ items={post.faq} />
 
         <RelatedPosts posts={related} />
 
