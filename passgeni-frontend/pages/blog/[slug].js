@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
-import Layout from '../../components/Layout';
-import { BLOG_POSTS } from '../../data/blogPosts';
+import PageLayout from '../../components/layout/PageLayout';
+import { ALL_POSTS as BLOG_POSTS } from '../../content/blog';
 
 /* ─── Reading Progress Bar ─── */
 function ReadingProgressBar() {
@@ -297,13 +297,13 @@ function RelatedPosts({ currentSlug, category }) {
 export default function BlogPost({ post }) {
   if (!post) {
     return (
-      <Layout>
+      <PageLayout>
         <div style={{ textAlign: 'center', padding: '120px 20px' }}>
           <h1 style={{ fontFamily: 'var(--font-heading)', color: '#fff', fontSize: 32 }}>Post Not Found</h1>
           <p style={{ color: '#888', marginTop: 16 }}>This post doesn't exist.</p>
           <Link href="/blog" className="cta-primary" style={{ marginTop: 32, display: 'inline-flex' }}>← Back to Blog</Link>
         </div>
-      </Layout>
+      </PageLayout>
     );
   }
 
@@ -317,7 +317,7 @@ export default function BlogPost({ post }) {
   }));
 
   return (
-    <Layout>
+    <PageLayout>
       <Head>
         <title>{post.title} | PassGeni</title>
         <meta name="description" content={post.metaDescription || post.excerpt} />
@@ -533,7 +533,7 @@ export default function BlogPost({ post }) {
 
       {/* Extra bottom spacing */}
       <div style={{ height: 80 }} />
-    </Layout>
+    </PageLayout>
   );
 }
 
