@@ -392,16 +392,16 @@ export const FAQ = {
   ],
 };
 
-// ─── WAITLIST / CTA SECTION ──────────────────────────────────
+// ─── TEAM API CTA SECTION ────────────────────────────────────
 export const WAITLIST = {
-  eyebrow:       "Coming soon",
-  headline:      "Team API is almost here.\nGet in early.",
-  body:          "5,000 API calls/day, all compliance presets, bulk export, CSV download, and 5 team seats. Early users get 3 months free. No card needed.",
+  eyebrow:       "Now live",
+  headline:      "Team API is live.\nStart building today.",
+  body:          "5,000 API calls/day, all compliance presets (HIPAA, PCI-DSS, SOC 2, NIST, DoD), bulk generation, CSV export, and 5 team seats. $29/month. Start free trial.",
   inputPlaceholder: "your@email.com",
-  ctaButton:     "Reserve my spot →",
-  successTitle:  "You are on the list.",
-  successBody:   "One email when it is ready. No sequences, no spam.",
-  disclaimer:    "No spam. No marketing sequences. Just one email when it is ready.",
+  ctaButton:     "Start free trial →",
+  successTitle:  "You're on the list.",
+  successBody:   "We'll send you early access details shortly.",
+  disclaimer:    "No spam. Cancel anytime. 14-day money-back guarantee.",
 };
 
 // ─── FOOTER ──────────────────────────────────────────────────

@@ -114,7 +114,7 @@ export default function SignInPage() {
 
             <p style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "#555", marginTop: 20, textAlign: "center", lineHeight: 1.7 }}>
               Only Team subscribers can access the dashboard.{" "}
-              <a href="/api#pricing" style={{ color: "#C8FF0077", textDecoration: "none" }}>Get Team →</a>
+              <a href="/#pricing" style={{ color: "#C8FF00", textDecoration: "none" }}>Get Team plan →</a>
             </p>
           </div>
         ) : (

@@ -125,7 +125,12 @@ export const authOptions = {
   },
 
   // ── Secret ───────────────────────────────────────────────────
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || "dev-placeholder-not-for-production",
 };
+
+// Gracefully handle missing env vars in production
+if (!process.env.NEXTAUTH_SECRET && process.env.NODE_ENV === "production") {
+  console.error("NEXTAUTH_SECRET is not set — auth will not work correctly");
+}
 
 export default NextAuth(authOptions);

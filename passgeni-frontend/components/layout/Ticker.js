@@ -20,7 +20,7 @@ export default function Ticker() {
             style={{
               fontFamily:    "var(--font-mono)",
               fontSize:      11,
-              color:         i % 2 === 0 ? "#2a2a2a" : "#C8FF00",
+              color:         i % 2 === 0 ? "#888" : "#C8FF00",
               letterSpacing: "0.1em",
               textTransform: "uppercase",
               padding:       "0 32px",

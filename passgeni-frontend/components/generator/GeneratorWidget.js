@@ -251,18 +251,18 @@ export default function GeneratorWidget() {
                   style={{ background: "#0c0c0e", border: "1px solid #222", borderRadius: 100, padding: "6px 14px", fontFamily: "var(--font-mono)", fontSize: 10, color: "#aaa", cursor: "pointer", outline: "none", letterSpacing: "0.06em" }}
                   title="Password character language / script"
                 >
-                  <option value="latin">🌐 Latin (Default)</option>
-                  <option value="arabic">🇦🇪 Arabic</option>
-                  <option value="french">🇫🇷 French</option>
-                  <option value="german">🇩🇪 German</option>
-                  <option value="spanish">🇪🇸 Spanish</option>
-                  <option value="portuguese">🇧🇷 Portuguese</option>
-                  <option value="russian">🇷🇺 Russian</option>
-                  <option value="japanese">🇯🇵 Japanese</option>
-                  <option value="chinese">🇨🇳 Chinese</option>
-                  <option value="greek">🇬🇷 Greek</option>
-                  <option value="hindi">🇮🇳 Hindi</option>
-                  <option value="korean">🇰🇷 Korean</option>
+                  <option value="latin">🌐 English (Default)</option>
+                  <option value="arabic">🇦🇪 Arabic / عربي</option>
+                  <option value="french">🇫🇷 French / Français</option>
+                  <option value="german">🇩🇪 German / Deutsch</option>
+                  <option value="spanish">🇪🇸 Spanish / Español</option>
+                  <option value="portuguese">🇧🇷 Portuguese / Português</option>
+                  <option value="russian">🇷🇺 Russian / Русский</option>
+                  <option value="japanese">🇯🇵 Japanese / 日本語</option>
+                  <option value="chinese">🇨🇳 Chinese / 中文</option>
+                  <option value="greek">🇬🇷 Greek / Ελληνικά</option>
+                  <option value="hindi">🇮🇳 Hindi / हिन्दी</option>
+                  <option value="korean">🇰🇷 Korean / 한국어</option>
                 </select>
               </div>
 

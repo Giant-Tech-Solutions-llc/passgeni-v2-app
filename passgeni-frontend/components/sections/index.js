@@ -36,9 +36,9 @@ export function StatsBar() {
 export function HowItWorks() {
   return (
     <section id="how" style={{ padding: "var(--section-pad) var(--page-pad)", maxWidth: 1200, margin: "0 auto" }} aria-labelledby="how-h2">
-      <div style={{ marginBottom: 64 }}>
+      <div style={{ marginBottom: 64, textAlign: "center" }}>
         <Eyebrow>{HOW_IT_WORKS.eyebrow}</Eyebrow>
-        <h2 id="how-h2" style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(28px,4vw,48px)", color: "#fff", letterSpacing: "-0.02em", maxWidth: 560, whiteSpace: "pre-line" }}>
+        <h2 id="how-h2" style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(28px,4vw,48px)", color: "#fff", letterSpacing: "-0.02em", maxWidth: 560, whiteSpace: "pre-line", margin: "0 auto" }}>
           {HOW_IT_WORKS.headline}
         </h2>
       </div>
@@ -66,7 +66,7 @@ export function HowItWorks() {
 export function FeaturesSection() {
   return (
     <section id="features" style={{ padding: "0 var(--page-pad) var(--section-pad)", maxWidth: 1200, margin: "0 auto" }} aria-labelledby="feat-h2">
-      <div style={{ marginBottom: 64 }}>
+      <div style={{ marginBottom: 64, textAlign: "center" }}>
         <Eyebrow>{FEATURES.eyebrow}</Eyebrow>
         <h2 id="feat-h2" style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(28px,4vw,48px)", color: "#fff", letterSpacing: "-0.02em" }}>
           Not just random.<br /><span style={{ color: "var(--color-accent)" }}>Reasoned.</span>
@@ -89,7 +89,7 @@ export function FeaturesSection() {
 export function ToolsPreview() {
   return (
     <section style={{ padding: "0 var(--page-pad) var(--section-pad)", maxWidth: 1200, margin: "0 auto" }}>
-      <div style={{ marginBottom: 64 }}>
+      <div style={{ marginBottom: 64, textAlign: "center" }}>
         <Eyebrow>{TOOLS_PREVIEW.eyebrow}</Eyebrow>
         <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(28px,4vw,48px)", color: "#fff", letterSpacing: "-0.02em" }}>
           Everything you need.<br /><span style={{ color: "var(--color-accent)" }}>Nothing you don't.</span>
@@ -97,14 +97,20 @@ export function ToolsPreview() {
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 16 }}>
         {TOOLS_PREVIEW.items.map(({ icon, title, body, href, label }) => (
-          <article key={title} className="card" style={{ display: "flex", flexDirection: "column" }}>
+          <a
+            key={title}
+            href={href}
+            style={{ display: "flex", flexDirection: "column", background: "var(--color-bg-card)", border: "1px solid #141416", borderRadius: 12, padding: "var(--card-pad)", textDecoration: "none", transition: "border-color 0.2s, transform 0.2s", cursor: "pointer" }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#C8FF0044"; e.currentTarget.style.transform = "translateY(-4px)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#141416"; e.currentTarget.style.transform = "translateY(0)"; }}
+          >
             <div style={{ fontSize: 28, marginBottom: 16 }}>{icon}</div>
             <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 17, color: "#fff", marginBottom: 10 }}>{title}</h3>
-            <p style={{ fontSize: 13, color: "#aaa", lineHeight: 1.8, flex: 1, marginBottom: 20 }}>{body}</p>
-            <a href={href} className="btn-ghost" style={{ justifyContent: "center", fontSize: 13, padding: "10px 20px" }}>
+            <p style={{ fontSize: 14, color: "#aaa", lineHeight: 1.8, flex: 1, marginBottom: 20 }}>{body}</p>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--color-accent)", letterSpacing: "0.06em" }}>
               {label} →
-            </a>
-          </article>
+            </span>
+          </a>
         ))}
       </div>
     </section>
@@ -176,7 +182,7 @@ export function TestimonialsSection() {
 
   return (
     <section style={{ padding: "0 0 var(--section-pad)", overflow: "hidden" }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 var(--page-pad)", marginBottom: 48 }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 var(--page-pad)", marginBottom: 48, textAlign: "center" }}>
         <Eyebrow>{TESTIMONIALS.eyebrow}</Eyebrow>
         <Headline>{TESTIMONIALS.headline}</Headline>
       </div>
@@ -312,74 +318,38 @@ export function FeaturedBlogSection() {
   );
 }
 export function WaitlistSection() {
-  const [email,     setEmail]     = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [loading,   setLoading]   = useState(false);
-  const [error,     setError]     = useState("");
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!email) return;
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch("/api/waitlist", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ email }),
-      });
-      if (res.ok) {
-        setSubmitted(true);
-      } else {
-        setError("Something went wrong. Please try again.");
-      }
-    } catch {
-      setError("Something went wrong. Please try again.");
-    }
-    setLoading(false);
-  };
-
   return (
     <section id="waitlist" style={{ margin: "0 auto clamp(80px,10vw,120px)", padding: "0 var(--page-pad)", maxWidth: 1200 }}>
       <div style={{ background: "#0a0a0c", border: "1px solid #141416", borderRadius: 20, overflow: "hidden", position: "relative" }}>
         <div aria-hidden="true" style={{ position: "absolute", top: -60, right: -60, width: 240, height: 240, borderRadius: "50%", background: "radial-gradient(circle,#C8FF0012,transparent 70%)", pointerEvents: "none" }} />
-        <div style={{ padding: "clamp(48px,6vw,80px)", position: "relative", zIndex: 1, maxWidth: 600 }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#C8FF0066", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 20 }}>
+        <div aria-hidden="true" style={{ position: "absolute", bottom: -40, left: -40, width: 180, height: 180, borderRadius: "50%", background: "radial-gradient(circle,#C8FF0008,transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ padding: "clamp(48px,6vw,80px)", position: "relative", zIndex: 1 }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#C8FF00", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#C8FF00", display: "inline-block", animation: "blink 1.5s ease infinite" }} />
             {WAITLIST.eyebrow}
           </div>
-          <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(28px,4vw,48px)", color: "#fff", letterSpacing: "-0.02em", marginBottom: 16, lineHeight: 1.1, whiteSpace: "pre-line" }}>
+          <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(28px,4vw,48px)", color: "#fff", letterSpacing: "-0.02em", marginBottom: 16, lineHeight: 1.1, whiteSpace: "pre-line", maxWidth: 560 }}>
             {WAITLIST.headline}
           </h2>
-          <p style={{ fontSize: 15, color: "#888", lineHeight: 1.75, marginBottom: 36, maxWidth: 440 }}>
+          <p style={{ fontSize: 16, color: "#888", lineHeight: 1.75, marginBottom: 36, maxWidth: 520 }}>
             {WAITLIST.body}
           </p>
-          {!submitted ? (
-            <form onSubmit={handleSubmit} style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-              <input
-                type="email"
-                placeholder={WAITLIST.inputPlaceholder}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                style={{ flex: 1, minWidth: 220, background: "#060608", border: "1px solid #1e1e1e", borderRadius: 6, padding: "14px 18px", fontFamily: "var(--font-body)", fontSize: 14, color: "#fff", outline: "none" }}
-              />
-              <button type="submit" className="btn-primary" disabled={loading}>
-                {loading ? "Saving…" : WAITLIST.ctaButton}
-              </button>
-              {error && <p style={{ width: "100%", fontSize: 13, color: "var(--color-danger)", marginTop: 4 }}>{error}</p>}
-            </form>
-          ) : (
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }} role="alert">
-              <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--color-accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: "#000", fontWeight: 800 }}>✓</div>
-              <div>
-                <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, color: "#fff", fontSize: 15 }}>{WAITLIST.successTitle}</div>
-                <div style={{ fontFamily: "var(--font-body)", color: "#888", fontSize: 13, marginTop: 2 }}>{WAITLIST.successBody}</div>
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
+            <a href="/auth/signin?callbackUrl=/api/stripe/checkout" className="btn-primary" style={{ fontSize: 15, padding: "16px 32px" }}>
+              {WAITLIST.ctaButton}
+            </a>
+            <a href="/api-docs" className="btn-ghost" style={{ fontSize: 14, padding: "14px 28px" }}>
+              View API docs →
+            </a>
+          </div>
+          <div style={{ display: "flex", gap: 24, marginTop: 28, flexWrap: "wrap" }}>
+            {["$29/month", "5,000 calls/day", "14-day free trial", "Cancel anytime"].map((item) => (
+              <div key={item} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ color: "#C8FF00", fontSize: 12 }}>✓</span>
+                <span style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#666" }}>{item}</span>
               </div>
-            </div>
-          )}
-          <p style={{ fontFamily: "var(--font-body)", fontSize: 11, color: "#aaa", marginTop: 16, letterSpacing: "0.04em" }}>
-            {WAITLIST.disclaimer}
-          </p>
+            ))}
+          </div>
         </div>
       </div>
     </section>

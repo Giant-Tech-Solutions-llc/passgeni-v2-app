@@ -276,7 +276,36 @@ export default function GuidePage({ guide, related, contentHtml, toc }) {
         <FAQSection items={guide.faq} />
         <RelatedGuides guides={related} />
 
-        <div style={{ marginTop: 64, textAlign: "center" }}>
+        {/* Internal links — SEO + UX */}
+        <nav aria-label="Related tools and resources" style={{ marginTop: 48, paddingTop: 32, borderTop: "1px solid #141416" }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#888", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 16 }}>
+            Free tools for this topic
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+            {[
+              { label: "Password Generator", href: "/#generator" },
+              { label: "Breach Checker", href: "/tools/breach-checker" },
+              { label: "Strength Checker", href: "/tools/strength-checker" },
+              { label: "Password Audit Tool", href: "/tools/audit" },
+              { label: "Policy Generator", href: "/tools/policy-generator" },
+              { label: "Secure Share", href: "/tools/secure-share" },
+              { label: "All Guides", href: "/guides" },
+              { label: "Blog", href: "/blog" },
+            ].map(({ label, href }) => (
+              <a
+                key={href}
+                href={href}
+                style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#C8FF00", background: "#C8FF0011", border: "1px solid #C8FF0022", borderRadius: 100, padding: "6px 14px", textDecoration: "none", letterSpacing: "0.04em", transition: "background 0.15s" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#C8FF0022")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "#C8FF0011")}
+              >
+                {label}
+              </a>
+            ))}
+          </div>
+        </nav>
+
+        <div style={{ marginTop: 40, textAlign: "center" }}>
           <a href="/guides" className="btn-ghost" style={{ marginRight: 12 }}>← All guides</a>
           <a href="/#generator" className="btn-primary" style={{ animation: "none" }}>Generate password →</a>
         </div>

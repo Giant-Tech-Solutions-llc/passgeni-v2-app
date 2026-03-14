@@ -122,7 +122,36 @@ export default function BlogPostPage({ post, related, contentHtml }) {
         <BlogFAQ items={post.faq} />
         <RelatedPosts posts={related} />
 
-        <div style={{ marginTop: 56, textAlign: "center" }}>
+        {/* Internal links — SEO + UX */}
+        <nav aria-label="Related tools and resources" style={{ marginTop: 48, paddingTop: 32, borderTop: "1px solid #141416" }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#888", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 16 }}>
+            Free tools mentioned in this post
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+            {[
+              { label: "Password Generator", href: "/#generator" },
+              { label: "Breach Checker", href: "/tools/breach-checker" },
+              { label: "Strength Checker", href: "/tools/strength-checker" },
+              { label: "Passphrase Generator", href: "/#generator" },
+              { label: "Policy Generator", href: "/tools/policy-generator" },
+              { label: "Password Audit", href: "/tools/audit" },
+              { label: "Security Guides", href: "/guides" },
+              { label: "All Blog Posts", href: "/blog" },
+            ].map(({ label, href }) => (
+              <a
+                key={label}
+                href={href}
+                style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#C8FF00", background: "#C8FF0011", border: "1px solid #C8FF0022", borderRadius: 100, padding: "6px 14px", textDecoration: "none", letterSpacing: "0.04em", transition: "background 0.15s" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#C8FF0022")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "#C8FF0011")}
+              >
+                {label}
+              </a>
+            ))}
+          </div>
+        </nav>
+
+        <div style={{ marginTop: 40, textAlign: "center" }}>
           <a href="/blog" className="btn-ghost" style={{ marginRight: 12 }}>← All posts</a>
           <a href="/#generator" className="btn-primary" style={{ animation: "none" }}>Generate password →</a>
         </div>
