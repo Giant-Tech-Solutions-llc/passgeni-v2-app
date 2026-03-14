@@ -48,4 +48,3 @@ export default function AuthErrorPage() {
 
 export async function getServerSideProps() { return { props: {} }; }
 
-export async function getServerSideProps() { return { props: {} }; }
