@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
-import PageLayout from '../../components/layout/PageLayout';
-import { ALL_POSTS as BLOG_POSTS } from '../../content/blog';  // centralised data
+import Layout from '../../components/Layout';
+import { BLOG_POSTS } from '../../data/blogPosts';  // centralised data
 
 const POSTS_PER_PAGE = 9;
 
@@ -152,7 +152,7 @@ export default function BlogIndex() {
   const gridPosts    = featuredPost ? pagePosts.slice(1) : pagePosts;
 
   return (
-    <PageLayout>
+    <Layout>
       <Head>
         <title>Blog — Password Security News and Analysis | PassGeni</title>
         <meta name="description" content="Password security news, compliance analysis, breach data, and practical advice from the PassGeni team." />
@@ -271,6 +271,6 @@ export default function BlogIndex() {
           </form>
         </div>
       </section>
-    </PageLayout>
+    </Layout>
   );
 }
