@@ -49,16 +49,16 @@ export function getDB() {
 // All throw on unexpected DB errors.
 
 /**
- * Find a customer by Stripe customer ID.
- * @param {string} stripeCustomerId
+ * Find a customer by Lemon Squeezy customer ID.
+ * @param {string} lsCustomerId
  * @returns {Promise<Object|null>}
  */
-export async function findCustomerByStripeId(stripeCustomerId) {
+export async function findCustomerByLSId(lsCustomerId) {
   const db = getDB();
   const { data, error } = await db
     .from("customers")
     .select("*")
-    .eq("stripe_customer_id", stripeCustomerId)
+    .eq("ls_customer_id", lsCustomerId)
     .single();
   if (error && error.code !== "PGRST116") throw error; // PGRST116 = not found
   return data || null;
@@ -82,13 +82,13 @@ export async function findCustomerByEmail(email) {
 
 /**
  * Upsert a customer record.
- * Used by the Stripe webhook when a subscription is created/updated.
+ * Used by the Lemon Squeezy webhook when a subscription is created/updated.
  */
 export async function upsertCustomer(fields) {
   const db = getDB();
   const { data, error } = await db
     .from("customers")
-    .upsert(fields, { onConflict: "stripe_customer_id" })
+    .upsert(fields, { onConflict: "ls_customer_id" })
     .select()
     .single();
   if (error) throw error;

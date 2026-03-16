@@ -5,7 +5,7 @@
 -- under your project → SQL Editor → New query.
 --
 -- Tables:
---   customers      — one row per paying Stripe customer
+--   customers      — one row per paying Lemon Squeezy customer
 --   api_keys       — keys issued per customer (up to 5)
 --   usage_logs     — one row per API call (for audit + analytics)
 --   usage_daily    — aggregated daily usage per key (fast lookup)
@@ -19,8 +19,8 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- ─── CUSTOMERS ───────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS customers (
   id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  stripe_customer_id  TEXT UNIQUE NOT NULL,
-  stripe_subscription_id TEXT,
+  ls_customer_id      TEXT UNIQUE NOT NULL,
+  ls_subscription_id  TEXT,
   email               TEXT NOT NULL,
   name                TEXT,
   plan                TEXT NOT NULL DEFAULT 'free',  -- 'free' | 'team'
@@ -31,8 +31,8 @@ CREATE TABLE IF NOT EXISTS customers (
   updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Index for fast Stripe webhook lookups
-CREATE INDEX IF NOT EXISTS idx_customers_stripe_id ON customers (stripe_customer_id);
+-- Index for fast Lemon Squeezy webhook lookups
+CREATE UNIQUE INDEX IF NOT EXISTS idx_customers_ls_id ON customers (ls_customer_id);
 CREATE INDEX IF NOT EXISTS idx_customers_email ON customers (email);
 
 -- Auto-update updated_at on any row change
@@ -105,7 +105,7 @@ CREATE INDEX IF NOT EXISTS idx_usage_logs_key ON usage_logs (key_id, called_at D
 CREATE INDEX IF NOT EXISTS idx_usage_logs_customer ON usage_logs (customer_id, called_at DESC);
 
 -- ─── TEAM MEMBERS ────────────────────────────────────────────
--- Seats under a Team plan. Owner = the stripe customer.
+-- Seats under a Team plan. Owner = the Lemon Squeezy customer.
 CREATE TABLE IF NOT EXISTS team_members (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_id  UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
