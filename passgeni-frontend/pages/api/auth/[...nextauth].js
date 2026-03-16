@@ -88,11 +88,11 @@ export const authOptions = {
         try {
           const customer = await findCustomerByEmail(token.email);
           if (customer) {
-            token.customerId  = customer.id;
-            token.plan        = customer.plan;
-            token.planStatus  = customer.plan_status;
-            token.trialEnd    = customer.trial_end;
-            token.stripeCustomerId = customer.stripe_customer_id;
+            token.customerId    = customer.id;
+            token.plan          = customer.plan;
+            token.planStatus    = customer.plan_status;
+            token.trialEnd      = customer.trial_end;
+            token.lsCustomerId  = customer.ls_customer_id;
           } else {
             // Email doesn't have a customer record — free/unsubscribed
             token.customerId  = null;
@@ -108,11 +108,11 @@ export const authOptions = {
 
     // Expose token fields to useSession() in the browser
     async session({ session, token }) {
-      session.user.customerId       = token.customerId;
-      session.user.plan             = token.plan;
-      session.user.planStatus       = token.planStatus;
-      session.user.trialEnd         = token.trialEnd;
-      session.user.stripeCustomerId = token.stripeCustomerId;
+      session.user.customerId     = token.customerId;
+      session.user.plan           = token.plan;
+      session.user.planStatus     = token.planStatus;
+      session.user.trialEnd       = token.trialEnd;
+      session.user.lsCustomerId   = token.lsCustomerId;
       return session;
     },
   },
