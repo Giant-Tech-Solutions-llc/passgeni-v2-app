@@ -332,12 +332,18 @@ export default function BlogPost({ post }) {
 
   const postUrl = `https://passgeni.ai/blog/${post.slug}`;
 
-  // Build headings from content for TOC
-  const headings = (post.sections || []).map((s, i) => ({
-    id: `section-${i}`,
-    text: s.title,
-    level: 2,
-  }));
+  // Build headings for TOC — extract from contentHtml or use sections
+  const headings = post.contentHtml
+    ? Array.from(post.contentHtml.matchAll(/<h2[^>]*>(.*?)<\/h2>/gi)).map((m, i) => ({
+        id: `h-${i}`,
+        text: m[1].replace(/<[^>]+>/g, ''),
+        level: 2,
+      }))
+    : (post.sections || []).map((s, i) => ({
+        id: `section-${i}`,
+        text: s.title,
+        level: 2,
+      }));
 
   return (
     <Layout>
@@ -440,27 +446,28 @@ export default function BlogPost({ post }) {
 
             {/* ── POST BODY ── */}
             <div className="blog-content">
-              {(post.sections || []).map((section, i) => (
-                <section key={i} id={`section-${i}`}>
-                  <h2>{section.title}</h2>
-                  {section.body.split('\n\n').map((para, j) => {
-                    const keywords = post.keywords || [];
-                    if (para.startsWith('- ') || para.startsWith('• ')) {
-                      const items = para.split('\n').filter(Boolean).map(l => l.replace(/^[-•]\s*/, ''));
-                      return (
-                        <ul key={j}>
-                          {items.map((item, k) => (
-                            <li key={k}>{renderInline(item, keywords)}</li>
-                          ))}
-                        </ul>
-                      );
-                    }
-                    return (
-                      <p key={j}>{renderInline(para, keywords)}</p>
-                    );
-                  })}
-                </section>
-              ))}
+              {post.contentHtml
+                ? <div dangerouslySetInnerHTML={{ __html: post.contentHtml }} />
+                : (post.sections || []).map((section, i) => (
+                    <section key={i} id={`section-${i}`}>
+                      <h2>{section.title}</h2>
+                      {section.body.split('\n\n').map((para, j) => {
+                        const keywords = post.keywords || [];
+                        if (para.startsWith('- ') || para.startsWith('• ')) {
+                          const items = para.split('\n').filter(Boolean).map(l => l.replace(/^[-•]\s*/, ''));
+                          return (
+                            <ul key={j}>
+                              {items.map((item, k) => (
+                                <li key={k}>{renderInline(item, keywords)}</li>
+                              ))}
+                            </ul>
+                          );
+                        }
+                        return <p key={j}>{renderInline(para, keywords)}</p>;
+                      })}
+                    </section>
+                  ))
+              }
             </div>
 
             {/* Keyword scan tags */}
@@ -567,5 +574,17 @@ export async function getStaticPaths() {
 
 export async function getStaticProps({ params }) {
   const post = BLOG_POSTS.find(p => p.slug === params.slug) || null;
-  return { props: { post } };
+  if (!post) return { props: { post: null } };
+
+  let contentHtml = null;
+  try {
+    const mod = require(`../../content/blog/${params.slug}.js`);
+    if (mod.contentHtml) {
+      // Inject id="h-N" into each <h2> so TOC anchor links work
+      let idx = 0;
+      contentHtml = mod.contentHtml.replace(/<h2([^>]*)>/gi, () => `<h2 id="h-${idx++}">`);
+    }
+  } catch (_) {}
+
+  return { props: { post: { ...post, contentHtml } } };
 }
