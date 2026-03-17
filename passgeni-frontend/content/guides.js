@@ -24,7 +24,6 @@ export const COMPLIANCE_GUIDES = [
       { q: "What is the minimum password length required by HIPAA?", a: "HIPAA does not specify an exact minimum length in its text. However, HHS guidance and NIST recommendations used as the security standard require at least 8 characters, with 12+ as best practice." },
       { q: "Does HIPAA require password rotation?", a: "HIPAA requires 'automatic logoff' and periodic review of access, which is broadly interpreted to include rotation. Best practice under HIPAA is 90-day rotation for most accounts, though NIST now questions mandatory rotation." },
       { q: "Is MFA required under HIPAA?", a: "MFA is not explicitly required by HIPAA, but it is strongly recommended and increasingly considered best practice for ePHI access, especially remote access." },
-,
       { q: "Does HIPAA specify a minimum password length?", a: "HIPAA's Security Rule does not specify an exact minimum. HHS guidance and NIST 800-63B (used as the de facto standard) recommend 12 characters minimum. OCR breach investigations frequently cite short passwords as evidence of inadequate access controls." },
       { q: "Is multi-factor authentication required for HIPAA?", a: "MFA is not explicitly mandated in the HIPAA Security Rule text, but is strongly recommended and increasingly expected. OCR's guidance and recent enforcement actions treat MFA absence as evidence of inadequate access controls, especially for remote ePHI access." },
       { q: "How often must HIPAA passwords be changed?", a: "HIPAA does not mandate a specific rotation schedule. NIST 800-63B, used as HIPAA's security reference, explicitly recommends against mandatory rotation. Change passwords only when compromise is suspected or confirmed." },
@@ -49,7 +48,6 @@ export const COMPLIANCE_GUIDES = [
     faq: [
       { q: "What changed in PCI-DSS v4.0 for passwords?", a: "The minimum password length increased from 7 to 12 characters. MFA requirements were expanded. The timeline for compliance was March 2025." },
       { q: "Does PCI-DSS v4.0 require MFA?", a: "Yes. PCI-DSS v4.0 Requirement 8.4 requires MFA for all non-console access into the cardholder data environment, and for all remote network access." },
-,
       { q: "What is the minimum password length for PCI-DSS v4.0?", a: "PCI-DSS v4.0 Requirement 8.3.6 requires a minimum of 12 characters for user passwords accessing the cardholder data environment. This increased from 8 characters in v3.2.1 and became mandatory March 31, 2024." },
       { q: "Does PCI-DSS v4.0 require MFA for everyone?", a: "PCI-DSS v4.0 Requirement 8.4.2 requires MFA for all access to the cardholder data environment, including on-site non-console access. Previously, MFA was only required for remote access. This is one of the most significant changes in v4.0." },
       { q: "How often must passwords be changed under PCI-DSS?", a: "PCI-DSS v4.0 no longer mandates automatic periodic password rotation. Instead, Requirement 8.3.9 requires passwords to be changed when compromise is suspected. This aligns with NIST 800-63B's evidence-based rotation approach." },
@@ -74,7 +72,6 @@ export const COMPLIANCE_GUIDES = [
     readTime:        9,
     faq: [
       { q: "What does SOC 2 CC6.1 require for passwords?", a: "CC6.1 requires logical access controls, including strong authentication. Auditors typically expect minimum 16 characters, complexity, MFA for privileged access, and a documented policy." },
-,
       { q: "What does SOC 2 CC6.1 require for passwords?", a: "CC6.1 requires logical access security including strong authentication controls. Auditors typically expect: minimum 16 characters, complexity requirements, MFA for privileged access, documented password policy, and breach-aware credential management." },
       { q: "What is the minimum password length for SOC 2?", a: "SOC 2 doesn't specify an exact minimum — it requires controls 'appropriate to the risk.' In practice, auditors expect 16+ characters for CC6.1 compliance, especially for admin accounts. PassGeni's SOC 2 preset enforces this automatically." },
       { q: "Is MFA required for SOC 2 Type II certification?", a: "MFA is not explicitly required by the SOC 2 Trust Services Criteria, but its absence is increasingly cited by auditors as a control gap under CC6.1. Most organisations pursuing SOC 2 Type II implement MFA for all internal systems as a matter of course." },
@@ -126,7 +123,6 @@ export const COMPLIANCE_GUIDES = [
     faq: [
       { q: "Does NIST require password rotation?", a: "No. NIST SP 800-63B explicitly advises against mandatory periodic rotation unless there is evidence of compromise. Forced rotation encourages predictable patterns like 'Password1' to 'Password2'." },
       { q: "Does NIST require complexity (uppercase, symbols)?", a: "No. NIST recommends against mandatory complexity rules. Instead, it recommends checking passwords against known breach lists and encouraging length." },
-,
       { q: "What are the key NIST 800-63B password requirements?", a: "NIST 800-63B requires: minimum 8 characters (64+ character maximum recommended), check against known-breached credential lists, allow all printable ASCII and Unicode, no mandatory complexity rules, no mandatory periodic rotation, no password hints, no knowledge-based authentication." },
       { q: "Does NIST 800-63B require password complexity?", a: "No — NIST 800-63B explicitly discourages mandatory composition rules (uppercase, lowercase, numbers, symbols). The guidance states composition rules 'often make it harder for people to choose strong passwords' and recommends length and breach checking instead." },
       { q: "What does NIST say about password rotation?", a: "NIST 800-63B explicitly advises against mandatory periodic rotation. Passwords should only be changed when there is evidence of compromise. Forced rotation encourages predictable minimal changes (Password1 → Password2) without improving security." },
@@ -285,7 +281,6 @@ export const CONCEPT_GUIDES = [
     faq: [
       { q: "What is password entropy?", a: "Password entropy is a measure of how unpredictable a password is, expressed in bits. Higher entropy means more possible combinations and a harder brute-force attack. Formula: length × log2(character_pool_size)." },
       { q: "How many bits of entropy is enough?", a: "NIST considers 80+ bits sufficient for most applications. For highly sensitive accounts, 100+ bits is recommended. A 16-character random password from a full character set has approximately 105 bits of entropy." },
-,
       { q: "What is password entropy?", a: "Password entropy is a measure of how unpredictable a password is, expressed in bits. It is calculated as: E = length × log₂(character pool size). Higher entropy means more possible combinations and harder brute-force attacks. A 20-character random password from the full ASCII set has ~131 bits of entropy." },
       { q: "How many bits of entropy is a secure password?", a: "NIST considers 80+ bits sufficient for most applications. For highly sensitive accounts, 100+ bits is recommended. Post-quantum security requires 128+ bits to maintain 64-bit effective security against Grover's algorithm. PassGeni's default 18-character output provides approximately 118 bits." },
       { q: "How is password entropy calculated?", a: "Entropy formula: E = L × log₂(N), where L is password length and N is the size of the character pool. Example: 20 characters from full printable ASCII (95 chars) = 20 × log₂(95) = 20 × 6.57 = 131.4 bits of entropy." },
