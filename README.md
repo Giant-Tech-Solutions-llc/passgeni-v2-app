@@ -68,32 +68,43 @@ Passgeni-v2/
     ├── components/
     │   ├── layout/
     │   │   ├── Header.js              ← Site header / navigation
-    │   │   └── Footer.js              ← Site footer
+    │   │   ├── Footer.js              ← Site footer
+    │   │   └── Ticker.js              ← Scrolling ticker bar
     │   ├── sections/
     │   │   ├── Hero.js                ← Hero section
-    │   │   ├── GeneratorSection.js    ← Password generator UI
-    │   │   ├── HowItWorks.js          ← 3-step explainer
-    │   │   ├── Features.js            ← Feature cards
-    │   │   ├── ToolsPreview.js        ← Tools preview cards
-    │   │   ├── Pricing.js             ← Pricing section
-    │   │   ├── Testimonials.js        ← Testimonials marquee
-    │   │   ├── FAQ.js                 ← FAQ accordion
-    │   │   ├── StatsBar.js            ← Stats bar
-    │   │   ├── Waitlist.js            ← Team API CTA
-    │   │   └── index.js               ← Barrel exports for all sections
-    │   ├── generator/                 ← Generator sub-components
+    │   │   ├── GeneratorSection.js    ← Password generator UI wrapper
+    │   │   ├── HowItWorks.js          ← Re-exports from index.js
+    │   │   ├── Features.js            ← Re-exports from index.js
+    │   │   ├── ToolsPreview.js        ← Re-exports from index.js
+    │   │   ├── Pricing.js             ← Re-exports from index.js
+    │   │   ├── Testimonials.js        ← Re-exports from index.js
+    │   │   ├── FAQ.js                 ← Re-exports from index.js
+    │   │   ├── StatsBar.js            ← Re-exports from index.js
+    │   │   ├── Waitlist.js            ← Re-exports from index.js
+    │   │   └── index.js               ← All section components defined here
+    │   ├── generator/
+    │   │   ├── GeneratorWidget.js     ← Main generator state + layout
+    │   │   ├── PasswordDisplay.js     ← Password output + strength bar
+    │   │   ├── DNAScore.js            ← DNA Score panel
+    │   │   ├── PasswordHistory.js     ← Session password history
+    │   │   ├── BulkGenerator.js       ← Bulk generation panel
+    │   │   ├── ComplianceBar.js       ← Compliance preset selector
+    │   │   ├── ProfessionSelector.js  ← Profession picker
+    │   │   └── PassphraseTab.js       ← Passphrase generation tab
     │   ├── tools/                     ← Tool-specific components
-    │   ├── ui/                        ← Shared UI primitives
+    │   ├── ui/
+    │   │   └── index.js               ← Shared UI primitives (CopyBtn, TogglePill, StrengthBar, TrustChip, Headline)
     │   ├── BlogHeroSVG.js             ← Blog hero illustration
     │   ├── CopyBtn.js                 ← Unified copy-to-clipboard button
     │   ├── ErrorBoundary.js           ← Global error boundary
-    │   ├── Layout.js                  ← Page layout wrapper
-    │   ├── TestimonialsSection.js     ← Testimonials (infinite marquee)
+    │   ├── Layout.js                  ← Page layout wrapper (nav, mobile menu)
+    │   ├── TestimonialsSection.js     ← Testimonials infinite marquee
     │   └── TrustStrip.js              ← Trust indicators strip
     ├── content/
-    │   └── copy.js                    ← ALL website text lives here
+    │   └── copy.js                    ← ALL website text lives here — edit here only
     ├── data/
-    │   └── blogPosts.js               ← All 53 blog posts (title, slug, hero image, FAQs, keywords)
+    │   ├── blogPosts.js               ← All 53 blog posts (title, slug, hero, FAQs, keywords)
+    │   └── compliance.js              ← Compliance preset definitions (HIPAA, SOC2, PCI-DSS etc.)
     ├── lib/
     │   ├── auth/                      ← Supabase NextAuth adapter
     │   ├── db/                        ← Supabase database helpers
@@ -101,16 +112,16 @@ Passgeni-v2/
     │   ├── apiKeys.js                 ← API key generation and validation
     │   ├── auth.js                    ← Auth helpers
     │   ├── gemini.js                  ← Gemini AI client
-    │   ├── generator.js               ← Client-side password generation logic
+    │   ├── generator.js               ← Client-side password generation (buildPassword, buildPassphrase, deriveSeeds)
     │   ├── paddle.js                  ← Paddle billing client + webhook verification
-    │   └── strength.js                ← Password DNA Score calculator
+    │   └── strength.js                ← Password DNA Score (getStrength, getEntropy, getCrackTime, getDNAScore)
     ├── seo/
     │   └── schema.js                  ← JSON-LD schema generators
     ├── styles/
     │   └── globals.css                ← All global styles, CSS variables, animations
     ├── public/                        ← Static assets (favicon, og-image, icons)
-    ├── next.config.js                 ← Next.js config
-    ├── INTEGRATION.md                 ← Integration guide for component updates
+    ├── next.config.js                 ← Next.js config (security headers, redirects)
+    ├── INTEGRATION.md                 ← Component integration guide
     └── package.json
 ```
 
@@ -118,13 +129,13 @@ Passgeni-v2/
 
 ## Design System
 
-All styles live in `styles/globals.css`. There is no Tailwind or CSS-in-JS library.
+All styles live in `styles/globals.css`. No Tailwind. No CSS-in-JS.
 
 ### CSS Variables
 
 | Variable | Value | Usage |
 |---|---|---|
-| `--color-accent` | `#C8FF00` | Primary brand color — buttons, highlights, icons |
+| `--color-accent` | `#C8FF00` | Brand color — buttons, highlights, icons |
 | `--color-bg` | `#060608` | Page background |
 | `--color-text` | `#e0e0e0` | Primary text |
 | `--font-heading` | Outfit 700/800 | All headings |
@@ -135,13 +146,12 @@ All styles live in `styles/globals.css`. There is no Tailwind or CSS-in-JS libra
 
 | Class | Purpose |
 |---|---|
-| `.cta-primary` | Lime (#C8FF00) background CTA button, black text |
-| `.gen-capsule` | Live password display pill in hero |
+| `.cta-primary` | Lime (#C8FF00) CTA button, black text |
+| `.gen-capsule` | Live password display pill |
 | `.nav-link` | Nav link — lime when inactive, white when active |
 | `.nav-link.active` | Active nav link — white |
-| `.testimonial-track` | Infinite horizontal marquee (80s, pauses on hover) |
-| `.copy-btn` | Unified copy button |
-| `.copy-btn.copied` | Copied state |
+| `.testimonial-track` | Infinite marquee (80s speed, pauses on hover) |
+| `.copy-btn` / `.copy-btn.copied` | Unified copy button states |
 | `.nav-hamburger` | Mobile menu toggle (visible below 900px) |
 | `.mobile-nav-drawer` | Mobile nav slide-down drawer |
 | `.trust-strip-text` | Trust strip — 12px, #aaa, flex row |
@@ -152,9 +162,9 @@ All styles live in `styles/globals.css`. There is no Tailwind or CSS-in-JS libra
 
 **All website text is in one file: `content/copy.js`**
 
-Edit text there — it updates across the site automatically. Never hardcode text in components.
+Never hardcode text in components. Edit `copy.js` only.
 
-Key exports from `content/copy.js`:
+Key exports:
 
 | Export | Contents |
 |---|---|
@@ -171,22 +181,41 @@ Key exports from `content/copy.js`:
 | `FOOTER` | Links, copyright, trust chips |
 | `TICKER_ITEMS` | Scrolling ticker labels |
 | `STATS` | Stats bar numbers |
+| `GENERATOR` | Generator section headline and subheadline |
+
+---
+
+## Generator Architecture
+
+The generator is split across `components/generator/`:
+
+- `GeneratorWidget.js` — All state lives here (tab, profession, length, opts, compliance, quantumMode, language, password, history, panels). Imports sub-components and assembles layout.
+- `ComplianceBar.js` — Preset buttons (HIPAA, PCI-DSS, SOC2, ISO27001, DoD, Post-Quantum, None). Applies preset settings to GeneratorWidget state.
+- `ProfessionSelector.js` — Profession picker. Reads from `content/professions.js`.
+- `PasswordDisplay.js` — Renders password output, strength bar, entropy, crack time.
+- `DNAScore.js` — 7-point DNA Score panel (toggle via TogglePill).
+- `BulkGenerator.js` — Bulk generation panel (toggle via TogglePill).
+- `PasswordHistory.js` — Session-only history list (cleared on tab close).
+- `PassphraseTab.js` — Passphrase tab with NIST 800-63B wordlist generation.
+
+Generation logic is in `lib/generator.js` — functions: `buildPassword`, `buildPassphrase`, `deriveSeeds`, `generateAuditRecord`.
+
+Strength scoring is in `lib/strength.js` — functions: `getStrength`, `getEntropy`, `getCrackTime`, `getDNAScore`.
+
+Compliance presets are defined in `data/compliance.js` as `COMPLIANCE_PRESETS`.
 
 ---
 
 ## Auth
 
-- **Provider:** NextAuth v4
 - **Method:** Magic link (email only — no passwords)
-- **Email sender:** Resend from `hello@passgeni.ai`
-- **Sessions:** JWT (stateless — no session DB table needed)
-- **Adapter:** Custom Supabase adapter at `lib/auth/`
+- **Sender:** Resend from `hello@passgeni.ai`
+- **Sessions:** JWT (stateless)
+- **Adapter:** `lib/auth/` — custom Supabase adapter
 
 ---
 
 ## Database — Supabase
-
-All user data stored in Supabase PostgreSQL. Key table: `profiles`.
 
 ```sql
 profiles (
@@ -208,17 +237,9 @@ profiles (
 
 ## Payments — Paddle
 
-Webhook endpoint: `POST /api/paddle/webhook`
+Webhook: `POST /api/paddle/webhook`
 
 Events handled: `subscription.created`, `subscription.activated`, `subscription.trialing`, `subscription.updated`, `subscription.canceled`, `subscription.past_due`, `transaction.completed`, `transaction.payment_failed`
-
----
-
-## AI — Gemini
-
-Used for profession-aware password seeding. Client: `lib/gemini.js`
-
-Test endpoint: `GET /api/test-gemini`
 
 ---
 
@@ -229,33 +250,22 @@ git clone https://github.com/Giant-Tech-Solutions-llc/Passgeni-v2.git
 cd Passgeni-v2/passgeni-frontend
 npm install
 cp .env.template .env.local
-# Fill in env vars (see below)
+# Fill in env vars
 npm run dev
 ```
-
-Open: http://localhost:3000
 
 ---
 
 ## Environment Variables
 
 ```bash
-# Supabase
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
-
-# Auth
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=
-
-# Email
 RESEND_API_KEY=
-
-# AI
 GEMINI_API_KEY=
-
-# Paddle
 PADDLE_API_KEY=
 PADDLE_WEBHOOK_SECRET=
 PADDLE_PRODUCT_PRO_MONTHLY=
@@ -269,20 +279,106 @@ PADDLE_PRODUCT_TEAM_ANNUAL=
 ## Vercel Deployment
 
 - **Project ID:** `prj_VEAZ4S4AlUXPSxRSWPxu0tjuqtCU`
-- **Root directory:** `passgeni-frontend` — must always be set
-- **Framework preset:** Next.js
+- **Root directory:** `passgeni-frontend` — must always stay set
+- **Framework:** Next.js
 - **Production domain:** `passgeni.ai`
 - Auto-deploys on every push to `main`
+
+---
+
+## Planned Changes (Not Yet Built)
+
+The following changes were agreed and are waiting to be implemented in Claude Code. Do not implement anything not on this list without explicit approval.
+
+### 1. Hero Section — Fix subheadline display
+**File:** `components/sections/Hero.js`
+
+The subheadline is currently one paragraph. Replace with 3 inline trust points on a single line:
+
+- 🔒 Built around your profession — easier to remember
+- ⚡ Generated in your browser — never touches a server  
+- 🆓 Free to start — no account, no card
+
+Each point: emoji + text, displayed inline horizontally (not stacked vertically, not pill capsules). Brand color `#C8FF00` for emojis only.
+
+Only one blinking dot allowed — the one already in the badge at the top. Remove any second blinking dot added anywhere in the hero.
+
+### 2. Hero Section — Single CTA only
+**File:** `components/sections/Hero.js`
+
+Remove the "View pricing" secondary CTA. Keep only "Generate my password ↓". No other CTA buttons in the hero.
+
+### 3. Generator Section — Remove company logos strip
+**File:** `components/sections/GeneratorSection.js`
+
+The `<LogosStrip />` component is imported and rendered below the generator widget. Remove it entirely. Do not replace it with anything.
+
+### 4. Generator Section — Remove stats bar
+The stats bar ("25,847 passwords generated this week" or similar) should not appear below or above the generator. Remove it if present.
+
+### 5. Free Tier — Post-Quantum limit enforcement
+**File:** `components/generator/GeneratorWidget.js` + `components/generator/ComplianceBar.js`
+
+Post-Quantum mode is currently unlimited for all users. It must be limited to 1 use per day for free users. After the 1st use:
+- Lock the Post-Quantum button with a visual lock icon
+- Show a small inline message: "You've used your free Post-Quantum password today. Upgrade to Pro for unlimited access — or share PassGeni to unlock +15 passwords."
+- Two options shown: "Share on X →" and "Share on LinkedIn →" (trust-based, honour system — no OAuth verification)
+- Clicking either share button opens the respective share URL and unlocks +15 passwords for 24 hours, stored in localStorage
+- Limit resets at midnight (localStorage timestamp check)
+
+### 6. Pricing Page — /pricing route
+**File:** Create `pages/pricing.js`
+
+The homepage currently includes the `<PricingSection />` inline. The plan is:
+- Remove `<PricingSection />` from `pages/index.js`
+- Replace with a 2-line teaser + "See full pricing →" link pointing to `/pricing`
+- Create `pages/pricing.js` as a dedicated pricing page with:
+  - Monthly / Annual billing toggle
+  - 4 plan cards: Free, Pro ($9/mo or $89/yr), Team ($29/mo or $249/yr), Enterprise (custom)
+  - Full feature comparison table
+  - FAQ section (pricing-specific questions)
+  - Checkout links wired to Paddle price IDs already in env vars
+
+### 7. Navigation — Mega menu for Tools and Guides
+**File:** `components/layout/Header.js`
+
+Add hover mega menus to the "Tools" and "Guides" nav links. Tools mega menu shows 4 columns (Security, Analysis, Business, Utility). Guides mega menu shows 3 columns (Compliance, By Profession, Fundamentals). Mega menus open on hover, close on mouse-out with 200ms delay, close on Escape key. Mobile: expand as accordion, not mega menu.
+
+### 8. Testimonials — Show 3 featured cards (static, not marquee) on homepage
+**File:** `components/sections/index.js` (TestimonialsSection)
+
+The homepage currently shows a full scrolling marquee of 50+ testimonials. Replace the homepage testimonials section with 3 static featured cards laid out 2-per-row (2 on top, 1 centred below). Keep the full marquee for any dedicated testimonials page. The 3 cards to feature:
+- James K. — IT Security Manager — Policy Generator story
+- Pia R. — Backend Engineer — FIPS entropy story  
+- Sarah M. — Registered Nurse — HIPAA mode story
+
+### 9. FAQ — Expand to 9 questions
+**File:** `content/copy.js` (FAQ export)
+
+Add these 3 questions to the existing 8 (do not remove any):
+- "Can I use PassGeni on my phone?" — Yes, fully responsive, no app needed.
+- "What happens if I forget my password?" — We don't store it. Use a password manager like Bitwarden or 1Password.
+- "Is PassGeni really free? What is the catch?" — 15/day free, no ads, no tracking. We make money from Pro and Team plans.
+
+### 10. CTA Section — Replace Waitlist section
+**File:** `components/sections/index.js` (WaitlistSection) + `pages/index.js`
+
+Replace the current Waitlist/Team API CTA with a 2-card section:
+- Card 1: Weekly Security Digest email subscribe (email input + subscribe button). No email stored beyond Resend.
+- Card 2: Free Compliance Cheat Sheet PDF download (HIPAA + PCI-DSS requirements). Direct download, no email required.
+Below both cards: pricing teaser — "Free forever for individuals. Pro from $9/month. Team from $29/month." + "See full pricing →" button.
 
 ---
 
 ## Rules for Working on This Codebase
 
 1. **Read the file fully before editing it** — never edit blind
-2. **Text changes go in `content/copy.js` only** — never hardcode text in components
-3. **Style changes go in `styles/globals.css`** — never use inline styles for design decisions
-4. **Never rewrite a working component** — make targeted edits only
-5. **Never change the logo or favicon** — these are brand assets
-6. **Check the live site before and after every change**
+2. **Only implement changes from the Planned Changes list above** — nothing else without approval
+3. **Text changes go in `content/copy.js` only** — never hardcode text in components
+4. **Style changes go in `styles/globals.css`** — use CSS variables, not inline styles
+5. **Never rewrite a working component** — make targeted edits only
+6. **Never change the logo or favicon** — these are brand assets, do not touch them
 7. **Run `npm run build` locally before pushing** — catch errors before Vercel does
-8. **The brand color is `#C8FF00`** — always use `var(--color-accent)` in components
+8. **The brand color is `#C8FF00`** — use `var(--color-accent)` in components
+9. **Check the live site before and after every change** — passgeni.ai is the source of truth
+10. **One change per commit** — do not bundle multiple planned changes into one commit
