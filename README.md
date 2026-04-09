@@ -292,8 +292,8 @@ Remove "Features" (no dedicated features page) and "API" (not a primary nav item
 **Behaviour:**
 - Free users get exactly 1 Post-Quantum generation per day
 - After the 1st use: the Post-Quantum toggle/button shows a lock icon 🔒 and is disabled
-- Inline message appears below: "You've used your free Post-Quantum password today."
-- Two unlock options shown as small text links:
+- small popup message appears: "You've used your free Post-Quantum password today. Try aftr 24hrs, or upgarde to Pro (use Bold hyperlink and connect with pro package)"
+- Two "instant" unlock options shown as small text links:
   - "Share on X for +15 passwords →" — opens `https://twitter.com/intent/tweet?text=...`
   - "Share on LinkedIn for +15 passwords →" — opens LinkedIn share URL
 - Clicking either link: opens share URL in new tab AND unlocks +15 passwords stored in `localStorage` with a 24h timestamp
@@ -307,7 +307,7 @@ Remove "Features" (no dedicated features page) and "API" (not a primary nav item
 **The 3 cards (exact text from copy.js TESTIMONIALS.items):**
 1. James K. — IT Security Manager — "ISO 27001 preset in PassGeni saved my team..."
 2. Pia R. — Dentist, private practice — "I generate all my practice management software..."
-3. Mei L. — Nurse practitioner — "HIPAA preset gave me exactly the right password..."
+3. Mei L. — Nurse practitioner — "Passgeni's HIPAA preset gave me exactly the right password..."
 Each card: dark background `#0a0a0c`, border `1px solid #1e1e1e`, rounded 12px, padding 24px. Stars in `#C8FF00`. Name bold white. Role muted grey. Quote in `#aaa`.
 
 #### Feature 3.3 — FAQ: add 3 new questions
