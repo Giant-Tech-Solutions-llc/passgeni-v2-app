@@ -228,7 +228,7 @@ PADDLE_PRODUCT_TEAM_ANNUAL=
 
 ---
 
-## PLANNED CHANGES FOR CLAUDE CODE
+## PLANNED CHANGES
 
 > Implement in order. One change per commit. Read the target file in full before touching it. Do not implement anything not on this list without explicit owner approval.
 
