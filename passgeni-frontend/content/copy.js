@@ -416,6 +416,27 @@ export const WAITLIST = {
   disclaimer:    "No spam. Cancel anytime. 14-day money-back guarantee.",
 };
 
+// ─── BOTTOM CTA SECTION ──────────────────────────────────
+export const BOTTOM_CTA = {
+  digest: {
+    eyebrow:          "STAY SHARP",
+    headline:         "One security insight. Every week.",
+    body:             "Breach alerts, compliance shifts, and one thing you can act on. That's it. No noise.",
+    inputPlaceholder: "your@email.com",
+    cta:              "Subscribe →",
+    success:          "✓  You're in. See you next week.",
+    disclaimer:       "No spam. No selling your email. Unsubscribe in one click.",
+  },
+  pdf: {
+    eyebrow:    "FREE DOWNLOAD",
+    headline:   "HIPAA + PCI-DSS in two minutes.",
+    body:       "The exact password requirements for both standards on one page. Used by compliance teams as a desk reference during audits.",
+    cta:        "Download free PDF →",
+    disclaimer: "Instant download. No signup. No email.",
+    href:       "/downloads/passgeni-hipaa-pcidss-cheatsheet.pdf",
+  },
+};
+
 // ─── FOOTER ──────────────────────────────────────────────────
 export const FOOTER = {
   description: "AI-powered password generator. Zero knowledge architecture. Built for humans who value security without the friction.",

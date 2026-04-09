@@ -1,5 +1,5 @@
 import{useState}from"react";
-import{HOW_IT_WORKS,FEATURES,TOOLS_PREVIEW,PRICING,TESTIMONIALS,FAQ,WAITLIST}from"../../content/copy.js";
+import{HOW_IT_WORKS,FEATURES,TOOLS_PREVIEW,PRICING,TESTIMONIALS,FAQ,WAITLIST,BOTTOM_CTA}from"../../content/copy.js";
 import{Headline}from"../ui/index.js";
 
 const LOGOS=["Microsoft","Google","Amazon","Stripe","Shopify","Cloudflare","GitHub","Atlassian","Twilio","Okta","Datadog","HashiCorp","Vercel","MongoDB","Elastic"];
@@ -291,31 +291,69 @@ export function FeaturedBlogSection(){
   );
 }
 
-/* ── WAITLIST/API CTA ── */
+/* ── BOTTOM CTA (digest + PDF) ── */
 export function WaitlistSection(){
+  const[email,setEmail]=useState("");
+  const[submitted,setSubmitted]=useState(false);
+  const[loading,setLoading]=useState(false);
+
+  async function handleSubmit(e){
+    e.preventDefault();
+    if(!email||loading)return;
+    setLoading(true);
+    try{
+      await fetch("/api/waitlist",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,type:"digest"})});
+    }catch(_){}
+    setSubmitted(true);
+    setLoading(false);
+  }
+
+  const cardStyle={
+    background:"#0a0a0c",border:"1px solid #1e1e1e",borderRadius:14,
+    padding:"clamp(28px,4vw,40px)",flex:"1 1 280px",display:"flex",flexDirection:"column",
+  };
+  const eyebrowStyle={
+    fontFamily:"var(--font-body)",fontSize:10,fontWeight:700,color:"#C8FF00",
+    letterSpacing:".14em",textTransform:"uppercase",marginBottom:14,
+  };
+  const disclaimerStyle={
+    fontFamily:"var(--font-body)",fontSize:11,color:"#444",marginTop:12,lineHeight:1.5,
+  };
+
   return(
-    <section id="waitlist" style={{margin:"0 auto clamp(60px,10vw,120px)",padding:"0 var(--pad)",maxWidth:1200}}>
-      <div className="bc bc-feat" style={{overflow:"hidden",position:"relative",padding:"clamp(40px,6vw,88px) var(--pad)",textAlign:"center"}}>
-        <div aria-hidden style={{position:"absolute",top:-80,right:-80,width:300,height:300,borderRadius:"50%",background:"radial-gradient(circle,rgba(200,255,0,.10),transparent 70%)",pointerEvents:"none"}}/>
-        <div aria-hidden style={{position:"absolute",bottom:-60,left:-60,width:220,height:220,borderRadius:"50%",background:"radial-gradient(circle,rgba(200,255,0,.06),transparent 70%)",pointerEvents:"none"}}/>
-        <div style={{position:"relative",zIndex:1,maxWidth:600,margin:"0 auto"}}>
-          <div style={{fontFamily:"var(--font-body)",fontSize:10,fontWeight:700,color:"var(--accent)",letterSpacing:".2em",textTransform:"uppercase",marginBottom:18,display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
-            <span className="live-dot"/>{WAITLIST.eyebrow}<span className="live-dot"/>
-          </div>
-          <h2 style={{fontFamily:"var(--font-heading)",fontWeight:800,fontSize:"clamp(26px,5vw,56px)",color:"var(--text)",letterSpacing:"-.03em",marginBottom:16,lineHeight:1.05,whiteSpace:"pre-line"}}>{WAITLIST.headline}</h2>
-          <p style={{fontSize:"clamp(15px,2vw,17px)",color:"var(--muted)",lineHeight:1.75,marginBottom:"clamp(28px,4vw,40px)"}}>{WAITLIST.body}</p>
-          <div style={{display:"flex",gap:"clamp(10px,2vw,14px)",flexWrap:"wrap",alignItems:"center",justifyContent:"center",marginBottom:"clamp(20px,3vw,28px)"}}>
-            <a href="/auth/signin?callbackUrl=/checkout" className="btn-primary" style={{fontSize:"clamp(13px,2vw,16px)",padding:"clamp(14px,2vw,17px) clamp(24px,4vw,36px)"}}>{WAITLIST.ctaButton}</a>
-            <a href="/api-docs" className="btn-ghost">View API docs →</a>
-          </div>
-          <div style={{display:"flex",gap:"clamp(12px,3vw,24px)",flexWrap:"wrap",justifyContent:"center"}}>
-            {["$29/month","5,000 calls/day","14-day free trial","Cancel anytime"].map(item=>(
-              <div key={item} style={{display:"flex",alignItems:"center",gap:7}}>
-                <span style={{color:"var(--accent)",fontSize:12}}>✓</span>
-                <span style={{fontFamily:"var(--font-body)",fontSize:"var(--text-base)",color:"var(--muted)"}}>{item}</span>
-              </div>
-            ))}
-          </div>
+    <section style={{margin:"0 auto clamp(60px,10vw,120px)",padding:"0 var(--pad)",maxWidth:1200}}>
+      <div style={{display:"flex",gap:"clamp(16px,3vw,24px)",flexWrap:"wrap"}}>
+        {/* Card 1 — Weekly Digest */}
+        <div style={cardStyle}>
+          <div style={eyebrowStyle}>{BOTTOM_CTA.digest.eyebrow}</div>
+          <h2 style={{fontFamily:"var(--font-heading)",fontWeight:800,fontSize:"clamp(20px,3vw,28px)",color:"var(--text)",letterSpacing:"-.03em",marginBottom:12,lineHeight:1.15}}>{BOTTOM_CTA.digest.headline}</h2>
+          <p style={{fontFamily:"var(--font-body)",fontSize:"var(--text-base)",color:"var(--muted)",lineHeight:1.75,marginBottom:24,flex:1}}>{BOTTOM_CTA.digest.body}</p>
+          {submitted?(
+            <div style={{fontFamily:"var(--font-body)",fontSize:14,fontWeight:600,color:"#C8FF00",padding:"12px 0"}}>{BOTTOM_CTA.digest.success}</div>
+          ):(
+            <form onSubmit={handleSubmit} style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              <input
+                type="email" required value={email} onChange={e=>setEmail(e.target.value)}
+                placeholder={BOTTOM_CTA.digest.inputPlaceholder}
+                style={{flex:1,minWidth:160,background:"rgba(255,255,255,0.04)",border:"1px solid #2a2a2a",borderRadius:8,padding:"10px 14px",fontFamily:"var(--font-body)",fontSize:14,color:"var(--text)",outline:"none"}}
+              />
+              <button type="submit" disabled={loading} className="btn-primary" style={{whiteSpace:"nowrap",padding:"10px 18px",fontSize:13}}>
+                {loading?"…":BOTTOM_CTA.digest.cta}
+              </button>
+            </form>
+          )}
+          <p style={disclaimerStyle}>{BOTTOM_CTA.digest.disclaimer}</p>
+        </div>
+
+        {/* Card 2 — PDF Download */}
+        <div style={cardStyle}>
+          <div style={eyebrowStyle}>{BOTTOM_CTA.pdf.eyebrow}</div>
+          <h2 style={{fontFamily:"var(--font-heading)",fontWeight:800,fontSize:"clamp(20px,3vw,28px)",color:"var(--text)",letterSpacing:"-.03em",marginBottom:12,lineHeight:1.15}}>{BOTTOM_CTA.pdf.headline}</h2>
+          <p style={{fontFamily:"var(--font-body)",fontSize:"var(--text-base)",color:"var(--muted)",lineHeight:1.75,marginBottom:24,flex:1}}>{BOTTOM_CTA.pdf.body}</p>
+          <a href={BOTTOM_CTA.pdf.href} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{display:"inline-flex",alignItems:"center",justifyContent:"center",padding:"12px 22px",fontSize:14,width:"fit-content"}}>
+            {BOTTOM_CTA.pdf.cta}
+          </a>
+          <p style={disclaimerStyle}>{BOTTOM_CTA.pdf.disclaimer}</p>
         </div>
       </div>
     </section>
