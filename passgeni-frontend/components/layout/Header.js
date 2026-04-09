@@ -1,4 +1,5 @@
 import{useState,useEffect}from"react";
+import{useSession}from"next-auth/react";
 import{NAV}from"../../content/copy.js";
 import PassGeniLogo from"./Logo.js";
 
@@ -9,6 +10,7 @@ const TICKER_ITEMS=[
 ];
 
 export default function Header(){
+  const{data:session,status}=useSession();
   const[scrolled,setScrolled]=useState(false);
   const[open,setOpen]=useState(false);
   const[active,setActive]=useState("");
@@ -54,9 +56,9 @@ export default function Header(){
 
           <div className="nav-right">
             <a href="/auth/signin" className="nav-signin">Sign In</a>
-            <a href={NAV.ctaHref} className="btn-primary" style={{padding:"9px 18px",fontSize:12}}>
-              Try Free
-            </a>
+            {status!=="loading"&&session&&(
+              <a href="/dashboard" className="btn-primary" style={{padding:"9px 18px",fontSize:12}}>Dashboard →</a>
+            )}
             <button
               className={`nav-hamburger${open?" open":""}`}
               onClick={()=>setOpen(v=>!v)}
@@ -94,10 +96,12 @@ export default function Header(){
             style={{justifyContent:"center",fontSize:15,padding:"14px"}}
             onClick={()=>setOpen(false)}
           >Sign In</a>
-          <a href={NAV.ctaHref} className="btn-primary"
-            style={{justifyContent:"center",fontSize:15,padding:"14px"}}
-            onClick={()=>setOpen(false)}
-          >Try Free</a>
+          {status!=="loading"&&session&&(
+            <a href="/dashboard" className="btn-primary"
+              style={{justifyContent:"center",fontSize:15,padding:"14px"}}
+              onClick={()=>setOpen(false)}
+            >Dashboard →</a>
+          )}
         </div>
       </nav>
     </>
