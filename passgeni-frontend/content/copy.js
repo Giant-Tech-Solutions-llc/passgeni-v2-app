@@ -22,7 +22,7 @@ export const NAV = {
     { label: "Features",  href: "#features"  },
     { label: "Tools",     href: "/tools"     },
     { label: "Guides",    href: "/guides"    },
-    { label: "Pricing",   href: "#pricing"   },
+    { label: "Pricing",   href: "/pricing"   },
     { label: "API",       href: "/api"       },
     { label: "Blog",      href: "/blog"      },
   ],
