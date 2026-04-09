@@ -163,48 +163,61 @@ export function PricingSection(){
 }
 
 /* ── TESTIMONIALS ── */
+const FEATURED_TESTIMONIALS=["James K.","Pia R.","Mei L."];
 export function TestimonialsSection(){
-  const items=TESTIMONIALS.items;
-  const mid=Math.ceil(items.length/2);
-  const rows=[items.slice(0,mid),items.slice(mid)];
+  const featured=TESTIMONIALS.items.filter(t=>FEATURED_TESTIMONIALS.includes(t.name));
   return(
-    <section style={{padding:"0 0 var(--section)",overflow:"hidden"}}>
-      <div style={{maxWidth:1200,margin:"0 auto",padding:"0 var(--pad)",marginBottom:"clamp(32px,5vw,52px)",textAlign:"center"}}>
-        <div className="eyebrow" style={{justifyContent:"center"}}>{TESTIMONIALS.eyebrow}</div>
-        <Headline>{TESTIMONIALS.headline}</Headline>
-      </div>
-      {rows.map((row,ri)=>{
-        const doubled=[...row,...row];
-        const dur=ri===0?90:110;
-        return(
-          <div key={ri} style={{marginBottom:10,position:"relative"}}>
-            <div style={{position:"absolute",left:0,top:0,bottom:0,width:"clamp(40px,8vw,120px)",background:"linear-gradient(to right,var(--bg),transparent)",zIndex:2,pointerEvents:"none"}}/>
-            <div style={{position:"absolute",right:0,top:0,bottom:0,width:"clamp(40px,8vw,120px)",background:"linear-gradient(to left,var(--bg),transparent)",zIndex:2,pointerEvents:"none"}}/>
-            <div
-              style={{display:"flex",gap:"clamp(8px,1.5vw,12px)",width:"max-content",animation:`scrollLeft ${dur}s linear infinite`,animationDirection:ri===1?"reverse":"normal"}}
-              onMouseEnter={e=>e.currentTarget.style.animationPlayState="paused"}
-              onMouseLeave={e=>e.currentTarget.style.animationPlayState="running"}
-            >
-              {doubled.map((t,i)=>(
-                <article key={i} className="bc"
-                  style={{width:"clamp(240px,30vw,310px)",flexShrink:0,padding:"clamp(18px,3vw,24px)"}}
-                  onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(200,255,0,.22)"}
-                  onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(200,255,0,.08)"}
-                >
-                  <div style={{display:"flex",gap:2,marginBottom:12}}>
-                    {Array(t.stars||5).fill("★").map((s,si)=><span key={si} style={{color:"var(--accent)",fontSize:"clamp(11px,1.5vw,14px)"}}>{s}</span>)}
-                  </div>
-                  <p style={{fontFamily:"var(--font-body)",fontSize:"var(--text-base)",color:"var(--muted)",lineHeight:1.75,marginBottom:14,flex:1}}>"{t.text}"</p>
-                  <div>
-                    <div style={{fontFamily:"var(--font-heading)",fontWeight:700,fontSize:"clamp(13px,1.8vw,15px)",color:"var(--text)"}}>{t.name}</div>
-                    <div style={{fontFamily:"var(--font-body)",fontSize:11,color:"var(--muted-2)",marginTop:2,letterSpacing:".03em"}}>{t.role}</div>
-                  </div>
-                </article>
-              ))}
-            </div>
+    <section style={{padding:"0 var(--pad) var(--section)"}}>
+      <div style={{maxWidth:1200,margin:"0 auto"}}>
+        <div style={{marginBottom:"clamp(32px,5vw,52px)",textAlign:"center"}}>
+          <div className="eyebrow" style={{justifyContent:"center"}}>{TESTIMONIALS.eyebrow}</div>
+          <Headline>{TESTIMONIALS.headline}</Headline>
+        </div>
+        <div style={{maxWidth:860,margin:"0 auto"}}>
+          {/* Top row — 2 cards */}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:"clamp(12px,2vw,20px)",marginBottom:"clamp(12px,2vw,20px)"}}>
+            {featured.slice(0,2).map((t,i)=>(
+              <article key={i} style={{
+                background:"#0a0a0c",border:"1px solid #1e1e1e",borderRadius:14,padding:28,
+                display:"flex",flexDirection:"column",transition:"border-color .2s,transform .2s",cursor:"default"
+              }}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(200,255,0,0.18)";e.currentTarget.style.transform="translateY(-3px)";}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor="#1e1e1e";e.currentTarget.style.transform="translateY(0)";}}
+              >
+                <div style={{display:"flex",gap:2,marginBottom:12}}>
+                  {Array(t.stars||5).fill("★").map((s,si)=><span key={si} style={{color:"#C8FF00",fontSize:13}}>{s}</span>)}
+                </div>
+                <p style={{fontFamily:"var(--font-body)",fontSize:"var(--text-base)",color:"#aaa",lineHeight:1.8,marginBottom:16,flex:1,fontStyle:"italic"}}>"{t.text}"</p>
+                <div>
+                  <div style={{fontFamily:"var(--font-heading)",fontWeight:700,fontSize:15,color:"#fff"}}>{t.name}</div>
+                  <div style={{fontFamily:"var(--font-body)",fontSize:12,color:"#555",marginTop:3}}>{t.role}</div>
+                </div>
+              </article>
+            ))}
           </div>
-        );
-      })}
+          {/* Bottom row — 1 card centred */}
+          <div style={{display:"flex",justifyContent:"center"}}>
+            {featured.slice(2,3).map((t,i)=>(
+              <article key={i} style={{
+                background:"#0a0a0c",border:"1px solid #1e1e1e",borderRadius:14,padding:28,
+                width:"calc(50% - 10px)",display:"flex",flexDirection:"column",transition:"border-color .2s,transform .2s",cursor:"default"
+              }}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(200,255,0,0.18)";e.currentTarget.style.transform="translateY(-3px)";}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor="#1e1e1e";e.currentTarget.style.transform="translateY(0)";}}
+              >
+                <div style={{display:"flex",gap:2,marginBottom:12}}>
+                  {Array(t.stars||5).fill("★").map((s,si)=><span key={si} style={{color:"#C8FF00",fontSize:13}}>{s}</span>)}
+                </div>
+                <p style={{fontFamily:"var(--font-body)",fontSize:"var(--text-base)",color:"#aaa",lineHeight:1.8,marginBottom:16,flex:1,fontStyle:"italic"}}>"{t.text}"</p>
+                <div>
+                  <div style={{fontFamily:"var(--font-heading)",fontWeight:700,fontSize:15,color:"#fff"}}>{t.name}</div>
+                  <div style={{fontFamily:"var(--font-body)",fontSize:12,color:"#555",marginTop:3}}>{t.role}</div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
