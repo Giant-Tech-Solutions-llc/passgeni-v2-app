@@ -72,13 +72,90 @@ export default function GeneratorWidget() {
   const [showAudit, setShowAudit] = useState(false);
   const [toastPreset, setToastPreset] = useState(null);
   const [toastVisible, setToastVisible] = useState(false);
+  const [pqLocked, setPqLocked] = useState(false);
+  const [showPqPopup, setShowPqPopup] = useState(false);
+  const [pqShareLoading, setPqShareLoading] = useState(null);
   const toastTimer = useRef(null);
   const inputRef = useRef(null);
+  const pqPopupRef = useRef(null);
 
   const strength = getStrength(password);
   const entropy = getEntropy(password);
   const crackTime = getCrackTime(password);
   const activePreset = COMPLIANCE_PRESETS[compliance];
+
+  // ── Post-Quantum daily limit helpers ──
+  function todayStr() {
+    return new Date().toISOString().slice(0, 10);
+  }
+  function checkPqLimit() {
+    try {
+      const usedDate = localStorage.getItem("pq_used_date");
+      const unlockedUntil = localStorage.getItem("pq_unlocked_until");
+      if (usedDate && usedDate !== todayStr()) {
+        localStorage.removeItem("pq_used_date");
+        localStorage.removeItem("pq_unlocked_until");
+        return { locked: false };
+      }
+      if (unlockedUntil && Date.now() < Number(unlockedUntil)) {
+        return { locked: false };
+      } else if (unlockedUntil) {
+        localStorage.removeItem("pq_unlocked_until");
+      }
+      return { locked: !!usedDate };
+    } catch (_) {
+      return { locked: false };
+    }
+  }
+  function markPqUsed() {
+    try { localStorage.setItem("pq_used_date", todayStr()); } catch (_) {}
+  }
+  function unlockPqShared() {
+    try { localStorage.setItem("pq_unlocked_until", String(Date.now() + 86400000)); } catch (_) {}
+  }
+
+  useEffect(() => {
+    const { locked } = checkPqLimit();
+    setPqLocked(locked);
+  }, []); // eslint-disable-line
+
+  useEffect(() => {
+    if (!showPqPopup) return;
+    function handleClick(e) {
+      if (pqPopupRef.current && !pqPopupRef.current.contains(e.target)) {
+        setShowPqPopup(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showPqPopup]);
+
+  async function handlePqShare(platform) {
+    setPqShareLoading(platform);
+    try {
+      const res = await fetch("/api/generate-share-copy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ platform }),
+      });
+      const { copy } = await res.json();
+      const url =
+        platform === "twitter"
+          ? `https://twitter.com/intent/tweet?text=${encodeURIComponent(copy)}`
+          : `https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fpassgeni.ai`;
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (_) {
+      const fallback =
+        platform === "twitter"
+          ? "https://twitter.com/intent/tweet?text=" + encodeURIComponent("Generated a Post-Quantum password with @PassGeniAI today. passgeni.ai")
+          : "https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fpassgeni.ai";
+      window.open(fallback, "_blank", "noopener,noreferrer");
+    }
+    unlockPqShared();
+    setPqLocked(false);
+    setShowPqPopup(false);
+    setPqShareLoading(null);
+  }
 
   const LANG_SEEDS = {
     arabic: "أبتثجحخدذرزسشصضطظعغفقكلمنهوي",
@@ -126,6 +203,8 @@ export default function GeneratorWidget() {
       setHistory((h) => [newPw, ...h.filter((x) => x !== newPw)].slice(0, 10));
       setGenerating(false);
       setIsNew(true);
+      // Track PQ usage for free users
+      if (useQuantum) markPqUsed();
       setTimeout(() => setIsNew(false), 2000);
     }, 200);
   }, [customSeeds, length, opts, quantumMode, profession, language, compliance]); // eslint-disable-line
@@ -197,11 +276,60 @@ export default function GeneratorWidget() {
           {tab === "password" ? (
             <>
               <PasswordDisplay password={password} generating={generating} strength={strength} entropy={entropy} crackTime={crackTime} isNew={isNew} />
-              <div style={{ display:"flex", gap:8, marginTop:10, marginBottom:4, flexWrap:"wrap" }}>
+              <div style={{ display:"flex", gap:8, marginTop:10, marginBottom:4, flexWrap:"wrap", position:"relative" }}>
                 <TogglePill label={showDNA?"Hide DNA Score":"Show DNA Score"} active={showDNA} onClick={()=>setShowDNA(d=>!d)} />
                 <TogglePill label={showAudit?"Hide Audit Log":"Show Audit Log"} active={showAudit} onClick={()=>setShowAudit(a=>!a)} />
                 <TogglePill label={showBulk?"Close Bulk":"Bulk Generator"} active={showBulk} onClick={()=>setShowBulk(b=>!b)} />
-                <TogglePill label={quantumMode?"⚡ Quantum ON":"Post-Quantum Mode"} active={quantumMode} onClick={()=>{ setQuantumMode(q=>!q); if (compliance!=="quantum") setCompliance("none"); }} />
+                {/* Post-Quantum toggle — lock after 1 free use per day */}
+                <div style={{ position:"relative" }}>
+                  <TogglePill
+                    label={pqLocked ? "🔒 Post-Quantum" : (quantumMode ? "⚡ Quantum ON" : "Post-Quantum Mode")}
+                    active={quantumMode && !pqLocked}
+                    onClick={()=>{
+                      if (pqLocked) { setShowPqPopup(p=>!p); return; }
+                      setQuantumMode(q=>!q);
+                      if (compliance!=="quantum") setCompliance("none");
+                    }}
+                  />
+                  {showPqPopup && (
+                    <div ref={pqPopupRef} style={{
+                      position:"absolute",top:"calc(100% + 8px)",left:0,zIndex:300,
+                      background:"#0a0a0c",border:"1px solid #1e1e1e",borderRadius:10,
+                      padding:"16px 18px",maxWidth:280,width:"max-content",
+                      animation:"fadeIn .2s ease",
+                      boxShadow:"0 16px 48px rgba(0,0,0,0.7)",
+                    }}>
+                      <div style={{ fontFamily:"var(--font-body)",fontSize:14,fontWeight:600,color:"#fff",marginBottom:8,lineHeight:1.5 }}>
+                        ⚛️  That&apos;s your Post-Quantum password for today.
+                      </div>
+                      <div style={{ fontFamily:"var(--font-body)",fontSize:13,color:"#aaa",marginBottom:14,lineHeight:1.6 }}>
+                        Come back tomorrow, or unlock it right now.
+                      </div>
+                      <a href="/pricing#pro" style={{ fontFamily:"var(--font-body)",fontSize:14,fontWeight:700,color:"#C8FF00",textDecoration:"none",display:"block",marginBottom:12 }}>
+                        Upgrade to Pro →
+                      </a>
+                      <div style={{ borderTop:"1px solid #222",paddingTop:12,marginBottom:10 }}>
+                        <div style={{ fontFamily:"var(--font-body)",fontSize:11,color:"#333",marginBottom:10,textTransform:"uppercase",letterSpacing:".08em" }}>Or keep it free — share PassGeni:</div>
+                        <div style={{ display:"flex",gap:8,flexWrap:"wrap" }}>
+                          <button
+                            onClick={()=>handlePqShare("twitter")}
+                            disabled={!!pqShareLoading}
+                            style={{ background:"rgba(200,255,0,0.06)",border:"1px solid rgba(200,255,0,0.15)",color:"#C8FF00",fontSize:12,borderRadius:100,padding:"6px 14px",fontFamily:"var(--font-body)",fontWeight:600,cursor:"pointer",opacity:pqShareLoading==="twitter"?0.5:1 }}
+                          >
+                            {pqShareLoading==="twitter"?"…":"𝕏 Share on X  +15 passwords"}
+                          </button>
+                          <button
+                            onClick={()=>handlePqShare("linkedin")}
+                            disabled={!!pqShareLoading}
+                            style={{ background:"rgba(200,255,0,0.06)",border:"1px solid rgba(200,255,0,0.15)",color:"#C8FF00",fontSize:12,borderRadius:100,padding:"6px 14px",fontFamily:"var(--font-body)",fontWeight:600,cursor:"pointer",opacity:pqShareLoading==="linkedin"?.5:1 }}
+                          >
+                            {pqShareLoading==="linkedin"?"…":"in Share on LinkedIn  +15 passwords"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
               {showDNA && <DNAScorePanel password={password} />}
               {showAudit && auditRecord && (
