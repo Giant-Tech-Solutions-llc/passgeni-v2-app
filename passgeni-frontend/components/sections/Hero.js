@@ -101,15 +101,14 @@ export default function HeroSection(){
         </motion.p>
 
         {/* CTAs — delay 0.55s, scale */}
-        <motion.div className="hero-ctas"
+        <motion.div
           initial={{opacity:0,scale:0.95}} animate={{opacity:1,scale:1}} transition={{duration:0.5,ease:"easeOut",delay:0.55}}
-          style={{marginBottom:"clamp(32px,5vw,56px)"}}
+          style={{marginBottom:"clamp(32px,5vw,56px)",display:"flex",justifyContent:"center"}}
         >
           <a href={HERO.primaryHref} className="btn-primary"
-            style={{fontSize:"clamp(12px,2vw,15px)",padding:"clamp(14px,2vw,17px) clamp(24px,4vw,40px)"}}
+            style={{fontSize:"clamp(13px,2vw,16px)",padding:"clamp(16px,2vw,20px) clamp(40px,6vw,72px)",letterSpacing:".06em"}}
             onClick={e=>{e.currentTarget.classList.remove("btn-pulse");void e.currentTarget.offsetWidth;e.currentTarget.classList.add("btn-pulse");}}
           >{HERO.primaryCTA} ↓</a>
-          <a href={HERO.secondaryHref} className="btn-ghost" style={{fontSize:"clamp(12px,2vw,15px)"}}>{HERO.secondaryCTA}</a>
         </motion.div>
 
         {/* Trust points — delay 0.45s */}

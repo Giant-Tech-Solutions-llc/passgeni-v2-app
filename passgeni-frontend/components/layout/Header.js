@@ -4,11 +4,6 @@ import{useSession}from"next-auth/react";
 import{NAV}from"../../content/copy.js";
 import PassGeniLogo from"./Logo.js";
 
-const TICKER_ITEMS=[
-  "Zero Data Retention","Quantum-Ready Entropy","256-bit Minimum",
-  "Client-Side Only","Post-Quantum Ready","Zero Knowledge",
-  "NIST SP 800-63B","FIPS 140-3 Aligned","No Account Needed","DoD Compliant"
-];
 
 const TOOLS_MENU={
   columns:[
@@ -158,8 +153,6 @@ export default function Header(){
     closeTimer.current=setTimeout(()=>setMegaOpen(null),200);
   }
 
-  const doubled=[...TICKER_ITEMS,...TICKER_ITEMS];
-
   return(
     <>
       {/* Scroll progress bar */}
@@ -224,14 +217,6 @@ export default function Header(){
           </div>
         </nav>
 
-        {/* Ticker strip */}
-        <div className="ticker-wrap" style={{marginTop:60}} role="marquee" aria-label="Feature highlights">
-          <div className="ticker-track">
-            {doubled.map((item,i)=>(
-              <span key={i} className="ticker-item">{item}</span>
-            ))}
-          </div>
-        </div>
       </motion.header>
 
       {/* Mobile drawer — animated */}
@@ -258,30 +243,61 @@ export default function Header(){
                   >{l.label}</motion.a>
                 );
               }
+              const menuData=key==="tools"?TOOLS_MENU:GUIDES_MENU;
+              const isExpanded=mobileExpanded===key;
               return(
-                <div key={l.label}>
+                <div key={l.label} style={{borderBottom:"1px solid rgba(255,255,255,.06)"}}>
                   <motion.button
-                    className="mobile-nav-link"
                     initial={{opacity:0,x:-10}} animate={{opacity:1,x:0}}
                     transition={{delay:li*0.05}}
-                    style={{background:"none",border:"none",cursor:"pointer",width:"100%",textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"center"}}
-                    onClick={()=>setMobileExpanded(mobileExpanded===key?null:key)}
+                    style={{background:"none",border:"none",cursor:"pointer",width:"100%",textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"center",padding:"18px 0",fontFamily:"var(--font-body)",fontSize:20,fontWeight:600,color:isExpanded?"var(--accent)":"var(--muted)"}}
+                    onClick={()=>setMobileExpanded(isExpanded?null:key)}
                   >
                     {l.label}
-                    <span style={{fontSize:10,opacity:.5}}>{mobileExpanded===key?"▲":"▼"}</span>
+                    <motion.span
+                      animate={{rotate:isExpanded?45:0}}
+                      transition={{duration:0.2}}
+                      style={{fontSize:20,lineHeight:1,color:"rgba(200,255,0,.5)",display:"inline-block"}}
+                    >+</motion.span>
                   </motion.button>
-                  {mobileExpanded===key&&(
-                    <div style={{paddingLeft:16,marginBottom:8}}>
-                      {(key==="tools"?TOOLS_MENU.columns:GUIDES_MENU.columns).map(col=>
-                        col.items.map(item=>(
-                          <a key={item.label} href={item.href} className="mobile-nav-link"
-                            style={{fontSize:13,paddingTop:6,paddingBottom:6,opacity:.8}}
+                  <AnimatePresence>
+                    {isExpanded&&(
+                      <motion.div
+                        initial={{height:0,opacity:0}}
+                        animate={{height:"auto",opacity:1}}
+                        exit={{height:0,opacity:0}}
+                        transition={{duration:0.25,ease:"easeOut"}}
+                        style={{overflow:"hidden"}}
+                      >
+                        <div style={{paddingBottom:16,display:"flex",flexDirection:"column",gap:20}}>
+                          {menuData.columns.map(col=>(
+                            <div key={col.label}>
+                              <div style={{fontFamily:"var(--font-body)",fontSize:9,fontWeight:700,color:"rgba(200,255,0,.4)",letterSpacing:".14em",textTransform:"uppercase",marginBottom:8,paddingLeft:2}}>{col.label}</div>
+                              {col.items.map(item=>(
+                                <a key={item.label} href={item.href}
+                                  style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderRadius:8,textDecoration:"none",background:"rgba(255,255,255,.02)",marginBottom:4,border:"1px solid rgba(255,255,255,.04)"}}
+                                  onClick={()=>setOpen(false)}
+                                  onTouchStart={e=>e.currentTarget.style.background="rgba(200,255,0,.06)"}
+                                  onTouchEnd={e=>e.currentTarget.style.background="rgba(255,255,255,.02)"}
+                                >
+                                  <div style={{flex:1}}>
+                                    <div style={{fontFamily:"var(--font-body)",fontSize:14,fontWeight:600,color:"#e8e8e8",lineHeight:1.3}}>{item.label}</div>
+                                    {item.desc&&<div style={{fontFamily:"var(--font-body)",fontSize:11,color:"#555",marginTop:2,lineHeight:1.4}}>{item.desc}</div>}
+                                  </div>
+                                  {item.business&&<span style={{background:"rgba(255,255,255,.05)",color:"#555",fontSize:9,borderRadius:100,padding:"2px 7px",fontFamily:"var(--font-body)",fontWeight:600,whiteSpace:"nowrap"}}>🏢</span>}
+                                  <span style={{color:"rgba(200,255,0,.3)",fontSize:12}}>›</span>
+                                </a>
+                              ))}
+                            </div>
+                          ))}
+                          <a href={menuData.footer.href}
+                            style={{fontFamily:"var(--font-body)",fontSize:13,fontWeight:600,color:"rgba(200,255,0,.6)",textDecoration:"none",padding:"8px 2px",display:"flex",alignItems:"center",gap:6}}
                             onClick={()=>setOpen(false)}
-                          >{item.label}</a>
-                        ))
-                      )}
-                    </div>
-                  )}
+                          >{menuData.footer.label}</a>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               );
             })}
