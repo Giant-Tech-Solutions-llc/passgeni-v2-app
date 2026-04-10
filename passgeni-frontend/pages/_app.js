@@ -14,10 +14,10 @@ export default function App({ Component, pageProps: { session, ...pageProps } })
         <AnimatePresence mode="wait">
           <motion.div
             key={router.pathname}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
           >
             {getLayout(<Component {...pageProps} />)}
           </motion.div>
