@@ -20,18 +20,19 @@ export const SITE = {
 export const NAV = {
   links: [
     { label: "Generator", href: "/#generator" },
-    { label: "Tools",     href: "/tools"     },
-    { label: "Guides",    href: "/guides"    },
-    { label: "Pricing",   href: "/pricing"   },
-    { label: "Blog",      href: "/blog"      },
+    { label: "Tools",     href: "/tools"      },
+    { label: "Guides",    href: "/guides"     },
+    { label: "Pricing",   href: "/pricing"    },
+    { label: "Blog",      href: "/blog"       },
   ],
-  ctaButton:  "Get Pro — Free Trial",
-  ctaHref:    "#pricing",
+  ctaButton: "Get Pro — Free Trial",
+  ctaHref:   "#pricing",
 };
 { label: "Generator", href: "/#generator" },
 // ─── HERO SECTION ────────────────────────────────────────────
 export const HERO = {
   badge:          "Free forever · No account · No tracking",
+  headline:       "Your password\nshouldn't be\nthis easy to crack.",
   subheadline:    "Most password generators create strings you copy, paste, and reset within a week. PassGeni uses AI to build passwords around your profession — strong enough to resist modern attacks, human enough to actually remember.",
   primaryCTA:     "Generate my password",
   primaryHref:    "#generator",
