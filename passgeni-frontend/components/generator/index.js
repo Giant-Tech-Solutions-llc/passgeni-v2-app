@@ -2,7 +2,8 @@
 // PASSGENI — GENERATOR SUB-COMPONENTS
 // =============================================================
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence, useMotionValue, animate } from "framer-motion";
 import { COMPLIANCE_PRESETS }  from "../../data/compliance.js";
 import { PROFESSIONS }         from "../../content/professions.js";
 import { buildPassword, buildPassphrase } from "../../lib/generator.js";
@@ -10,31 +11,75 @@ import { getStrength, getEntropy, getCrackTime, getDNAScore } from "../../lib/st
 import { CopyBtn, TogglePill, StrengthBar, TrustChip } from "../ui/index.js";
 
 // ─── PASSWORD DISPLAY ─────────────────────────────────────────
+function AnimatedEntropy({ value }) {
+  const mv = useMotionValue(0);
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    const ctrl = animate(mv, value, { duration: 0.5, ease: "easeOut" });
+    const unsub = mv.onChange(v => setDisplay(Math.round(v)));
+    return () => { ctrl.stop(); unsub(); };
+  }, [value]); // eslint-disable-line
+  return <span>{display}</span>;
+}
+
 export function PasswordDisplay({ password, generating, strength, entropy, crackTime, isNew }) {
+  const strengthPct = strength ? Math.round((strength.score / 4) * 100) : 0;
   return (
     <div style={{ background: "#08080a", border: "1px solid #141416", borderRadius: 10, padding: "20px 24px", position: "relative", overflow: "hidden" }} aria-live="polite">
       {/* Scan line animation */}
       <div style={{ position: "absolute", left: 0, right: 0, height: "1px", background: "linear-gradient(90deg,transparent,#C8FF0022,transparent)", animation: "scanline 3s linear infinite", pointerEvents: "none" }} />
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
-        {/* Password characters with syntax-highlight coloring */}
-        <div style={{ fontFamily: "var(--font-mono)", fontSize: "clamp(13px,2vw,16px)", lineHeight: 1.7, wordBreak: "break-all", flex: 1, minHeight: 26, opacity: generating ? 0.3 : 1, transition: "opacity 0.2s" }}>
-          {password
-            ? password.split("").map((c, i) => {
-                let color = "#e8e8e8";
-                if ("!@#$%^&*-_=+[]{}|;:,.<>?".includes(c)) color = "#C8FF00";
-                else if ("0123456789".includes(c))           color = "#777";
-                else if (c === c.toUpperCase() && /[A-Z]/.test(c)) color = "#fff";
-                return <span key={i} style={{ color }}>{c}</span>;
-              })
-            : <span style={{ color: "#aaa" }}>click generate —</span>
-          }
+        {/* Password with AnimatePresence key-swap */}
+        <div style={{ fontFamily: "var(--font-mono)", fontSize: "clamp(13px,2vw,16px)", lineHeight: 1.7, wordBreak: "break-all", flex: 1, minHeight: 26, position: "relative", overflow: "hidden" }}>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={password}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: generating ? 0.3 : 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: generating ? 0.15 : 0.25, ease: "easeOut" }}
+            >
+              {password
+                ? password.split("").map((c, i) => {
+                    let color = "#e8e8e8";
+                    if ("!@#$%^&*-_=+[]{}|;:,.<>?".includes(c)) color = "#C8FF00";
+                    else if ("0123456789".includes(c))           color = "#777";
+                    else if (c === c.toUpperCase() && /[A-Z]/.test(c)) color = "#fff";
+                    return <span key={i} style={{ color }}>{c}</span>;
+                  })
+                : <span style={{ color: "#aaa" }}>click generate —</span>
+              }
+            </motion.div>
+          </AnimatePresence>
         </div>
         <CopyBtn text={password} pulse={isNew} />
       </div>
 
-      {/* Strength bar */}
-      <StrengthBar password={password} strength={strength} entropy={entropy} crackTime={crackTime} />
+      {/* Animated strength bar */}
+      {password && strength && (
+        <div style={{ marginTop: 14 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: strength.color, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 700 }}>{strength.label}</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#555" }}>
+              <AnimatedEntropy value={entropy || 0} /> bits
+            </span>
+          </div>
+          <div style={{ height: 3, background: "#141416", borderRadius: 100, overflow: "hidden" }}>
+            <motion.div
+              style={{ height: "100%", borderRadius: 100, background: strength.color }}
+              initial={{ width: 0 }}
+              animate={{ width: `${strengthPct}%` }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+            />
+          </div>
+          {crackTime && (
+            <div style={{ marginTop: 6, fontFamily: "var(--font-mono)", fontSize: 10, color: "#444", letterSpacing: "0.06em" }}>
+              crack time: {crackTime}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
