@@ -6,7 +6,6 @@ import GeneratorSection from "../components/sections/GeneratorSection.js";
 import HowItWorks from "../components/sections/HowItWorks.js";
 import FeaturesSection from "../components/sections/Features.js";
 import ToolsPreview from "../components/sections/ToolsPreview.js";
-import PricingSection from "../components/sections/Pricing.js";
 import TestimonialsSection from "../components/sections/Testimonials.js";
 import FAQSection from "../components/sections/FAQ.js";
 import WaitlistSection from "../components/sections/Waitlist.js";
@@ -42,7 +41,6 @@ export default function HomePage(){
         <HowItWorks/>
         <FeaturesSection/>
         <ToolsPreview/>
-        <PricingSection/>
         <TestimonialsSection/>
         <FeaturedBlogSection/>
         <FAQSection/>
