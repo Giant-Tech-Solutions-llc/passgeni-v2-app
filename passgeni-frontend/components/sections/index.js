@@ -31,23 +31,26 @@ export function LogosStrip(){
   );
 }
 
+const sectionHeadReveal={initial:{opacity:0,y:30},whileInView:{opacity:1,y:0},viewport:{once:true,margin:"-80px"},transition:{duration:0.6,ease:"easeOut"}};
+const cardReveal=(i)=>({initial:{opacity:0,y:20},whileInView:{opacity:1,y:0},viewport:{once:true},transition:{duration:0.4,ease:"easeOut",delay:i*0.1}});
+
 /* ── HOW IT WORKS ── */
 export function HowItWorks(){
   return(
     <section id="how" style={{padding:"var(--section) var(--pad)",maxWidth:1200,margin:"0 auto"}}>
       <div className="section-header">
         <div className="eyebrow" style={{justifyContent:"center"}}>{HOW_IT_WORKS.eyebrow}</div>
-        <h2 style={{fontFamily:"var(--font-heading)",fontWeight:800,fontSize:"clamp(26px,5vw,52px)",color:"var(--text)",letterSpacing:"-.03em",lineHeight:1.05,maxWidth:520,margin:"0 auto",whiteSpace:"pre-line"}}>{HOW_IT_WORKS.headline}</h2>
+        <motion.h2 {...sectionHeadReveal} style={{fontFamily:"var(--font-heading)",fontWeight:800,fontSize:"clamp(26px,5vw,52px)",color:"var(--text)",letterSpacing:"-.03em",lineHeight:1.05,maxWidth:520,margin:"0 auto",whiteSpace:"pre-line"}}>{HOW_IT_WORKS.headline}</motion.h2>
       </div>
       <div className="grid-cards">
-        {HOW_IT_WORKS.steps.map(step=>(
-          <article key={step.step} className="bc bc-a">
+        {HOW_IT_WORKS.steps.map((step,i)=>(
+          <motion.article key={step.step} {...cardReveal(i)} className="bc bc-a">
             <div className="bc-line"/>
             <div style={{fontFamily:"var(--font-body)",fontSize:10,fontWeight:700,color:"var(--accent)",letterSpacing:".14em",marginBottom:16,textTransform:"uppercase"}}>{step.step}</div>
             <h3 style={{fontFamily:"var(--font-heading)",fontWeight:800,fontSize:"clamp(16px,2.5vw,20px)",color:"var(--text)",marginBottom:12,letterSpacing:"-.02em"}}>{step.title}</h3>
             <p style={{fontSize:"var(--text-base)",color:"var(--muted)",lineHeight:1.8,flex:1,marginBottom:20}}>{step.body}</p>
             <div style={{display:"inline-block",background:"rgba(200,255,0,0.06)",border:"1px solid rgba(200,255,0,0.15)",borderRadius:6,padding:"5px 12px",fontFamily:"var(--font-body)",fontSize:10,fontWeight:600,color:"rgba(200,255,0,.7)",letterSpacing:".06em"}}>{step.accent}</div>
-          </article>
+          </motion.article>
         ))}
       </div>
     </section>
@@ -60,18 +63,18 @@ export function FeaturesSection(){
     <section id="features" style={{padding:"0 var(--pad) var(--section)",maxWidth:1200,margin:"0 auto"}}>
       <div className="section-header">
         <div className="eyebrow" style={{justifyContent:"center"}}>{FEATURES.eyebrow}</div>
-        <h2 style={{fontFamily:"var(--font-heading)",fontWeight:800,fontSize:"clamp(26px,5vw,52px)",color:"var(--text)",letterSpacing:"-.03em"}}>
+        <motion.h2 {...sectionHeadReveal} style={{fontFamily:"var(--font-heading)",fontWeight:800,fontSize:"clamp(26px,5vw,52px)",color:"var(--text)",letterSpacing:"-.03em"}}>
           Not just random.<br/><span style={{color:"var(--accent)"}}>Reasoned.</span>
-        </h2>
+        </motion.h2>
       </div>
       <div className="grid-cards">
-        {FEATURES.items.slice(0,6).map(item=>(
-          <article key={item.title} className="bc bc-a">
+        {FEATURES.items.slice(0,6).map((item,i)=>(
+          <motion.article key={item.title} {...cardReveal(i)} className="bc bc-a">
             <div className="bc-line"/>
             <div style={{fontSize:"clamp(22px,3.5vw,28px)",marginBottom:16,color:"var(--accent)",lineHeight:1}}>{item.icon}</div>
             <h3 style={{fontFamily:"var(--font-heading)",fontWeight:800,fontSize:"clamp(15px,2vw,17px)",color:"var(--text)",marginBottom:10,letterSpacing:"-.02em",lineHeight:1.3}}>{item.title}</h3>
             <p style={{fontSize:"var(--text-base)",color:"var(--muted)",lineHeight:1.8}}>{item.body}</p>
-          </article>
+          </motion.article>
         ))}
       </div>
     </section>
@@ -84,19 +87,19 @@ export function ToolsPreview(){
     <section style={{padding:"0 var(--pad) var(--section)",maxWidth:1200,margin:"0 auto"}}>
       <div className="section-header">
         <div className="eyebrow" style={{justifyContent:"center"}}>{TOOLS_PREVIEW.eyebrow}</div>
-        <h2 style={{fontFamily:"var(--font-heading)",fontWeight:800,fontSize:"clamp(26px,5vw,52px)",color:"var(--text)",letterSpacing:"-.03em"}}>
+        <motion.h2 {...sectionHeadReveal} style={{fontFamily:"var(--font-heading)",fontWeight:800,fontSize:"clamp(26px,5vw,52px)",color:"var(--text)",letterSpacing:"-.03em"}}>
           Everything you need.<br/><span style={{color:"var(--accent)"}}>Nothing you don't.</span>
-        </h2>
+        </motion.h2>
       </div>
       <div className="grid-cards">
-        {TOOLS_PREVIEW.items.slice(0,6).map(item=>(
-          <a key={item.title} href={item.href} className="bc bc-a" style={{textDecoration:"none"}}>
+        {TOOLS_PREVIEW.items.slice(0,6).map((item,i)=>(
+          <motion.a key={item.title} {...cardReveal(i)} href={item.href} className="bc bc-a" style={{textDecoration:"none"}}>
             <div className="bc-line"/>
             <div style={{fontSize:"clamp(22px,3.5vw,28px)",marginBottom:14,lineHeight:1}}>{item.icon}</div>
             <h3 style={{fontFamily:"var(--font-heading)",fontWeight:800,fontSize:"clamp(15px,2vw,17px)",color:"var(--text)",marginBottom:8,flex:1}}>{item.title}</h3>
             <p style={{fontSize:"var(--text-base)",color:"var(--muted)",lineHeight:1.75,marginBottom:14}}>{item.body}</p>
             <span style={{fontFamily:"var(--font-body)",fontSize:12,fontWeight:600,color:"var(--accent)",letterSpacing:".04em"}}>{item.label} →</span>
-          </a>
+          </motion.a>
         ))}
       </div>
     </section>
