@@ -157,7 +157,7 @@ export default function Header(){
     <>
       {/* Scroll progress bar */}
       <motion.div style={{scaleX:scrollYProgress,transformOrigin:"0%",position:"fixed",top:0,left:0,right:0,height:2,background:"#C8FF00",boxShadow:"0 0 6px rgba(200,255,0,0.5)",zIndex:9999}}/>
-      <motion.header style={{backgroundColor:headerBg,backdropFilter:headerBlur}}>
+      <motion.header style={{backgroundColor:headerBg,backdropFilter:headerBlur,position:"fixed",top:0,left:0,right:0,zIndex:100}}>
         {/* Main nav */}
         <nav className={`nav-root${scrolled?" scrolled":""}`} aria-label="Main navigation">
           <a href="/" className="nav-logo" aria-label="PassGeni home">
