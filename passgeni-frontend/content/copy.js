@@ -28,7 +28,6 @@ export const NAV = {
   ctaButton: "Get Pro — Free Trial",
   ctaHref:   "#pricing",
 };
-{ label: "Generator", href: "/#generator" },
 // ─── HERO SECTION ────────────────────────────────────────────
 export const HERO = {
   badge:          "Free forever · No account · No tracking",
