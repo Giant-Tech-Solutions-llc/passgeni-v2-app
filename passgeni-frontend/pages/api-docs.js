@@ -1,73 +1,323 @@
 // =============================================================
-// PASSGENI — API DOCUMENTATION PAGE
-// passgeni.ai/api
-// =============================================================
-// The developer-facing documentation page.
-// Also acts as the sales page for the Team plan.
-// Interactive code examples. Live endpoint reference.
+// PASSGENI — API DOCUMENTATION PAGE  (v2 — DX-first redesign)
+// passgeni.ai/api-docs
 // =============================================================
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import PageLayout from "../components/layout/PageLayout.js";
 
-// ─── CONSTANTS ────────────────────────────────────────────────
-const BASE_URL = "https://passgeni.ai/api/v1";
+const BASE = "https://passgeni.ai/api/v1";
 
-// ─── REUSABLE COMPONENTS ──────────────────────────────────────
+// ─── Syntax-highlight a JSON string ──────────────────────────
+function JsonHL({ code }) {
+  const lines = code.split("\n").map((line, i) => {
+    const highlighted = line
+      .replace(/("[\w_]+")\s*:/g, '<span style="color:#79c0ff">$1</span>:')
+      .replace(/:\s*(".*?")/g, ': <span style="color:#a5d6a7">$1</span>')
+      .replace(/:\s*(true|false|null)/g, ': <span style="color:#ff7b72">$1</span>')
+      .replace(/:\s*(\d+\.?\d*)/g, ': <span style="color:#ffa657">$1</span>');
+    return <div key={i} dangerouslySetInnerHTML={{ __html: highlighted }} />;
+  });
+  return <>{lines}</>;
+}
 
-function CodeBlock({ code, language = "bash", label }) {
+// ─── Code block with copy ────────────────────────────────────
+function CodeBlock({ code, label, json = false, maxH }) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
-    await navigator.clipboard.writeText(code);
+    try { await navigator.clipboard.writeText(code); } catch(_) {}
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
   return (
-    <div style={{ background: "#060608", border: "1px solid #1a1a1a", borderRadius: 10, overflow: "hidden", marginBottom: 20 }}>
-      {label && (
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 18px", borderBottom: "1px solid #111" }}>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#555", letterSpacing: "0.1em", textTransform: "uppercase" }}>{label}</span>
-          <button onClick={copy} style={{ background: "none", border: "none", fontFamily: "var(--font-mono)", fontSize: 10, color: copied ? "#C8FF00" : "#555", cursor: "pointer", letterSpacing: "0.08em", transition: "color 0.15s" }}>
-            {copied ? "✓ copied" : "copy"}
-          </button>
+    <div style={{ background: "#05050a", border: "1px solid rgba(255,255,255,.07)", borderRadius: 12, overflow: "hidden" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 18px", borderBottom: "1px solid rgba(255,255,255,.05)", background: "rgba(255,255,255,.02)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", gap: 5 }}>
+            <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ff5f57" }} />
+            <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#febc2e" }} />
+            <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#28c840" }} />
+          </div>
+          {label && <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#555", letterSpacing: ".08em" }}>{label}</span>}
         </div>
-      )}
-      <pre style={{ margin: 0, padding: "20px 22px", fontFamily: "var(--font-mono)", fontSize: 12, color: "#aaa", lineHeight: 1.85, overflowX: "auto", whiteSpace: "pre" }}>
-        <code>{code}</code>
-      </pre>
+        <button onClick={copy} style={{ background: copied ? "rgba(200,255,0,.1)" : "none", border: `1px solid ${copied ? "rgba(200,255,0,.25)" : "rgba(255,255,255,.08)"}`, borderRadius: 6, padding: "4px 12px", fontFamily: "var(--font-mono)", fontSize: 10, color: copied ? "#C8FF00" : "#555", cursor: "pointer", transition: "all .15s" }}>
+          {copied ? "✓ copied" : "copy"}
+        </button>
+      </div>
+      <div style={{ overflowY: maxH ? "auto" : "visible", maxHeight: maxH, padding: "18px 20px", fontFamily: "var(--font-mono)", fontSize: 12.5, lineHeight: 1.9, color: "#9ca3af", overflowX: "auto", whiteSpace: "pre" }}>
+        {json ? <JsonHL code={code} /> : code}
+      </div>
     </div>
   );
 }
 
-function ParamRow({ name, type, required, defaultVal, description }) {
-  return (
-    <tr>
-      <td style={{ padding: "14px 16px", borderBottom: "1px solid #0e0e10", verticalAlign: "top" }}>
-        <code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "#C8FF00" }}>{name}</code>
-        {required && <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#ff4444", marginLeft: 6, letterSpacing: "0.06em" }}>required</span>}
-      </td>
-      <td style={{ padding: "14px 16px", borderBottom: "1px solid #0e0e10", verticalAlign: "top" }}>
-        <code style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#888" }}>{type}</code>
-      </td>
-      <td style={{ padding: "14px 16px", borderBottom: "1px solid #0e0e10", verticalAlign: "top" }}>
-        <code style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#555" }}>{defaultVal || "—"}</code>
-      </td>
-      <td style={{ padding: "14px 16px", borderBottom: "1px solid #0e0e10", verticalAlign: "top" }}>
-        <span style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#888", lineHeight: 1.7 }}>{description}</span>
-      </td>
-    </tr>
-  );
-}
+// ─── Tabbed code examples ─────────────────────────────────────
+const LANG_EXAMPLES = [
+  {
+    id: "curl", label: "cURL",
+    code: `curl -X POST ${BASE}/generate \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "apiKey":     "pg_live_your_key_here",
+    "profession": "developer",
+    "length":     20,
+    "count":      5
+  }'`,
+  },
+  {
+    id: "js", label: "JavaScript",
+    code: `const res = await fetch("${BASE}/generate", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    apiKey:     process.env.PASSGENI_API_KEY,
+    profession: "developer",
+    length:     20,
+    count:      5,
+    compliance: "hipaa",   // team plan only
+  }),
+});
 
-function SectionAnchor({ id, title }) {
-  return (
-    <h2 id={id} style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(20px,2.5vw,28px)", color: "#fff", letterSpacing: "-0.02em", marginBottom: 20, marginTop: 64, paddingTop: 16, scrollMarginTop: 80 }}>
-      {title}
-    </h2>
-  );
-}
+const { passwords, entropy } = await res.json();
+// passwords → ["nX9#kT2@mP5!qR8$", ...]
+// entropy   → 131 bits`,
+  },
+  {
+    id: "python", label: "Python",
+    code: `import requests, os
 
-// ─── INTERACTIVE TESTER ───────────────────────────────────────
+resp = requests.post(
+    "${BASE}/generate",
+    json={
+        "apiKey":     os.environ["PASSGENI_API_KEY"],
+        "profession": "finance",
+        "length":     20,
+        "count":      10,
+        "compliance": "pci",
+    }
+)
+
+data = resp.json()
+print(data["passwords"])   # list of strings
+print(data["entropy"])     # bits of entropy`,
+  },
+  {
+    id: "php", label: "PHP",
+    code: `$data = json_decode(file_get_contents(
+    "${BASE}/generate",
+    false,
+    stream_context_create(["http" => [
+        "method"  => "POST",
+        "header"  => "Content-Type: application/json",
+        "content" => json_encode([
+            "apiKey"     => getenv("PASSGENI_API_KEY"),
+            "profession" => "developer",
+            "length"     => 20,
+            "count"      => 5,
+        ]),
+    ]])
+), true);
+
+$passwords = $data["passwords"]; // string[]`,
+  },
+  {
+    id: "python-webhook", label: "Python (webhook)",
+    code: `# Auto-generate passwords on new user signup
+# Works with Flask, FastAPI, Django — any framework
+
+from flask import Flask, request, jsonify
+import requests, os
+
+app = Flask(__name__)
+
+@app.route("/webhook/new-user", methods=["POST"])
+def on_new_user():
+    user = request.json
+
+    # Generate a secure onboarding password
+    resp = requests.post("${BASE}/generate", json={
+        "apiKey":     os.environ["PASSGENI_API_KEY"],
+        "profession": user.get("role", "general"),
+        "length":     18,
+        "count":      1,
+    })
+    temp_password = resp.json()["passwords"][0]
+
+    # → email it, store hash, set expiry flag
+    send_welcome_email(user["email"], temp_password)
+    return jsonify({"ok": True})`,
+  },
+  {
+    id: "node-cron", label: "Node (rotation)",
+    code: `// Rotate credentials every 90 days (PCI-DSS Req 8.3.9)
+// Run with node-cron, GitHub Actions, or any scheduler
+
+import fetch from "node-fetch";
+import { updateUserCredential } from "./db.js";
+
+export async function rotateAllCredentials(userIds) {
+  const res = await fetch("${BASE}/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      apiKey:     process.env.PASSGENI_API_KEY,
+      compliance: "pci",    // enforces PCI-DSS v4.0 Req 8
+      count:      userIds.length,  // up to 500 per request
+      length:     16,
+    }),
+  });
+
+  const { passwords } = await res.json();
+
+  for (const [i, userId] of userIds.entries()) {
+    await updateUserCredential(userId, passwords[i]);
+    await notifyUser(userId, "Your credential has been rotated.");
+  }
+}`,
+  },
+];
+
+// ─── Integration cards ────────────────────────────────────────
+const INTEGRATIONS = [
+  {
+    icon: "⚙️",
+    title: "GitHub Actions / CI-CD",
+    desc: "Auto-generate deploy secrets, DB passwords, and env vars on every release pipeline run. Never commit a credential again.",
+    badge: "DevOps",
+    color: "#79c0ff",
+    snippet: `# .github/workflows/rotate-secrets.yml
+- name: Rotate DB password
+  run: |
+    PW=$(curl -s -X POST ${BASE}/generate \\
+      -H "Content-Type: application/json" \\
+      -d '{"apiKey":"$PASSGENI_KEY","compliance":"soc2","count":1}' \\
+      | jq -r '.passwords[0]')
+    echo "::add-mask::$PW"   # mask from logs
+    gh secret set DB_PASSWORD --body "$PW"`,
+  },
+  {
+    icon: "⚡",
+    title: "Zapier / Make / n8n",
+    desc: "No-code automation. Trigger a PassGeni API call on any event — new user, form submission, Salesforce record — and pipe the password anywhere.",
+    badge: "No-Code",
+    color: "#ffa657",
+    snippet: `// Zapier "Run JavaScript" step
+const response = await fetch("${BASE}/generate", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    apiKey: "pg_live_...",
+    profession: inputData.department,
+    count: 1,
+  }),
+});
+const { passwords } = await response.json();
+return { password: passwords[0] };`,
+  },
+  {
+    icon: "🏥",
+    title: "Healthcare Onboarding",
+    desc: "Generate HIPAA §164.312(d)-compliant credentials for new staff. One API call returns a temporary password that meets your IT policy on day one.",
+    badge: "HIPAA",
+    color: "#4fc3f7",
+    snippet: `# On-call script — new staff member joins
+import requests, os
+
+def onboard_staff(name, role, email):
+    pw = requests.post("${BASE}/generate", json={
+        "apiKey":     os.environ["PASSGEN_KEY"],
+        "profession": role,           # "doctor", "nurse", etc.
+        "compliance": "hipaa",        # enforces 12+ chars
+        "count":      1,
+    }).json()["passwords"][0]
+
+    send_secure_email(email, name, pw)
+    set_force_change_on_login(email)`,
+  },
+  {
+    icon: "💳",
+    title: "PCI-DSS Compliance Automation",
+    desc: "Enforce PCI-DSS v4.0 Requirement 8 across every credential your system manages. The API rejects non-compliant requests and returns the exact standard cite.",
+    badge: "PCI-DSS",
+    color: "#ffb74d",
+    snippet: `// Monthly credential rotation — PCI-DSS Req 8.3.9
+const { passwords } = await passgeni.generate({
+  compliance: "pci",   // enforces: 12+ chars, upper+lower+num+sym
+  count: accountIds.length,  // up to 500 at once
+});
+
+for (const [i, id] of accountIds.entries()) {
+  await db.rotateCredential(id, passwords[i]);
+  await audit.log(id, "rotated", "pci-req-8");
+}`,
+  },
+  {
+    icon: "🔧",
+    title: "WordPress / PHP Apps",
+    desc: "Add a 'Generate strong password' button to any PHP form. Three lines of code. No plugin needed. Works on any WordPress, Laravel, or plain PHP project.",
+    badge: "PHP",
+    color: "#ce93d8",
+    snippet: `<?php
+// add_action('user_register', 'pg_set_secure_password');
+function pg_set_secure_password($user_id) {
+    $resp = wp_remote_post("${BASE}/generate", [
+        "body"    => json_encode(["count" => 1, "length" => 18]),
+        "headers" => ["Content-Type" => "application/json"],
+    ]);
+    $pw = json_decode(wp_remote_retrieve_body($resp))->passwords[0];
+    wp_set_password($pw, $user_id);
+}`,
+  },
+  {
+    icon: "🤖",
+    title: "Slack Bots & Internal Tools",
+    desc: "Let your team request a compliant password via Slack slash command. The bot calls PassGeni, DMs the result, and logs the action — all in under a second.",
+    badge: "Slack",
+    color: "#a5d6a7",
+    snippet: `// Slack bolt app — /genpassword command
+app.command("/genpassword", async ({ command, ack, client }) => {
+  await ack();
+  const { passwords } = await passgeni({
+    compliance: command.text || null,  // /genpassword hipaa
+    count: 1,
+  });
+  await client.chat.postEphemeral({
+    channel: command.channel_id,
+    user: command.user_id,
+    text: "🔐 Your password: \`" + passwords[0] + "\`",
+  });
+});`,
+  },
+];
+
+// ─── Quick param cards ────────────────────────────────────────
+const PARAMS = [
+  { name: "apiKey",     type: "string",  req: false, def: "null",        color: "#79c0ff", note: "Your Team key. Leave blank for free tier (50 calls/day)." },
+  { name: "profession", type: "string",  req: false, def: '"developer"', color: "#a5d6a7", note: "Seeds the generator: developer · doctor · finance · designer · legal · educator" },
+  { name: "length",     type: "number",  req: false, def: "18",          color: "#ffa657", note: "Password length. Range 8–32. Compliance presets enforce a higher minimum." },
+  { name: "count",      type: "number",  req: false, def: "1",           color: "#ffa657", note: "How many passwords to return. Free: max 10. Team: max 500 per request." },
+  { name: "compliance", type: "string",  req: false, def: "null",        color: "#ffb74d", note: "hipaa · pci · soc2 · iso · nist · dod — Team plan only. Enforces the exact standard." },
+  { name: "mode",       type: "string",  req: false, def: '"password"',  color: "#ce93d8", note: '"password" for standard, "passphrase" for memorable word-based credentials.' },
+  { name: "quantum",    type: "boolean", req: false, def: "false",       color: "#ef9a9a", note: "Post-quantum mode: 512-bit entropy, expanded symbol set, 20-char minimum." },
+];
+
+// ─── Sidebar links ────────────────────────────────────────────
+const NAV_SECTIONS = [
+  { id: "quickstart",     label: "Quickstart — 30 sec" },
+  { id: "how-it-works",   label: "How it works"         },
+  { id: "integrations",   label: "Integrations"         },
+  { id: "authentication", label: "Authentication"        },
+  { id: "rate-limits",    label: "Rate limits"           },
+  { id: "parameters",     label: "Parameters"            },
+  { id: "response",       label: "Response schema"       },
+  { id: "errors",         label: "Error codes"           },
+  { id: "examples",       label: "Code examples"         },
+  { id: "tester",         label: "Live tester"           },
+  { id: "pricing",        label: "Plans & pricing"       },
+];
+
+// ─── Live tester ──────────────────────────────────────────────
 function LiveTester() {
   const [apiKey,     setApiKey]     = useState("");
   const [profession, setProfession] = useState("developer");
@@ -79,557 +329,640 @@ function LiveTester() {
   const [error,      setError]      = useState("");
 
   const run = async () => {
-    setLoading(true);
-    setError("");
-    setResponse(null);
+    setLoading(true); setError(""); setResponse(null);
     try {
       const body = { profession, length, count };
       if (apiKey.trim()) body.apiKey    = apiKey.trim();
       if (compliance)    body.compliance = compliance;
-
-      const res  = await fetch("/api/v1/generate", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify(body),
-      });
+      const res  = await fetch("/api/v1/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const data = await res.json();
       setResponse({ status: res.status, body: data });
-    } catch (e) {
-      setError("Request failed — check your connection.");
-    }
+    } catch { setError("Request failed — check your connection."); }
     setLoading(false);
   };
 
+  const SELECT = { width: "100%", background: "#08080d", border: "1px solid rgba(255,255,255,.08)", borderRadius: 8, padding: "10px 14px", fontFamily: "var(--font-mono)", fontSize: 13, color: "#ccc", outline: "none", cursor: "pointer", boxSizing: "border-box" };
+  const INPUT  = { ...SELECT, cursor: "text" };
+
   return (
-    <div style={{ background: "#0a0a0c", border: "1px solid #1a1a1a", borderRadius: 14, overflow: "hidden", marginTop: 24 }}>
-      <div style={{ padding: "16px 22px", borderBottom: "1px solid #141416", display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#C8FF00", animation: "blink 2s ease infinite" }} />
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#888", letterSpacing: "0.1em" }}>LIVE API TESTER</span>
+    <div style={{ background: "rgba(5,5,10,.95)", border: "1px solid rgba(200,255,0,.12)", borderRadius: 16, overflow: "hidden" }}>
+      {/* Header */}
+      <div style={{ padding: "14px 22px", borderBottom: "1px solid rgba(255,255,255,.05)", display: "flex", alignItems: "center", gap: 10, background: "rgba(200,255,0,.03)" }}>
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#C8FF00", boxShadow: "0 0 8px rgba(200,255,0,.6)", animation: "livePulse 2s ease-in-out infinite" }} />
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#C8FF00", letterSpacing: ".12em" }}>LIVE API TESTER — runs a real request</span>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, padding: "22px" }}>
-        {/* API Key */}
-        <div style={{ gridColumn: "1/-1" }}>
-          <label style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: 10, color: "#888", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
-            API Key <span style={{ color: "#555" }}>(optional — leave blank for free tier)</span>
-          </label>
-          <input
-            type="password"
-            placeholder="pg_live_... or pg_test_..."
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            style={{ width: "100%", background: "#060608", border: "1px solid #1a1a1a", borderRadius: 7, padding: "10px 14px", fontFamily: "var(--font-mono)", fontSize: 13, color: "#fff", outline: "none", boxSizing: "border-box" }}
-          />
+      <div style={{ padding: "22px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
+          {/* API key */}
+          <div style={{ gridColumn: "1/-1" }}>
+            <label style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: 9, color: "#555", letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 6 }}>
+              apiKey <span style={{ color: "#333" }}>— optional, leave blank for free tier</span>
+            </label>
+            <input type="password" placeholder="pg_live_…" value={apiKey} onChange={e => setApiKey(e.target.value)}
+              style={{ ...INPUT, fontSize: 13 }}
+              onFocus={e => (e.currentTarget.style.borderColor = "rgba(200,255,0,.3)")}
+              onBlur={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,.08)")} />
+          </div>
+
+          {/* Profession */}
+          <div>
+            <label style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: 9, color: "#555", letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 6 }}>profession</label>
+            <select value={profession} onChange={e => setProfession(e.target.value)} style={SELECT}>
+              {["developer","doctor","finance","designer","legal","educator","general"].map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
+
+          {/* Compliance */}
+          <div>
+            <label style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: 9, color: "#555", letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 6 }}>
+              compliance <span style={{ color: "#333" }}>team only</span>
+            </label>
+            <select value={compliance} onChange={e => setCompliance(e.target.value)} style={SELECT}>
+              <option value="">none</option>
+              {["hipaa","pci","soc2","iso","nist","dod"].map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+
+          {/* Length */}
+          <div>
+            <label style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: 9, color: "#555", letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 8 }}>
+              length: <span style={{ color: "#C8FF00" }}>{length}</span>
+            </label>
+            <input type="range" min={8} max={32} value={length} onChange={e => setLength(+e.target.value)} style={{ width: "100%" }} />
+          </div>
+
+          {/* Count */}
+          <div>
+            <label style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: 9, color: "#555", letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 8 }}>
+              count: <span style={{ color: "#C8FF00" }}>{count}</span>
+            </label>
+            <input type="range" min={1} max={10} value={count} onChange={e => setCount(+e.target.value)} style={{ width: "100%" }} />
+          </div>
         </div>
 
-        {/* Profession */}
-        <div>
-          <label style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: 10, color: "#888", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>profession</label>
-          <select value={profession} onChange={(e) => setProfession(e.target.value)}
-            style={{ width: "100%", background: "#060608", border: "1px solid #1a1a1a", borderRadius: 7, padding: "10px 14px", fontFamily: "var(--font-mono)", fontSize: 13, color: "#fff", outline: "none", cursor: "pointer", boxSizing: "border-box" }}>
-            {["developer", "doctor", "finance", "designer", "legal", "educator"].map((p) => (
-              <option key={p} value={p}>{p}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Compliance */}
-        <div>
-          <label style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: 10, color: "#888", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>compliance</label>
-          <select value={compliance} onChange={(e) => setCompliance(e.target.value)}
-            style={{ width: "100%", background: "#060608", border: "1px solid #1a1a1a", borderRadius: 7, padding: "10px 14px", fontFamily: "var(--font-mono)", fontSize: 13, color: "#fff", outline: "none", cursor: "pointer", boxSizing: "border-box" }}>
-            <option value="">none</option>
-            {["hipaa", "pci", "soc2", "iso", "nist", "dod"].map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Length */}
-        <div>
-          <label style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: 10, color: "#888", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
-            length: {length}
-          </label>
-          <input type="range" min={8} max={32} value={length} onChange={(e) => setLength(+e.target.value)} />
-        </div>
-
-        {/* Count */}
-        <div>
-          <label style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: 10, color: "#888", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
-            count: {count}
-          </label>
-          <input type="range" min={1} max={10} value={count} onChange={(e) => setCount(+e.target.value)} />
-        </div>
-
-        {/* Run */}
-        <div style={{ gridColumn: "1/-1" }}>
-          <button onClick={run} disabled={loading} className="btn-primary" style={{ fontSize: 14, padding: "12px 28px", animation: "none" }}>
-            {loading ? "Running…" : "Run request →"}
-          </button>
-        </div>
+        <button onClick={run} disabled={loading} className="btn-primary" style={{ width: "100%", justifyContent: "center", fontSize: 13 }}>
+          {loading ? "Running…" : "Run request →"}
+        </button>
       </div>
 
       {/* Response */}
-      {(response || error) && (
-        <div style={{ borderTop: "1px solid #111", padding: "0 22px 22px" }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: response?.status === 200 ? "#C8FF00" : "#ff4444", letterSpacing: "0.1em", textTransform: "uppercase", padding: "16px 0 10px" }}>
-            {error ? "error" : `HTTP ${response.status}`}
-          </div>
-          {error
-            ? <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#ff8888" }}>{error}</p>
-            : (
-              <pre style={{ margin: 0, fontFamily: "var(--font-mono)", fontSize: 11, color: "#aaa", lineHeight: 1.85, overflowX: "auto", whiteSpace: "pre-wrap" }}>
-                {JSON.stringify(response.body, null, 2)}
-              </pre>
-            )
-          }
-        </div>
-      )}
+      <AnimatePresence>
+        {(response || error) && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}
+            style={{ borderTop: "1px solid rgba(255,255,255,.05)", overflow: "hidden" }}>
+            <div style={{ padding: "18px 22px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: error ? "#ff4444" : response?.status === 200 ? "#C8FF00" : "#ffaa00" }} />
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: error ? "#ff6644" : response?.status === 200 ? "#C8FF00" : "#ffaa00", letterSpacing: ".1em" }}>
+                  {error ? "CONNECTION ERROR" : `HTTP ${response.status}`}
+                </span>
+              </div>
+              {error
+                ? <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#ff8888", margin: 0 }}>{error}</p>
+                : (
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "#9ca3af", lineHeight: 1.9, overflowX: "auto", whiteSpace: "pre-wrap" }}>
+                    <JsonHL code={JSON.stringify(response.body, null, 2)} />
+                  </div>
+                )
+              }
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-// ─── SIDEBAR NAV ──────────────────────────────────────────────
-function SidebarNav() {
-  const sections = [
-    { id: "overview",       label: "Overview"         },
-    { id: "authentication", label: "Authentication"   },
-    { id: "rate-limits",    label: "Rate Limits"      },
-    { id: "generate",       label: "POST /generate"   },
-    { id: "parameters",     label: "Parameters"       },
-    { id: "response",       label: "Response Schema"  },
-    { id: "errors",         label: "Errors"           },
-    { id: "examples",       label: "Code Examples"    },
-    { id: "tester",         label: "Live Tester"      },
-    { id: "pricing",        label: "Pricing & Limits" },
-  ];
-
+// ─── Integration card ─────────────────────────────────────────
+function IntegrationCard({ item, isOpen, onToggle }) {
   return (
-    <nav style={{ position: "sticky", top: 88, width: 200, flexShrink: 0 }} aria-label="API docs navigation">
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#555", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 14 }}>
-        Contents
-      </div>
-      {sections.map(({ id, label }) => (
-        <a
-          key={id}
-          href={`#${id}`}
-          style={{ display: "block", fontFamily: "var(--font-body)", fontSize: 13, color: "#888", textDecoration: "none", padding: "6px 0", borderLeft: "2px solid transparent", paddingLeft: 12, transition: "all 0.15s", lineHeight: 1.4 }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = "#C8FF00"; e.currentTarget.style.borderLeftColor = "#C8FF00"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = "#888";    e.currentTarget.style.borderLeftColor = "transparent"; }}
-        >
-          {label}
-        </a>
-      ))}
+    <div style={{ background: "rgba(8,8,13,.9)", border: `1px solid ${isOpen ? `${item.color}30` : "rgba(255,255,255,.06)"}`, borderRadius: 14, overflow: "hidden", transition: "border-color .25s" }}>
+      <button
+        onClick={onToggle}
+        style={{ width: "100%", background: "none", border: "none", padding: "20px 22px", cursor: "pointer", textAlign: "left", display: "flex", alignItems: "flex-start", gap: 14 }}
+      >
+        <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: `${item.color}10`, border: `1px solid ${item.color}25`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>{item.icon}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 5 }}>
+            <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 15, color: "#e0e0e0" }}>{item.title}</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: item.color, background: `${item.color}12`, border: `1px solid ${item.color}25`, borderRadius: 100, padding: "2px 8px", letterSpacing: ".08em", flexShrink: 0 }}>{item.badge}</span>
+          </div>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#666", lineHeight: 1.6, margin: 0 }}>{item.desc}</p>
+        </div>
+        <motion.span animate={{ rotate: isOpen ? 45 : 0 }} transition={{ duration: 0.2 }}
+          style={{ color: "rgba(200,255,0,.4)", fontSize: 22, lineHeight: 1, flexShrink: 0, fontWeight: 300 }}>+</motion.span>
+      </button>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            key="code" initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }} style={{ overflow: "hidden" }}>
+            <div style={{ padding: "0 22px 22px" }}>
+              <CodeBlock code={item.snippet} label={`${item.title} — example`} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
-      <div style={{ marginTop: 28, background: "#0a0a0c", border: "1px solid #C8FF0022", borderRadius: 10, padding: "16px" }}>
-        <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#C8FF0066", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Team plan</div>
-        <p style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "#888", lineHeight: 1.7, marginBottom: 12 }}>
-          5,000 calls/day. All compliance presets. $29/month.
-        </p>
-        <a href="#pricing" style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#C8FF00", textDecoration: "none" }}>
-          Get started →
-        </a>
-      </div>
-    </nav>
+// ─── Section header ───────────────────────────────────────────
+function SH({ id, eyebrow, title }) {
+  return (
+    <div id={id} style={{ paddingTop: 72, scrollMarginTop: 80, marginBottom: 28 }}>
+      <p style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "rgba(200,255,0,.6)", letterSpacing: ".16em", textTransform: "uppercase", marginBottom: 8 }}>{eyebrow}</p>
+      <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(20px,2.5vw,28px)", color: "#fff", letterSpacing: "-.02em", lineHeight: 1.1, margin: 0 }}>{title}</h2>
+    </div>
   );
 }
 
 // ─── PAGE ─────────────────────────────────────────────────────
+const SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "name": "PassGeni API Documentation",
+  "description": "Complete API documentation for the PassGeni password generation API. REST endpoint, code examples in 6 languages, live tester, and integration guides for CI/CD, Zapier, healthcare, and more.",
+  "url": "https://passgeni.ai/api-docs",
+};
+
 export default function APIDocsPage() {
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [activeLang,        setActiveLang]        = useState("js");
+  const [openIntegration,   setOpenIntegration]   = useState(null);
+  const [activeSection,     setActiveSection]      = useState("quickstart");
+  const observerRef = useRef(null);
 
-  const startCheckout = async () => {
-    setCheckoutLoading(true);
-    try {
-      const res  = await fetch("/api/paddle/checkout", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({}),
-      });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-    } catch (e) {
-      alert("Could not start checkout. Please try again.");
-    }
-    setCheckoutLoading(false);
-  };
+  // Intersection observer for active sidebar link
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const ids = NAV_SECTIONS.map(s => s.id);
+    const targets = ids.map(id => document.getElementById(id)).filter(Boolean);
+    observerRef.current = new IntersectionObserver(
+      entries => {
+        const visible = entries.filter(e => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible.length) setActiveSection(visible[0].target.id);
+      },
+      { rootMargin: "-20% 0px -60% 0px" }
+    );
+    targets.forEach(t => observerRef.current.observe(t));
+    return () => observerRef.current?.disconnect();
+  }, []);
 
-  const schema = {
-    "@context": "https://schema.org",
-    "@type":    "TechArticle",
-    "name":     "PassGeni API Documentation",
-    "description": "Complete API documentation for the PassGeni password generation API. REST endpoint, parameters, rate limits, and code examples in JavaScript, Python, and curl.",
-    "url":      "https://passgeni.ai/api",
-  };
+  const activeLangData = LANG_EXAMPLES.find(l => l.id === activeLang) || LANG_EXAMPLES[0];
 
   return (
     <PageLayout
-      title="API Documentation — PassGeni Password Generation API"
-      description="PassGeni REST API for developers. Generate secure, compliance-ready passwords programmatically. Free tier: 50 calls/day. Team: 5,000/day. Full documentation with examples."
-      canonical="https://passgeni.ai/api"
-      schema={schema}
+      title="PassGeni API — Password Generation API for Developers"
+      description="Generate HIPAA, PCI-DSS, and NIST-compliant passwords via REST API. Free tier: 50 calls/day. Team: 5,000/day. Works with Node.js, Python, PHP, cURL, Zapier, GitHub Actions, and more."
+      canonical="https://passgeni.ai/api-docs"
+      schema={SCHEMA}
     >
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "60px var(--page-pad) 120px" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "56px var(--page-pad) 120px" }}>
 
-        {/* ── Page header ── */}
-        <div style={{ marginBottom: 60 }}>
-          <nav aria-label="Breadcrumb" style={{ marginBottom: 24 }}>
-            <a href="/" style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#888", textDecoration: "none" }}>PassGeni</a>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#444", margin: "0 8px" }}>→</span>
+        {/* ── Hero ─────────────────────────────────────────── */}
+        <div style={{ maxWidth: 760, marginBottom: 64 }}>
+          <nav aria-label="Breadcrumb" style={{ marginBottom: 20 }}>
+            <a href="/" style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#555", textDecoration: "none" }}>PassGeni</a>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#333", margin: "0 8px" }}>→</span>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#C8FF00" }}>API Docs</span>
           </nav>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#888", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 16 }}>
-            REST API · v1
-          </div>
-          <h1 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(30px,4.5vw,54px)", color: "#fff", letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 16 }}>
-            PassGeni API<br /><span style={{ color: "#C8FF00" }}>Documentation.</span>
-          </h1>
-          <p style={{ fontFamily: "var(--font-body)", fontSize: 16, color: "#888", lineHeight: 1.8, maxWidth: 560 }}>
-            Generate cryptographically secure, compliance-ready passwords programmatically.
-            One endpoint. JSON in, passwords out. No setup beyond an API key.
-          </p>
 
-          {/* Quick stats */}
-          <div style={{ display: "flex", gap: 24, marginTop: 28, flexWrap: "wrap" }}>
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+            <p className="eyebrow">REST API · v1 · JSON</p>
+            <h1 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(32px,5vw,60px)", color: "#fff", letterSpacing: "-.04em", lineHeight: .98, marginBottom: 20 }}>
+              Generate secure passwords<br />
+              <span style={{ color: "var(--accent)" }}>from any app. In 3 lines.</span>
+            </h1>
+            <p style={{ fontFamily: "var(--font-body)", fontSize: "clamp(15px,1.6vw,17px)", color: "var(--muted)", lineHeight: 1.8, maxWidth: 540, margin: "0 0 32px" }}>
+              One REST endpoint. No SDK, no install, no account required for the free tier.
+              Send JSON, get passwords back. Works with any language, any framework, any no-code tool.
+            </p>
+
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <a href="#quickstart" className="btn-primary">Start in 30 seconds →</a>
+              <a href="#tester" className="btn-ghost">Try live tester</a>
+            </div>
+          </motion.div>
+
+          {/* Stat strip */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
+            style={{ display: "flex", gap: "clamp(16px,3vw,36px)", marginTop: 40, flexWrap: "wrap" }}>
             {[
-              { label: "Base URL",    value: BASE_URL },
-              { label: "Auth",        value: "API key in body" },
-              { label: "Format",      value: "JSON" },
-              { label: "Free tier",   value: "50 calls/day" },
-            ].map(({ label, value }) => (
-              <div key={label}>
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#555", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>{label}</div>
-                <code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "#aaa" }}>{value}</code>
+              { k: "Base URL",  v: BASE },
+              { k: "Method",   v: "POST" },
+              { k: "Format",   v: "JSON" },
+              { k: "Free tier", v: "50 calls/day" },
+            ].map(({ k, v }) => (
+              <div key={k}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#555", letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 4 }}>{k}</div>
+                <code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "#aaa" }}>{v}</code>
               </div>
             ))}
-          </div>
+          </motion.div>
         </div>
 
-        {/* ── Two-column layout: sidebar + content ── */}
-        <div style={{ display: "flex", gap: 60, alignItems: "flex-start" }}>
+        {/* ── 2-col layout ─────────────────────────────────── */}
+        <div style={{ display: "flex", gap: "clamp(32px,5vw,72px)", alignItems: "flex-start" }}>
 
-          {/* Sidebar — hidden on mobile */}
-          <div style={{ display: "block" }} className="nav-trust-row">
-            <SidebarNav />
-          </div>
+          {/* Sidebar */}
+          <nav aria-label="API docs contents" style={{ position: "sticky", top: 84, width: 200, flexShrink: 0, display: "block" }}
+            className="api-sidebar">
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 8, color: "#444", letterSpacing: ".16em", textTransform: "uppercase", marginBottom: 12 }}>Contents</div>
+            {NAV_SECTIONS.map(({ id, label }) => {
+              const isActive = activeSection === id;
+              return (
+                <a key={id} href={`#${id}`}
+                  style={{ display: "block", fontFamily: "var(--font-body)", fontSize: 13, color: isActive ? "#C8FF00" : "#666", textDecoration: "none", padding: "5px 0 5px 12px", borderLeft: `2px solid ${isActive ? "#C8FF00" : "transparent"}`, transition: "all .15s", lineHeight: 1.4, marginBottom: 2 }}
+                  onMouseEnter={e => { if (!isActive) { e.currentTarget.style.color = "#aaa"; e.currentTarget.style.borderLeftColor = "rgba(200,255,0,.2)"; } }}
+                  onMouseLeave={e => { if (!isActive) { e.currentTarget.style.color = "#666"; e.currentTarget.style.borderLeftColor = "transparent"; } }}>
+                  {label}
+                </a>
+              );
+            })}
 
-          {/* Main content */}
+            {/* Team CTA */}
+            <div style={{ marginTop: 28, background: "linear-gradient(135deg,rgba(200,255,0,.07),rgba(10,10,13,.9))", border: "1px solid rgba(200,255,0,.15)", borderRadius: 12, padding: "16px" }}>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 8, color: "rgba(200,255,0,.6)", letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 6 }}>Team plan</div>
+              <p style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "#777", lineHeight: 1.65, marginBottom: 12 }}>5,000 calls/day · All compliance presets · 500 per request</p>
+              <a href="/pricing" style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#C8FF00", textDecoration: "none", letterSpacing: ".06em" }}>$29/month →</a>
+            </div>
+          </nav>
+
+          {/* Content */}
           <div style={{ flex: 1, minWidth: 0 }}>
 
-            {/* ── OVERVIEW ── */}
-            <SectionAnchor id="overview" title="Overview" />
-            <p style={{ fontFamily: "var(--font-body)", fontSize: 15, color: "#aaa", lineHeight: 1.85, marginBottom: 20 }}>
-              The PassGeni API lets you generate secure passwords at scale — in your backend, during user onboarding,
-              for credential rotation, or any programmatic use case. One endpoint. No SDK required.
-            </p>
-            <p style={{ fontFamily: "var(--font-body)", fontSize: 15, color: "#aaa", lineHeight: 1.85 }}>
-              The free tier gives you 50 calls per day with no API key. The Team plan ($29/month) gives you
-              5,000 calls/day, all compliance presets, and bulk generation up to 500 passwords per request.
+            {/* ═══ QUICKSTART ═══════════════════════════════ */}
+            <SH id="quickstart" eyebrow="Getting started" title="From zero to working code in 30 seconds." />
+            <p style={{ fontFamily: "var(--font-body)", fontSize: 15, color: "#777", lineHeight: 1.8, marginBottom: 32 }}>
+              No account. No signup. No API key needed to try it. Just send a POST request.
             </p>
 
-            {/* ── AUTHENTICATION ── */}
-            <SectionAnchor id="authentication" title="Authentication" />
-            <p style={{ fontFamily: "var(--font-body)", fontSize: 15, color: "#aaa", lineHeight: 1.85, marginBottom: 20 }}>
-              Pass your API key in the request body as <code style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "#C8FF00", background: "#C8FF0011", padding: "2px 6px", borderRadius: 4 }}>apiKey</code>.
-              No Authorization header required. Free tier requests work without any key.
-            </p>
-            <CodeBlock
-              label="Example — authenticated request"
-              code={`curl -X POST https://passgeni.ai/api/v1/generate \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "apiKey":     "pg_live_your_key_here",
-    "profession": "developer",
-    "length":     20,
-    "count":      5
-  }'`}
-            />
-            <div style={{ background: "#0a0806", border: "1px solid #ff440022", borderRadius: 10, padding: "14px 18px", marginBottom: 24 }}>
-              <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#ff8866", margin: 0, lineHeight: 1.7 }}>
-                ⚠️ Never expose your API key in client-side code or public repositories. Use environment variables.
-                API keys can be rotated from your dashboard at any time.
+            {/* 3 steps */}
+            {[
+              {
+                n: "1", title: "Pick your language",
+                body: "Choose any language below. The API accepts plain JSON — no SDK, no library required.",
+              },
+              {
+                n: "2", title: "Send one POST request",
+                body: `POST to <code style="background:rgba(200,255,0,.08);color:#C8FF00;padding:2px 6px;border-radius:4px;font-size:12px">${BASE}/generate</code> with a JSON body. That's it.`,
+              },
+              {
+                n: "3", title: "Use the passwords array",
+                body: "The response contains a <code style=\"background:rgba(200,255,0,.08);color:#C8FF00;padding:2px 6px;border-radius:4px;font-size:12px\">passwords</code> array, entropy bits, and an audit object. Done.",
+              },
+            ].map((s, i) => (
+              <motion.div key={s.n}
+                initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.07 }}
+                style={{ display: "flex", gap: 18, marginBottom: 24 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: "linear-gradient(135deg,rgba(200,255,0,.18),rgba(200,255,0,.04))", border: "1px solid rgba(200,255,0,.2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-heading)", fontWeight: 900, fontSize: 15, color: "#C8FF00", marginTop: 2 }}>{s.n}</div>
+                <div>
+                  <div style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 15, color: "#e0e0e0", marginBottom: 4 }}>{s.title}</div>
+                  <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#666", lineHeight: 1.7, margin: 0 }} dangerouslySetInnerHTML={{ __html: s.body }} />
+                </div>
+              </motion.div>
+            ))}
+
+            {/* Tabbed quickstart code */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: -1 }}>
+                {LANG_EXAMPLES.slice(0, 4).map(l => (
+                  <button key={l.id} onClick={() => setActiveLang(l.id)}
+                    style={{
+                      background: activeLang === l.id ? "rgba(200,255,0,.1)" : "rgba(255,255,255,.03)",
+                      border: `1px solid ${activeLang === l.id ? "rgba(200,255,0,.3)" : "rgba(255,255,255,.07)"}`,
+                      borderBottom: activeLang === l.id ? "1px solid #05050a" : undefined,
+                      borderRadius: "8px 8px 0 0", padding: "7px 16px",
+                      fontFamily: "var(--font-mono)", fontSize: 11,
+                      color: activeLang === l.id ? "#C8FF00" : "#666",
+                      cursor: "pointer", transition: "all .15s", position: "relative", zIndex: 2,
+                    }}>{l.label}</button>
+                ))}
+              </div>
+              <AnimatePresence mode="wait">
+                <motion.div key={activeLang} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
+                  <CodeBlock code={activeLangData.code} label={activeLangData.label} />
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Minimal free-tier example */}
+            <div style={{ background: "rgba(200,255,0,.04)", border: "1px solid rgba(200,255,0,.1)", borderRadius: 12, padding: "16px 20px", marginBottom: 8 }}>
+              <p style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "rgba(200,255,0,.6)", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 10 }}>Smallest possible request — no API key needed</p>
+              <CodeBlock code={`curl -X POST ${BASE}/generate -H "Content-Type: application/json" -d '{}'`} />
+              <p style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "#555", margin: "8px 0 0", lineHeight: 1.6 }}>
+                Returns 1 password, 18 chars. No account, no key, no setup. Free tier: 50 requests/day per IP.
               </p>
             </div>
 
-            {/* ── RATE LIMITS ── */}
-            <SectionAnchor id="rate-limits" title="Rate Limits" />
-            <div style={{ background: "#0a0a0c", border: "1px solid #141416", borderRadius: 12, overflow: "hidden", marginBottom: 24 }}>
+            {/* ═══ HOW IT WORKS ══════════════════════════════ */}
+            <SH id="how-it-works" eyebrow="Architecture" title="What actually happens when you call the API?" />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12, marginBottom: 28 }}>
+              {[
+                { icon: "📤", step: "You send JSON",      body: "A POST request with optional parameters. No SDK, no special headers beyond Content-Type." },
+                { icon: "🔐", step: "Server generates",   body: "Node.js crypto.randomInt() — the same FIPS 140-3 primitive used in TLS — builds your password on our server." },
+                { icon: "📋", step: "Standards applied",   body: "If you pass compliance:'hipaa', we enforce HIPAA §164.312(d) minimum requirements before returning." },
+                { icon: "📬", step: "You get passwords",  body: "A JSON array of passwords plus entropy bits, crack time, and an audit object with the character pool used." },
+              ].map((s, i) => (
+                <motion.div key={s.step}
+                  initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }} transition={{ delay: i * 0.07 }}
+                  className="bc" style={{ position: "relative", overflow: "hidden" }}>
+                  <div className="bc-line" />
+                  <span style={{ fontSize: 24, display: "block", marginBottom: 10 }}>{s.icon}</span>
+                  <div style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 14, color: "#e0e0e0", marginBottom: 6 }}>{s.step}</div>
+                  <p style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "var(--muted)", lineHeight: 1.7, margin: 0 }}>{s.body}</p>
+                </motion.div>
+              ))}
+            </div>
+
+            <div style={{ background: "rgba(255,170,0,.05)", border: "1px solid rgba(255,170,0,.15)", borderRadius: 10, padding: "14px 18px", marginBottom: 8 }}>
+              <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#ffaa44", margin: 0, lineHeight: 1.7 }}>
+                ⚠️ API generation is server-side — your password transits our server over HTTPS. For zero-knowledge, client-side generation use the{" "}
+                <a href="/" style={{ color: "#ffaa44", textDecoration: "underline" }}>web generator</a>.
+              </p>
+            </div>
+
+            {/* ═══ INTEGRATIONS ══════════════════════════════ */}
+            <SH id="integrations" eyebrow="What can you build with it?" title="Plug PassGeni into anything." />
+            <p style={{ fontFamily: "var(--font-body)", fontSize: 15, color: "#777", lineHeight: 1.8, marginBottom: 24 }}>
+              Because it&apos;s plain JSON over HTTPS, PassGeni works with every language, platform, and no-code tool that can make an HTTP request — which is all of them.
+              Click any integration below to see a working code example.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+              {INTEGRATIONS.map((item, i) => (
+                <motion.div key={item.title}
+                  initial={{ opacity: 0, x: -8 }} whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }} transition={{ delay: i * 0.05 }}>
+                  <IntegrationCard
+                    item={item}
+                    isOpen={openIntegration === i}
+                    onToggle={() => setOpenIntegration(openIntegration === i ? null : i)}
+                  />
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Platform icons */}
+            <div style={{ background: "rgba(10,10,13,.8)", border: "1px solid rgba(255,255,255,.06)", borderRadius: 12, padding: "16px 20px", marginBottom: 8, textAlign: "center" }}>
+              <p style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#444", letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 14 }}>Also works with</p>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+                {["Zapier","Make","n8n","GitHub Actions","AWS Lambda","Vercel Edge","Cloudflare Workers","Postman","Insomnia","Laravel","Django","Rails","Spring Boot","Go stdlib","Rust reqwest"].map(t => (
+                  <span key={t} style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#555", background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.05)", borderRadius: 6, padding: "4px 10px" }}>{t}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* ═══ AUTHENTICATION ════════════════════════════ */}
+            <SH id="authentication" eyebrow="Security" title="Authentication" />
+            <p style={{ fontFamily: "var(--font-body)", fontSize: 15, color: "#777", lineHeight: 1.8, marginBottom: 20 }}>
+              Pass your API key as <code style={{ background: "rgba(200,255,0,.08)", color: "#C8FF00", padding: "2px 6px", borderRadius: 4, fontSize: 13 }}>apiKey</code> in the request body.
+              Free tier requests need no key at all.
+            </p>
+            <CodeBlock code={`// Authenticated (Team plan)
+{ "apiKey": "pg_live_abc123...", "count": 10 }
+
+// Anonymous (free tier — no key needed, 50 calls/day)
+{ "count": 1 }`} label="Authentication — body field" />
+
+            <div style={{ background: "rgba(255,68,68,.05)", border: "1px solid rgba(255,68,68,.18)", borderRadius: 10, padding: "14px 18px", marginBottom: 8 }}>
+              <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#ff8866", margin: 0, lineHeight: 1.75 }}>
+                🔒 Never put your API key in front-end code, browser JS, or a public GitHub repo.
+                Use an environment variable (<code style={{ background: "rgba(255,68,68,.1)", padding: "2px 5px", borderRadius: 3 }}>process.env.PASSGENI_API_KEY</code>). Rotate from your{" "}
+                <a href="/dashboard" style={{ color: "#ff8866", textDecoration: "underline" }}>dashboard</a> if compromised.
+              </p>
+            </div>
+
+            {/* ═══ RATE LIMITS ═══════════════════════════════ */}
+            <SH id="rate-limits" eyebrow="Quotas" title="Rate limits" />
+            <div style={{ background: "rgba(8,8,13,.9)", border: "1px solid rgba(255,255,255,.06)", borderRadius: 12, overflow: "hidden", marginBottom: 20 }}>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
-                  <tr style={{ borderBottom: "1px solid #1a1a1a" }}>
-                    {["Tier", "Calls / day", "Max count per request", "Compliance presets"].map((h) => (
-                      <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontFamily: "var(--font-mono)", fontSize: 10, color: "#888", letterSpacing: "0.1em", textTransform: "uppercase" }}>{h}</th>
+                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,.05)", background: "rgba(255,255,255,.02)" }}>
+                    {["Plan","Calls/day","Per request","Compliance","Cost"].map(h => (
+                      <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontFamily: "var(--font-mono)", fontSize: 9, color: "#555", letterSpacing: ".1em", textTransform: "uppercase" }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {[
-                    { tier: "Free (no key)", calls: "50 / day",   count: "10",  compliance: "—"   },
-                    { tier: "Team",          calls: "5,000 / day", count: "500", compliance: "All" },
-                  ].map(({ tier, calls, count, compliance }) => (
-                    <tr key={tier} style={{ borderBottom: "1px solid #0e0e10" }}>
-                      <td style={{ padding: "14px 16px" }}><span style={{ fontFamily: "var(--font-body)", fontSize: 14, color: tier === "Team" ? "#C8FF00" : "#ccc" }}>{tier}</span></td>
-                      <td style={{ padding: "14px 16px" }}><code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "#aaa" }}>{calls}</code></td>
-                      <td style={{ padding: "14px 16px" }}><code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "#aaa" }}>{count}</code></td>
-                      <td style={{ padding: "14px 16px" }}><code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: compliance === "All" ? "#C8FF00" : "#555" }}>{compliance}</code></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "#aaa", lineHeight: 1.8, marginBottom: 24 }}>
-              Rate limit headers are returned on every response:
-            </p>
-            <CodeBlock
-              label="Rate limit headers"
-              code={`X-RateLimit-Limit:     5000
-X-RateLimit-Remaining: 4997
-X-RateLimit-Reset:     1704067200000`}
-            />
-
-            {/* ── ENDPOINT ── */}
-            <SectionAnchor id="generate" title="POST /v1/generate" />
-            <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#0a0a0c", border: "1px solid #C8FF0022", borderRadius: 10, padding: "16px 20px", marginBottom: 24 }}>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#fff", background: "#C8FF0022", border: "1px solid #C8FF0044", borderRadius: 6, padding: "4px 10px", letterSpacing: "0.06em" }}>POST</span>
-              <code style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "#aaa" }}>{BASE_URL}/generate</code>
-            </div>
-            <p style={{ fontFamily: "var(--font-body)", fontSize: 15, color: "#aaa", lineHeight: 1.85, marginBottom: 24 }}>
-              Generates one or more secure passwords. All parameters are optional — sensible defaults apply.
-              Returns a JSON object containing the generated passwords plus audit metadata.
-            </p>
-
-            {/* ── PARAMETERS ── */}
-            <SectionAnchor id="parameters" title="Request Parameters" />
-            <div style={{ background: "#0a0a0c", border: "1px solid #141416", borderRadius: 12, overflow: "hidden", marginBottom: 24 }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ borderBottom: "1px solid #1a1a1a" }}>
-                    {["Parameter", "Type", "Default", "Description"].map((h) => (
-                      <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontFamily: "var(--font-mono)", fontSize: 10, color: "#888", letterSpacing: "0.1em", textTransform: "uppercase" }}>{h}</th>
-                    ))}
+                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,.03)" }}>
+                    <td style={{ padding: "14px 16px" }}><span style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "#aaa" }}>Free</span></td>
+                    <td style={{ padding: "14px 16px" }}><code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "#aaa" }}>50/day (IP)</code></td>
+                    <td style={{ padding: "14px 16px" }}><code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "#aaa" }}>10</code></td>
+                    <td style={{ padding: "14px 16px" }}><span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "#555" }}>—</span></td>
+                    <td style={{ padding: "14px 16px" }}><span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "#aaa" }}>$0</span></td>
                   </tr>
-                </thead>
-                <tbody>
-                  <ParamRow name="apiKey"     type="string"  required={false} defaultVal="null"       description="Your Team API key. Omit for free tier (50 calls/day)." />
-                  <ParamRow name="profession" type="string"  required={false} defaultVal='"general"'  description='Influences password seed. Options: "developer", "doctor", "finance", "designer", "legal", "educator", or any custom string.' />
-                  <ParamRow name="length"     type="number"  required={false} defaultVal="18"         description="Password length. Range: 8–32. Compliance presets may enforce a higher minimum." />
-                  <ParamRow name="count"      type="number"  required={false} defaultVal="1"          description="Number of passwords to generate. Free: max 10. Team: max 500." />
-                  <ParamRow name="compliance" type="string"  required={false} defaultVal="null"       description='Compliance preset. Options: "hipaa", "pci", "soc2", "iso", "nist", "dod". Team plan only.' />
-                  <ParamRow name="mode"       type="string"  required={false} defaultVal='"password"' description='Generation mode. "password" or "passphrase".' />
-                  <ParamRow name="quantum"    type="boolean" required={false} defaultVal="false"      description="Enable post-quantum mode. Sets minimum length 20, expands symbol set." />
+                  <tr>
+                    <td style={{ padding: "14px 16px" }}>
+                      <span style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "#C8FF00", fontWeight: 700 }}>Team</span>
+                    </td>
+                    <td style={{ padding: "14px 16px" }}><code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "#C8FF00" }}>5,000/day</code></td>
+                    <td style={{ padding: "14px 16px" }}><code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "#C8FF00" }}>500</code></td>
+                    <td style={{ padding: "14px 16px" }}><span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "#C8FF00" }}>All 6</span></td>
+                    <td style={{ padding: "14px 16px" }}><span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "#aaa" }}>$29/mo</span></td>
+                  </tr>
                 </tbody>
               </table>
             </div>
+            <CodeBlock code={`X-RateLimit-Limit:     5000
+X-RateLimit-Remaining: 4995
+X-RateLimit-Reset:     1735689600000  // Unix ms — midnight UTC`} label="Rate limit headers (every response)" />
 
-            {/* ── RESPONSE ── */}
-            <SectionAnchor id="response" title="Response Schema" />
-            <CodeBlock
-              label="200 OK — success response"
-              code={`{
-  "passwords":  ["nX9#kT2@mP5!qR8$vZ3", "Bz7!deploy#K3@stack"],
+            {/* ═══ PARAMETERS ════════════════════════════════ */}
+            <SH id="parameters" eyebrow="Request body" title="Parameters" />
+            <p style={{ fontFamily: "var(--font-body)", fontSize: 15, color: "#777", lineHeight: 1.8, marginBottom: 20 }}>
+              All parameters are optional. An empty body <code style={{ background: "rgba(200,255,0,.06)", color: "#C8FF00", padding: "2px 5px", borderRadius: 4, fontSize: 13 }}>{"{}"}</code> returns one 18-character password with sensible defaults.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+              {PARAMS.map(p => (
+                <div key={p.name} style={{ display: "flex", gap: 16, alignItems: "flex-start", background: "rgba(8,8,13,.9)", border: "1px solid rgba(255,255,255,.05)", borderRadius: 10, padding: "14px 18px" }}>
+                  <div style={{ flexShrink: 0, minWidth: 100 }}>
+                    <code style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: p.color, display: "block", marginBottom: 4 }}>{p.name}</code>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#444" }}>{p.type}</span>
+                    {p.req && <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#ff4444", marginLeft: 6 }}>required</span>}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <code style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#444", background: "rgba(255,255,255,.03)", padding: "2px 6px", borderRadius: 4, display: "inline-block", marginBottom: 5 }}>default: {p.def}</code>
+                    <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#666", lineHeight: 1.65, margin: 0 }}>{p.note}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ═══ RESPONSE ══════════════════════════════════ */}
+            <SH id="response" eyebrow="Response format" title="Response schema" />
+            <p style={{ fontFamily: "var(--font-body)", fontSize: 15, color: "#777", lineHeight: 1.8, marginBottom: 20 }}>
+              Every successful response is <code style={{ background: "rgba(200,255,0,.06)", color: "#C8FF00", padding: "2px 6px", borderRadius: 4, fontSize: 13 }}>HTTP 200</code> with this JSON structure:
+            </p>
+            <CodeBlock json label="200 OK — example response" code={`{
+  "passwords":  ["nX9#kT2@mP5!qR8$vZ", "Bz7!deploy#K3@stack9"],
   "count":      2,
   "entropy":    131,
   "length":     20,
-  "compliance": null,
+  "compliance": "hipaa",
   "mode":       "password",
   "quantum":    false,
   "tier":       "team",
-  "generated":  "2025-01-15T14:23:11.442Z",
+  "generated":  "2026-04-11T14:23:11.442Z",
   "audit": {
-    "entropySource":  "Node.js crypto.randomInt() — FIPS 140-3 aligned",
-    "characterPool":  "lower+upper+numbers+symbols",
-    "clientSide":     false,
-    "serverContact":  true,
-    "note":           "API generation is server-side. For zero-knowledge generation, use the web tool at passgeni.ai"
+    "entropySource": "Node.js crypto.randomInt() — FIPS 140-3 aligned",
+    "characterPool": "lower+upper+numbers+symbols",
+    "clientSide":    false,
+    "serverContact": true
   }
-}`}
-            />
+}`} />
 
-            {/* ── ERRORS ── */}
-            <SectionAnchor id="errors" title="Error Codes" />
-            <div style={{ background: "#0a0a0c", border: "1px solid #141416", borderRadius: 12, overflow: "hidden", marginBottom: 24 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 10, marginBottom: 20, marginTop: 4 }}>
+              {[
+                { field: "passwords", desc: "Array of generated password strings" },
+                { field: "entropy",   desc: "Bits of entropy in the first password" },
+                { field: "tier",      desc: '"free" or "team" — shows which rate limit applied' },
+                { field: "audit",     desc: "Character pool and entropy source for compliance evidence" },
+              ].map(({ field, desc }) => (
+                <div key={field} style={{ background: "rgba(8,8,13,.9)", border: "1px solid rgba(255,255,255,.05)", borderRadius: 8, padding: "12px 14px" }}>
+                  <code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "#79c0ff", display: "block", marginBottom: 5 }}>{field}</code>
+                  <p style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "#666", lineHeight: 1.6, margin: 0 }}>{desc}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* ═══ ERRORS ════════════════════════════════════ */}
+            <SH id="errors" eyebrow="Error handling" title="Error codes" />
+            <div style={{ background: "rgba(8,8,13,.9)", border: "1px solid rgba(255,255,255,.06)", borderRadius: 12, overflow: "hidden", marginBottom: 20 }}>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
-                  <tr style={{ borderBottom: "1px solid #1a1a1a" }}>
-                    {["Status", "Error", "Cause"].map((h) => (
-                      <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontFamily: "var(--font-mono)", fontSize: 10, color: "#888", letterSpacing: "0.1em", textTransform: "uppercase" }}>{h}</th>
+                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,.05)", background: "rgba(255,255,255,.02)" }}>
+                    {["Status","Error","What to do"].map(h => (
+                      <th key={h} style={{ padding: "11px 16px", textAlign: "left", fontFamily: "var(--font-mono)", fontSize: 9, color: "#555", letterSpacing: ".1em", textTransform: "uppercase" }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {[
-                    { status: "400", error: "Bad request",        cause: "Malformed JSON or invalid parameter types"   },
-                    { status: "405", error: "Method not allowed", cause: "Only POST is accepted"                       },
-                    { status: "429", error: "Rate limit exceeded", cause: "Too many requests. Check X-RateLimit-Reset" },
-                    { status: "500", error: "Generation failed",  cause: "Internal error — try again or contact support" },
-                  ].map(({ status, error, cause }) => (
-                    <tr key={status} style={{ borderBottom: "1px solid #0e0e10" }}>
-                      <td style={{ padding: "14px 16px" }}><code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: parseInt(status) >= 400 ? "#ff6644" : "#C8FF00" }}>{status}</code></td>
-                      <td style={{ padding: "14px 16px" }}><code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "#888" }}>{error}</code></td>
-                      <td style={{ padding: "14px 16px" }}><span style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#777" }}>{cause}</span></td>
+                    { s: "400", e: "Bad request",         f: "#ffaa44", fix: "Check that length and count are numbers, not strings." },
+                    { s: "403", e: "Forbidden",            f: "#ff9977", fix: "You passed a compliance preset without a Team API key." },
+                    { s: "405", e: "Method not allowed",   f: "#ff9977", fix: "Use POST. GET is not accepted on this endpoint." },
+                    { s: "429", e: "Rate limit exceeded",  f: "#ff6644", fix: "Wait for X-RateLimit-Reset, or upgrade for 5,000/day." },
+                    { s: "500", e: "Generation failed",    f: "#ff4444", fix: "Retry once. If it persists, email hello@passgeni.ai." },
+                  ].map(({ s, e, f, fix }) => (
+                    <tr key={s} style={{ borderBottom: "1px solid rgba(255,255,255,.03)" }}>
+                      <td style={{ padding: "13px 16px" }}><code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: f }}>{s}</code></td>
+                      <td style={{ padding: "13px 16px" }}><code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "#888" }}>{e}</code></td>
+                      <td style={{ padding: "13px 16px" }}><span style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#666" }}>{fix}</span></td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <CodeBlock
-              label="429 rate limit response"
-              code={`{
+            <CodeBlock json label="429 — rate limit response body" code={`{
   "error":   "Rate limit exceeded",
   "limit":   50,
-  "resetAt": "2025-01-15T15:00:00.000Z",
-  "upgrade": "Upgrade to Team for 5,000 calls/day — passgeni.ai/api"
-}`}
-            />
+  "resetAt": "2026-04-12T00:00:00.000Z",
+  "upgrade": "https://passgeni.ai/pricing"
+}`} />
 
-            {/* ── EXAMPLES ── */}
-            <SectionAnchor id="examples" title="Code Examples" />
+            {/* ═══ EXAMPLES ══════════════════════════════════ */}
+            <SH id="examples" eyebrow="Ready-to-run examples" title="Code examples" />
+            <p style={{ fontFamily: "var(--font-body)", fontSize: 15, color: "#777", lineHeight: 1.8, marginBottom: 20 }}>
+              All examples work out of the box. Replace <code style={{ background: "rgba(200,255,0,.06)", color: "#C8FF00", padding: "2px 5px", borderRadius: 4, fontSize: 13 }}>pg_live_your_key_here</code> with your API key for Team features.
+            </p>
 
-            <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 16, color: "#fff", marginBottom: 12, marginTop: 28 }}>cURL</h3>
-            <CodeBlock
-              label="cURL — basic"
-              code={`# Free tier — no API key needed
-curl -X POST https://passgeni.ai/api/v1/generate \\
-  -H "Content-Type: application/json" \\
-  -d '{"profession": "developer", "length": 18, "count": 3}'`}
-            />
-            <CodeBlock
-              label="cURL — Team with compliance preset"
-              code={`curl -X POST https://passgeni.ai/api/v1/generate \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "apiKey":     "pg_live_your_key_here",
-    "profession": "doctor",
-    "length":     18,
-    "compliance": "hipaa",
-    "count":      10
-  }'`}
-            />
+            {/* All language tabs */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: -1 }}>
+                {LANG_EXAMPLES.map(l => (
+                  <button key={l.id} onClick={() => setActiveLang(l.id)}
+                    style={{
+                      background: activeLang === l.id ? "rgba(200,255,0,.1)" : "rgba(255,255,255,.03)",
+                      border: `1px solid ${activeLang === l.id ? "rgba(200,255,0,.3)" : "rgba(255,255,255,.07)"}`,
+                      borderBottom: activeLang === l.id ? "1px solid #05050a" : undefined,
+                      borderRadius: "8px 8px 0 0", padding: "7px 14px",
+                      fontFamily: "var(--font-mono)", fontSize: 11,
+                      color: activeLang === l.id ? "#C8FF00" : "#666",
+                      cursor: "pointer", transition: "all .15s", position: "relative", zIndex: 2,
+                    }}>{l.label}</button>
+                ))}
+              </div>
+              <AnimatePresence mode="wait">
+                <motion.div key={activeLang} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
+                  <CodeBlock code={activeLangData.code} label={activeLangData.label} maxH={400} />
+                </motion.div>
+              </AnimatePresence>
+            </div>
 
-            <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 16, color: "#fff", marginBottom: 12, marginTop: 28 }}>JavaScript / Node.js</h3>
-            <CodeBlock
-              label="Node.js — async/await"
-              code={`const response = await fetch("https://passgeni.ai/api/v1/generate", {
-  method:  "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    apiKey:     process.env.PASSGENI_API_KEY,
-    profession: "developer",
-    length:     20,
-    count:      5,
-    compliance: "soc2",
-  }),
-});
-
-const { passwords, entropy, tier } = await response.json();
-// passwords: ["Bz7!deploy#K3@stack", ...]
-// entropy:   131
-// tier:      "team"`}
-            />
-
-            <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 16, color: "#fff", marginBottom: 12, marginTop: 28 }}>Python</h3>
-            <CodeBlock
-              label="Python — requests"
-              code={`import requests, os
-
-response = requests.post(
-    "https://passgeni.ai/api/v1/generate",
-    json={
-        "apiKey":     os.environ["PASSGENI_API_KEY"],
-        "profession": "developer",
-        "length":     20,
-        "count":      5,
-        "compliance": "soc2",
-    }
-)
-
-data      = response.json()
-passwords = data["passwords"]
-print(f"Generated {len(passwords)} passwords, entropy: {data['entropy']} bits")`}
-            />
-
-            <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 16, color: "#fff", marginBottom: 12, marginTop: 28 }}>PHP</h3>
-            <CodeBlock
-              label="PHP — cURL"
-              code={`$response = file_get_contents("https://passgeni.ai/api/v1/generate", false,
-  stream_context_create([
-    "http" => [
-      "method"  => "POST",
-      "header"  => "Content-Type: application/json",
-      "content" => json_encode([
-        "apiKey"     => getenv("PASSGENI_API_KEY"),
-        "profession" => "developer",
-        "length"     => 20,
-        "count"      => 5,
-      ]),
-    ],
-  ])
-);
-
-$data = json_decode($response, true);
-$passwords = $data["passwords"]; // array of password strings`}
-            />
-
-            {/* ── LIVE TESTER ── */}
-            <SectionAnchor id="tester" title="Live Tester" />
-            <p style={{ fontFamily: "var(--font-body)", fontSize: 15, color: "#aaa", lineHeight: 1.8, marginBottom: 4 }}>
-              Try the API directly from this page. The free tier works without an API key.
+            {/* ═══ LIVE TESTER ═══════════════════════════════ */}
+            <SH id="tester" eyebrow="Interactive" title="Live tester — run a real request" />
+            <p style={{ fontFamily: "var(--font-body)", fontSize: 15, color: "#777", lineHeight: 1.8, marginBottom: 20 }}>
+              This sends a real API request right now. Free tier: no key needed.
+              The response is the actual JSON your code would receive.
             </p>
             <LiveTester />
 
-            {/* ── PRICING ── */}
-            <SectionAnchor id="pricing" title="Pricing & Limits" />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 28 }}>
+            {/* ═══ PRICING ═══════════════════════════════════ */}
+            <SH id="pricing" eyebrow="Plans" title="Plans & pricing" />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 14, marginBottom: 28 }}>
               {[
                 {
-                  name:     "Free",
-                  price:    "$0",
-                  color:    "#888",
-                  features: ["50 API calls / day", "Max 10 per request", "No API key needed", "Password mode only", "No compliance presets"],
+                  name: "Free", price: "$0", period: "forever", color: "#888", featured: false,
+                  items: ["50 API calls / day", "Max 10 per request", "No API key needed", "Password mode only", "All 6 profession seeds", "No compliance presets"],
                 },
                 {
-                  name:     "Team",
-                  price:    "$29/mo",
-                  color:    "#C8FF00",
-                  featured: true,
-                  badge:    "14-day free trial",
-                  features: ["5,000 API calls / day", "Max 500 per request", "All compliance presets", "Password + passphrase", "Post-quantum mode", "5 team seats", "CSV export"],
+                  name: "Team", price: "$29", period: "/month", color: "#C8FF00", featured: true, badge: "14-day free trial",
+                  items: ["5,000 API calls / day", "Max 500 per request", "All 6 compliance presets", "Passphrase mode", "Post-quantum mode", "5 dashboard seats", "CSV bulk export", "API key rotation"],
                 },
-              ].map((plan) => (
-                <div key={plan.name} style={{ background: "#0a0a0c", border: `1px solid ${plan.featured ? "#C8FF0044" : "#1a1a1a"}`, borderRadius: 14, padding: "24px 28px", position: "relative" }}>
+              ].map(plan => (
+                <div key={plan.name} style={{ background: "rgba(10,10,14,.9)", border: `1px solid ${plan.featured ? "rgba(200,255,0,.25)" : "rgba(255,255,255,.06)"}`, borderRadius: 16, padding: "28px", position: "relative", overflow: "hidden" }}>
+                  {/* Top shimmer */}
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg,transparent,${plan.featured ? "rgba(200,255,0,.4)" : "rgba(255,255,255,.06)"},transparent)`, pointerEvents: "none" }} />
                   {plan.badge && (
-                    <div style={{ position: "absolute", top: -1, left: "50%", transform: "translateX(-50%)", background: "#C8FF00", color: "#000", fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 700, padding: "3px 12px", borderRadius: "0 0 6px 6px", letterSpacing: "0.1em", whiteSpace: "nowrap" }}>
-                      {plan.badge}
+                    <div style={{ position: "absolute", top: -1, left: "50%", transform: "translateX(-50%)", background: "#C8FF00", color: "#000", fontFamily: "var(--font-mono)", fontSize: 8, fontWeight: 800, padding: "3px 12px", borderRadius: "0 0 8px 8px", letterSpacing: ".1em", whiteSpace: "nowrap" }}>
+                      {plan.badge.toUpperCase()}
                     </div>
                   )}
-                  <div style={{ marginTop: plan.badge ? 14 : 0 }}>
-                    <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: plan.color, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6 }}>{plan.name}</div>
-                    <div style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 32, color: "#fff", letterSpacing: "-0.03em", marginBottom: 20 }}>{plan.price}</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      {plan.features.map((f, i) => (
-                        <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                          <span style={{ color: plan.featured ? "#C8FF00" : "#555", fontSize: 11 }}>✓</span>
-                          <span style={{ fontFamily: "var(--font-body)", fontSize: 13, color: plan.featured ? "#ccc" : "#777" }}>{f}</span>
+                  <div style={{ paddingTop: plan.badge ? 16 : 0 }}>
+                    <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: plan.color, letterSpacing: ".14em", textTransform: "uppercase", marginBottom: 8 }}>{plan.name}</div>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 20 }}>
+                      <span style={{ fontFamily: "var(--font-heading)", fontWeight: 900, fontSize: 36, color: "#fff", letterSpacing: "-.04em", lineHeight: 1 }}>{plan.price}</span>
+                      <span style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#555" }}>{plan.period}</span>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 20 }}>
+                      {plan.items.map((f, i) => (
+                        <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                          <span style={{ color: plan.featured ? "#C8FF00" : "#444", fontSize: 11, flexShrink: 0, marginTop: 2 }}>✓</span>
+                          <span style={{ fontFamily: "var(--font-body)", fontSize: 13, color: plan.featured ? "#ccc" : "#666" }}>{f}</span>
                         </div>
                       ))}
                     </div>
                     {plan.featured && (
-                      <button onClick={startCheckout} disabled={checkoutLoading} className="btn-primary" style={{ width: "100%", justifyContent: "center", marginTop: 20, fontSize: 14, animation: "none" }}>
-                        {checkoutLoading ? "Loading…" : "Start free trial →"}
-                      </button>
+                      <a href="/pricing" className="btn-primary" style={{ display: "flex", justifyContent: "center", fontSize: 13 }}>
+                        Start free trial →
+                      </a>
                     )}
                   </div>
                 </div>
               ))}
             </div>
-            <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#666", lineHeight: 1.7 }}>
-              Questions? Email <a href="mailto:hello@passgeni.ai" style={{ color: "#C8FF00", textDecoration: "none" }}>hello@passgeni.ai</a>.
-              We reply within 24 hours.
+
+            <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#555", lineHeight: 1.7 }}>
+              Questions? Email{" "}
+              <a href="mailto:hello@passgeni.ai" style={{ color: "#C8FF00", textDecoration: "none" }}>hello@passgeni.ai</a>
+              {" "}— we reply within 24 hours.
             </p>
 
           </div>
         </div>
       </div>
+
+      <style>{`
+        @media(max-width:900px){
+          .api-sidebar{ display: none !important; }
+        }
+      `}</style>
     </PageLayout>
   );
 }
