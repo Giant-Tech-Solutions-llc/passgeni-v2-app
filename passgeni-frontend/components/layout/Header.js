@@ -51,37 +51,85 @@ const GUIDES_MENU={
   footer:{label:"Browse all guides →",href:"/guides"},
 };
 
-const DROPDOWN_STYLE={
-  position:"absolute",top:"calc(100% + 8px)",left:0,
-  background:"rgba(8,8,10,0.98)",border:"1px solid rgba(200,255,0,0.1)",
-  borderRadius:12,backdropFilter:"blur(20px)",boxShadow:"0 24px 64px rgba(0,0,0,0.6)",
-  zIndex:200,padding:"24px",minWidth:520,
+const DROPDOWN_BASE={
+  position:"absolute",top:"calc(100% + 12px)",left:0,
+  background:"rgba(7,7,9,0.98)",border:"1px solid rgba(200,255,0,0.08)",
+  borderRadius:16,backdropFilter:"blur(24px)",
+  boxShadow:"0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(200,255,0,0.04)",
+  zIndex:200,
+};
+
+// column label
+function ColLabel({children}){
+  return(
+    <div style={{fontFamily:"var(--font-body)",fontSize:10,fontWeight:700,color:"rgba(200,255,0,.5)",letterSpacing:".14em",textTransform:"uppercase",marginBottom:16,paddingBottom:10,borderBottom:"1px solid rgba(255,255,255,.04)"}}>
+      {children}
+    </div>
+  );
+}
+
+// single menu item with icon box
+function MenuItem({href,icon,label,desc,badge}){
+  return(
+    <a href={href} style={{display:"flex",alignItems:"flex-start",gap:14,padding:"10px 12px",borderRadius:10,textDecoration:"none",transition:"background .15s",marginBottom:2}}
+      onMouseEnter={e=>{e.currentTarget.style.background="rgba(200,255,0,0.05)";}}
+      onMouseLeave={e=>{e.currentTarget.style.background="transparent";}}
+    >
+      <div style={{width:36,height:36,borderRadius:8,background:"rgba(200,255,0,0.06)",border:"1px solid rgba(200,255,0,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0,marginTop:1}}>
+        {icon}
+      </div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
+          <span style={{fontFamily:"var(--font-body)",fontSize:14,fontWeight:600,color:"#f0f0f0",lineHeight:1.2}}>{label}</span>
+          {badge&&<span style={{background:"rgba(200,255,0,0.08)",color:"rgba(200,255,0,0.5)",fontSize:9,borderRadius:100,padding:"2px 8px",fontFamily:"var(--font-body)",fontWeight:700,letterSpacing:".08em",textTransform:"uppercase",flexShrink:0}}>Team</span>}
+        </div>
+        {desc&&<div style={{fontFamily:"var(--font-body)",fontSize:12,color:"#666",lineHeight:1.5}}>{desc}</div>}
+      </div>
+    </a>
+  );
+}
+
+// simple link row (no icon) for Guides
+function GuideLink({href,label}){
+  return(
+    <a href={href} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,padding:"9px 12px",borderRadius:8,textDecoration:"none",transition:"background .15s,color .15s",fontFamily:"var(--font-body)",fontSize:13,fontWeight:500,color:"#aaa",lineHeight:1.3,marginBottom:2}}
+      onMouseEnter={e=>{e.currentTarget.style.background="rgba(200,255,0,0.05)";e.currentTarget.style.color="#fff";e.currentTarget.querySelector("span").style.opacity="1";}}
+      onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color="#aaa";e.currentTarget.querySelector("span").style.opacity="0";}}
+    >
+      {label}
+      <span style={{color:"rgba(200,255,0,.5)",fontSize:13,opacity:0,transition:"opacity .15s",flexShrink:0}}>→</span>
+    </a>
+  );
+}
+
+const TOOLS_ICONS={
+  "Breach Checker":"🔍",
+  "Secure Password Sharing":"🔗",
+  "Password Strength Checker":"📊",
+  "Password Audit Tool":"🛡️",
+  "Password Policy Generator":"📋",
+  "WiFi QR Generator":"📶",
 };
 
 function ToolsDropdown(){
   return(
-    <div style={DROPDOWN_STYLE}>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:16,marginBottom:16}}>
+    <div style={{...DROPDOWN_BASE,width:640,padding:"28px 28px 20px"}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:0,columnGap:32,marginBottom:20}}>
         {TOOLS_MENU.columns.map(col=>(
-          <div key={col.label}>
-            <div style={{fontFamily:"var(--font-body)",fontSize:9,fontWeight:700,color:"rgba(200,255,0,.45)",letterSpacing:".12em",textTransform:"uppercase",marginBottom:10}}>{col.label}</div>
+          <div key={col.label} style={{marginBottom:20}}>
+            <ColLabel>{col.label}</ColLabel>
             {col.items.map(item=>(
-              <a key={item.label} href={item.href} style={{display:"block",textDecoration:"none",padding:"7px 8px",borderRadius:8,marginBottom:2,transition:"background .15s"}}
-                onMouseEnter={e=>e.currentTarget.style.background="rgba(200,255,0,0.05)"}
-                onMouseLeave={e=>e.currentTarget.style.background="transparent"}
-              >
-                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
-                  <span style={{fontFamily:"var(--font-body)",fontSize:13,fontWeight:700,color:"#fff"}}>{item.label}</span>
-                  {item.business&&<span style={{background:"rgba(255,255,255,0.06)",color:"#666",fontSize:9,borderRadius:100,padding:"2px 7px",fontFamily:"var(--font-body)",fontWeight:600}}>🏢</span>}
-                </div>
-                <div style={{fontFamily:"var(--font-body)",fontSize:11,color:"#555",lineHeight:1.4}}>{item.desc}</div>
-              </a>
+              <MenuItem key={item.label} href={item.href} icon={TOOLS_ICONS[item.label]||"⚙️"} label={item.label} desc={item.desc} badge={item.business}/>
             ))}
           </div>
         ))}
       </div>
-      <div style={{borderTop:"1px solid rgba(200,255,0,0.06)",paddingTop:12}}>
-        <a href={TOOLS_MENU.footer.href} style={{fontFamily:"var(--font-body)",fontSize:12,fontWeight:600,color:"rgba(200,255,0,.6)",textDecoration:"none",letterSpacing:".03em"}}>{TOOLS_MENU.footer.label}</a>
+      <div style={{borderTop:"1px solid rgba(255,255,255,.05)",paddingTop:16,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <span style={{fontFamily:"var(--font-body)",fontSize:12,color:"#444"}}>All tools are free · No account needed</span>
+        <a href={TOOLS_MENU.footer.href} style={{fontFamily:"var(--font-body)",fontSize:13,fontWeight:600,color:"rgba(200,255,0,.7)",textDecoration:"none",display:"flex",alignItems:"center",gap:6,transition:"color .15s"}}
+          onMouseEnter={e=>e.currentTarget.style.color="#C8FF00"}
+          onMouseLeave={e=>e.currentTarget.style.color="rgba(200,255,0,.7)"}
+        >{TOOLS_MENU.footer.label}</a>
       </div>
     </div>
   );
@@ -89,22 +137,23 @@ function ToolsDropdown(){
 
 function GuidesDropdown(){
   return(
-    <div style={DROPDOWN_STYLE}>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16,marginBottom:16}}>
+    <div style={{...DROPDOWN_BASE,width:700,padding:"28px 28px 20px"}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:0,columnGap:28,marginBottom:20}}>
         {GUIDES_MENU.columns.map(col=>(
           <div key={col.label}>
-            <div style={{fontFamily:"var(--font-body)",fontSize:9,fontWeight:700,color:"rgba(200,255,0,.45)",letterSpacing:".12em",textTransform:"uppercase",marginBottom:10}}>{col.label}</div>
+            <ColLabel>{col.label}</ColLabel>
             {col.items.map(item=>(
-              <a key={item.label} href={item.href} style={{display:"block",textDecoration:"none",padding:"6px 8px",borderRadius:8,marginBottom:2,fontFamily:"var(--font-body)",fontSize:13,fontWeight:500,color:"#ccc",transition:"background .15s,color .15s"}}
-                onMouseEnter={e=>{e.currentTarget.style.background="rgba(200,255,0,0.05)";e.currentTarget.style.color="#fff";}}
-                onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color="#ccc";}}
-              >{item.label}</a>
+              <GuideLink key={item.label} href={item.href} label={item.label}/>
             ))}
           </div>
         ))}
       </div>
-      <div style={{borderTop:"1px solid rgba(200,255,0,0.06)",paddingTop:12}}>
-        <a href={GUIDES_MENU.footer.href} style={{fontFamily:"var(--font-body)",fontSize:12,fontWeight:600,color:"rgba(200,255,0,.6)",textDecoration:"none",letterSpacing:".03em"}}>{GUIDES_MENU.footer.label}</a>
+      <div style={{borderTop:"1px solid rgba(255,255,255,.05)",paddingTop:16,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <span style={{fontFamily:"var(--font-body)",fontSize:12,color:"#444"}}>Free compliance guides · Updated 2024</span>
+        <a href={GUIDES_MENU.footer.href} style={{fontFamily:"var(--font-body)",fontSize:13,fontWeight:600,color:"rgba(200,255,0,.7)",textDecoration:"none",display:"flex",alignItems:"center",gap:6,transition:"color .15s"}}
+          onMouseEnter={e=>e.currentTarget.style.color="#C8FF00"}
+          onMouseLeave={e=>e.currentTarget.style.color="rgba(200,255,0,.7)"}
+        >{GUIDES_MENU.footer.label}</a>
       </div>
     </div>
   );
