@@ -291,6 +291,50 @@ export const PRICING = {
 export const TESTIMONIALS = {
   eyebrow:  "What people say",
   headline: "Real users. Real opinions.",
+  featured: [
+    {
+      name: "Tariq B.",
+      role: "Penetration tester",
+      avatar: "TB",
+      stars: 5,
+      text: "i literally opened devtools and watched the network tab while generating. nothing goes out. zero. that's not marketing, that's just true. been recommending it to clients ever since",
+    },
+    {
+      name: "Priya N.",
+      role: "Pediatrician",
+      avatar: "PN",
+      stars: 5,
+      text: "set it to Doctor mode, generated a passphrase for my EHR login. that was like 5 months ago and i havent hit 'forgot password' once since. small thing but honestly huge for me",
+    },
+    {
+      name: "Luke S.",
+      role: "Uni student, Edinburgh",
+      avatar: "LS",
+      stars: 5,
+      text: "ran my old gmail password through the breach checker just to see. showed up 3 times in leaked databases lol. changed everything that week. passgeni probably saved my bank account tbh",
+    },
+    {
+      name: "Ingrid H.",
+      role: "Hospital administrator",
+      avatar: "IH",
+      stars: 5,
+      text: "the HIPAA preset is the first thing ive been able to hand to non-technical staff and say just use this. no explaining minimum lengths or symbol rules. they just click it and its done",
+    },
+    {
+      name: "Zoe H.",
+      role: "Remote developer",
+      avatar: "ZH",
+      stars: 5,
+      text: "work across like 5 different client repos. bulk generated unique passwords for each CI/CD system in maybe 30 seconds. the txt export is clean and it actually labeled each one. did not expect that",
+    },
+    {
+      name: "Mo A.",
+      role: "Finance manager",
+      avatar: "MA",
+      stars: 5,
+      text: "PCI-DSS preset just... set everything. length, symbols, complexity, all of it. our payment portal passwords went from a mess to fully compliant and i didnt make a single manual decision",
+    },
+  ],
   items: [
     { name: "Sadia R.",       role: "Security Engineer",       stars: 5, text: "Finally a password generator that doesn't make me feel like a robot typed it. The Profession-aware seeding in PassGeni actually gives me something I can scan in half a second." },
     { name: "Marcus T.",      role: "Freelance Designer",      stars: 5, text: "The passphrase mode is what got me. Four random words I can say out loud without sounding crazy. Used it for my Figma and Adobe accounts. Zero confusion since." },

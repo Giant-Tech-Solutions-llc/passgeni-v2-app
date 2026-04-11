@@ -167,58 +167,89 @@ export function PricingSection(){
 }
 
 /* ── TESTIMONIALS ── */
-const FEATURED_TESTIMONIALS=["James K.","Pia R.","Mei L."];
 export function TestimonialsSection(){
-  const featured=TESTIMONIALS.items.filter(t=>FEATURED_TESTIMONIALS.includes(t.name));
+  const cards=TESTIMONIALS.featured||[];
+  const row1=cards.slice(0,3);
+  const row2=cards.slice(3,6);
   return(
     <section style={{padding:"0 var(--pad) var(--section)"}}>
       <div style={{maxWidth:1200,margin:"0 auto"}}>
+        {/* Heading */}
         <div style={{marginBottom:"clamp(32px,5vw,52px)",textAlign:"center"}}>
           <div className="eyebrow" style={{justifyContent:"center"}}>{TESTIMONIALS.eyebrow}</div>
           <Headline>{TESTIMONIALS.headline}</Headline>
         </div>
-        <div style={{maxWidth:860,margin:"0 auto"}}>
-          {/* Top row — 2 cards */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:"clamp(12px,2vw,20px)",marginBottom:"clamp(12px,2vw,20px)"}}>
-            {featured.slice(0,2).map((t,i)=>(
-              <motion.article key={i}
-                whileHover={{y:-4,borderColor:"rgba(200,255,0,0.25)"}}
-                transition={{duration:0.2}}
-                style={{background:"#0a0a0c",border:"1px solid #1e1e1e",borderRadius:14,padding:28,display:"flex",flexDirection:"column",cursor:"default"}}
-              >
-                <div style={{display:"flex",gap:2,marginBottom:12}}>
-                  {Array(t.stars||5).fill("★").map((s,si)=><span key={si} style={{color:"#C8FF00",fontSize:13}}>{s}</span>)}
-                </div>
-                <p style={{fontFamily:"var(--font-body)",fontSize:"var(--text-base)",color:"#aaa",lineHeight:1.8,marginBottom:16,flex:1,fontStyle:"italic"}}>"{t.text}"</p>
-                <div>
-                  <div style={{fontFamily:"var(--font-heading)",fontWeight:700,fontSize:15,color:"#fff"}}>{t.name}</div>
-                  <div style={{fontFamily:"var(--font-body)",fontSize:12,color:"#555",marginTop:3}}>{t.role}</div>
-                </div>
-              </motion.article>
-            ))}
-          </div>
-          {/* Bottom row — 1 card centred */}
-          <div style={{display:"flex",justifyContent:"center"}}>
-            {featured.slice(2,3).map((t,i)=>(
-              <motion.article key={i}
-                whileHover={{y:-4,borderColor:"rgba(200,255,0,0.25)"}}
-                transition={{duration:0.2}}
-                style={{background:"#0a0a0c",border:"1px solid #1e1e1e",borderRadius:14,padding:28,width:"calc(50% - 10px)",display:"flex",flexDirection:"column",cursor:"default"}}
-              >
-                <div style={{display:"flex",gap:2,marginBottom:12}}>
-                  {Array(t.stars||5).fill("★").map((s,si)=><span key={si} style={{color:"#C8FF00",fontSize:13}}>{s}</span>)}
-                </div>
-                <p style={{fontFamily:"var(--font-body)",fontSize:"var(--text-base)",color:"#aaa",lineHeight:1.8,marginBottom:16,flex:1,fontStyle:"italic"}}>"{t.text}"</p>
-                <div>
-                  <div style={{fontFamily:"var(--font-heading)",fontWeight:700,fontSize:15,color:"#fff"}}>{t.name}</div>
-                  <div style={{fontFamily:"var(--font-body)",fontSize:12,color:"#555",marginTop:3}}>{t.role}</div>
-                </div>
-              </motion.article>
-            ))}
-          </div>
+
+        {/* Row 1 */}
+        <div className="testimonials-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"clamp(12px,2vw,20px)",marginBottom:"clamp(12px,2vw,20px)"}}>
+          {row1.map((t,i)=><TestimonialCard key={i} t={t} delay={i*0.08}/>)}
+        </div>
+        {/* Row 2 */}
+        <div className="testimonials-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"clamp(12px,2vw,20px)"}}>
+          {row2.map((t,i)=><TestimonialCard key={i} t={t} delay={i*0.08}/>)}
         </div>
       </div>
     </section>
+  );
+}
+
+function TestimonialCard({t,delay=0}){
+  return(
+    <motion.article
+      initial={{opacity:0,y:16}}
+      whileInView={{opacity:1,y:0}}
+      viewport={{once:true,margin:"-40px"}}
+      transition={{duration:0.45,ease:"easeOut",delay}}
+      whileHover={{y:-4,borderColor:"rgba(200,255,0,0.2)"}}
+      style={{
+        background:"#0a0a0c",
+        border:"1px solid #1a1a1e",
+        borderRadius:16,
+        padding:"clamp(20px,2.5vw,28px)",
+        display:"flex",
+        flexDirection:"column",
+        gap:16,
+        cursor:"default",
+        transition:"border-color .2s",
+      }}
+    >
+      {/* Stars */}
+      <div style={{display:"flex",gap:3}}>
+        {Array(t.stars||5).fill(0).map((_,si)=>(
+          <span key={si} style={{color:"#C8FF00",fontSize:12,lineHeight:1}}>★</span>
+        ))}
+      </div>
+
+      {/* Quote */}
+      <p style={{
+        fontFamily:"var(--font-body)",
+        fontSize:"clamp(13px,1.4vw,15px)",
+        color:"#999",
+        lineHeight:1.75,
+        flex:1,
+        margin:0,
+      }}>
+        &ldquo;{t.text}&rdquo;
+      </p>
+
+      {/* Author */}
+      <div style={{display:"flex",alignItems:"center",gap:12,paddingTop:4,borderTop:"1px solid rgba(255,255,255,.05)"}}>
+        <div style={{
+          width:36,height:36,borderRadius:"50%",
+          background:"linear-gradient(135deg,rgba(200,255,0,0.15),rgba(200,255,0,0.04))",
+          border:"1px solid rgba(200,255,0,0.12)",
+          display:"flex",alignItems:"center",justifyContent:"center",
+          fontFamily:"var(--font-body)",fontSize:11,fontWeight:700,
+          color:"rgba(200,255,0,0.7)",letterSpacing:".04em",flexShrink:0,
+        }}>
+          {t.avatar||t.name.split(" ").map(w=>w[0]).join("").slice(0,2)}
+        </div>
+        <div>
+          <div style={{fontFamily:"var(--font-body)",fontWeight:700,fontSize:14,color:"#e8e8e8",lineHeight:1.2}}>{t.name}</div>
+          <div style={{fontFamily:"var(--font-body)",fontSize:11,color:"#444",marginTop:3,lineHeight:1}}>{t.role}</div>
+        </div>
+      </div>
+    </motion.article>
   );
 }
 
