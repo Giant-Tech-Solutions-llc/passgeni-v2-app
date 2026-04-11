@@ -203,8 +203,11 @@ export default function GeneratorWidget() {
       setHistory((h) => [newPw, ...h.filter((x) => x !== newPw)].slice(0, 10));
       setGenerating(false);
       setIsNew(true);
-      // Track PQ usage for free users
-      if (useQuantum) markPqUsed();
+      // Track PQ usage for free users — lock immediately in this session
+      if (useQuantum) {
+        markPqUsed();
+        setPqLocked(true);
+      }
       setTimeout(() => setIsNew(false), 2000);
     }, 200);
   }, [customSeeds, length, opts, quantumMode, profession, language, compliance]); // eslint-disable-line
