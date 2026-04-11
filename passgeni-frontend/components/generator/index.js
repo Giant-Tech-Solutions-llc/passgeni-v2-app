@@ -159,16 +159,37 @@ export function PasswordHistory({ history, onClear }) {
   );
 }
 
+// ─── SHARED PLAN HELPERS (used by BulkGenerator + ComplianceBar) ──
+function getPlan() {
+  try { const raw = localStorage.getItem("passgeni_plan"); if (raw) return raw; } catch (_) {}
+  return "free";
+}
+const PLAN_LIMITS = {
+  free:       { passwords: 15,  bulk: 0,   dnaScore: 1,  passphrase: 3,  seeds: 5   },
+  pro:        { passwords: 150, bulk: 25,  dnaScore: 999, passphrase: 999, seeds: 999 },
+  team:       { passwords: 999, bulk: 500, dnaScore: 999, passphrase: 999, seeds: 999 },
+  enterprise: { passwords: 999, bulk: 500, dnaScore: 999, passphrase: 999, seeds: 999 },
+};
+
 // ─── BULK GENERATOR ───────────────────────────────────────────
 export function BulkGenerator({ profession, opts, length, customSeeds, quantumMode }) {
   const [count,      setCount]      = useState(10);
   const [bulk,       setBulk]       = useState([]);
   const [generating, setGenerating] = useState(false);
+  const [blocked,    setBlocked]    = useState(false);
 
   const generate = () => {
+    const plan = getPlan();
+    const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
+    if (limits.bulk === 0) {
+      setBlocked(true);
+      return;
+    }
+    setBlocked(false);
+    const safeCount = Math.min(count, limits.bulk);
     setGenerating(true);
     setTimeout(() => {
-      const list = Array.from({ length: count }, () => buildPassword(length, profession, opts, customSeeds, quantumMode));
+      const list = Array.from({ length: safeCount }, () => buildPassword(length, profession, opts, customSeeds, quantumMode));
       setBulk(list);
       setGenerating(false);
     }, 300);
@@ -207,9 +228,19 @@ export function BulkGenerator({ profession, opts, length, customSeeds, quantumMo
 
       {/* Body */}
       <div style={{ padding: "20px 24px" }}>
-        <button className="btn-primary" style={{ width: "100%", justifyContent: "center", marginBottom: 16 }} onClick={generate}>
+        <button className="btn-primary" style={{ width: "100%", justifyContent: "center", marginBottom: blocked ? 0 : 16 }} onClick={generate}>
           {generating ? `Generating ${count} passwords…` : <>Generate {count} passwords <span style={{ fontSize: 16 }}>⚡</span></>}
         </button>
+        {blocked && (
+          <div style={{ marginTop: 12, marginBottom: 16, background: "#0a0a0c", border: "1px solid #1e1e1e", borderRadius: 10, padding: "14px 18px", animation: "fadeIn .2s ease" }}>
+            <div style={{ fontFamily: "var(--font-body)", fontSize: 13, fontWeight: 600, color: "#fff", marginBottom: 6 }}>
+              Bulk generation is available on Pro and Team plans.
+            </div>
+            <a href="/pricing#pro" style={{ fontFamily: "var(--font-body)", fontSize: 13, fontWeight: 700, color: "#C8FF00", textDecoration: "none" }}>
+              Upgrade to Pro →
+            </a>
+          </div>
+        )}
         {bulk.length > 0 && (
           <>
             <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
@@ -236,7 +267,24 @@ export function BulkGenerator({ profession, opts, length, customSeeds, quantumMo
 }
 
 // ─── COMPLIANCE BAR ───────────────────────────────────────────
+const TEAM_PRESETS = ["hipaa", "pci", "soc2", "iso27001", "nist", "dod", "quantum"];
+
 export function ComplianceBar({ compliance, onSelect, activePreset }) {
+  const [gateMsg, setGateMsg] = useState(false);
+
+  const handleSelect = (key) => {
+    if (TEAM_PRESETS.includes(key.toLowerCase())) {
+      const plan = getPlan();
+      if (plan !== "team" && plan !== "enterprise") {
+        setGateMsg(true);
+        setTimeout(() => setGateMsg(false), 3000);
+        return;
+      }
+    }
+    setGateMsg(false);
+    onSelect(key);
+  };
+
   return (
     <div style={{ background: "#0a0a0c", border: "1px solid #141416", borderRadius: 12, padding: "16px 20px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
@@ -252,21 +300,31 @@ export function ComplianceBar({ compliance, onSelect, activePreset }) {
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         {Object.entries(COMPLIANCE_PRESETS).map(([key, preset]) => {
           const isActive = compliance === key;
+          const isTeamOnly = TEAM_PRESETS.includes(key.toLowerCase());
+          const plan = getPlan();
+          const locked = isTeamOnly && plan !== "team" && plan !== "enterprise";
           return (
             <motion.button
               key={key}
-              onClick={() => onSelect(key)}
+              onClick={() => handleSelect(key)}
               whileTap={{ scale: 0.96 }}
               animate={{ boxShadow: isActive ? `0 0 12px ${preset.color}4d` : "0 0 0px rgba(200,255,0,0)" }}
               transition={{ duration: 0.3 }}
               className={`compliance-pill ${isActive ? "active" : ""}`}
-              style={isActive ? { borderColor: preset.color, color: preset.color, background: `${preset.color}11` } : {}}
+              style={isActive ? { borderColor: preset.color, color: preset.color, background: `${preset.color}11` } : locked ? { opacity: 0.45 } : {}}
+              title={locked ? "Available on Team plan" : undefined}
             >
-              {preset.label}
+              {locked ? "🔒 " : ""}{preset.label}
             </motion.button>
           );
         })}
       </div>
+      {gateMsg && (
+        <div style={{ marginTop: 10, fontFamily: "var(--font-body)", fontSize: 12, color: "#888", animation: "fadeIn .2s ease" }}>
+          Compliance presets are available on the Team plan.{" "}
+          <a href="/pricing#team" style={{ color: "#C8FF00", textDecoration: "none", fontWeight: 600 }}>Upgrade →</a>
+        </div>
+      )}
     </div>
   );
 }

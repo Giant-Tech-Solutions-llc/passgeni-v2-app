@@ -75,6 +75,7 @@ export default function GeneratorWidget() {
   const [pqLocked, setPqLocked] = useState(false);
   const [showPqPopup, setShowPqPopup] = useState(false);
   const [pqShareLoading, setPqShareLoading] = useState(null);
+  const [pwLimitHit, setPwLimitHit] = useState(false);
   const toastTimer = useRef(null);
   const inputRef = useRef(null);
   const pqPopupRef = useRef(null);
@@ -114,9 +115,39 @@ export default function GeneratorWidget() {
     try { localStorage.setItem("pq_unlocked_until", String(Date.now() + 86400000)); } catch (_) {}
   }
 
+  // ── Plan limits ────────────────────────────────────────────────
+  function getPlan() {
+    try { const raw = localStorage.getItem("passgeni_plan"); if (raw) return raw; } catch (_) {}
+    return "free";
+  }
+  const PLAN_LIMITS = {
+    free:       { passwords: 15,  bulk: 0,   dnaScore: 1,  passphrase: 3,  seeds: 5   },
+    pro:        { passwords: 150, bulk: 25,  dnaScore: 999, passphrase: 999, seeds: 999 },
+    team:       { passwords: 999, bulk: 500, dnaScore: 999, passphrase: 999, seeds: 999 },
+    enterprise: { passwords: 999, bulk: 500, dnaScore: 999, passphrase: 999, seeds: 999 },
+  };
+  function getDailyCount(key) {
+    try {
+      const data = JSON.parse(localStorage.getItem(key) || "{}");
+      if (data.date !== todayStr()) return 0;
+      return data.count || 0;
+    } catch (_) { return 0; }
+  }
+  function incrementDailyCount(key) {
+    try {
+      const data = JSON.parse(localStorage.getItem(key) || "{}");
+      const count = data.date === todayStr() ? (data.count || 0) + 1 : 1;
+      localStorage.setItem(key, JSON.stringify({ date: todayStr(), count }));
+      return count;
+    } catch (_) { return 1; }
+  }
+
   useEffect(() => {
     const { locked } = checkPqLimit();
     setPqLocked(locked);
+    const plan = getPlan();
+    const lims = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
+    setPwLimitHit(getDailyCount("pg_pw_count") >= lims.passwords);
   }, []); // eslint-disable-line
 
   useEffect(() => {
@@ -173,6 +204,15 @@ export default function GeneratorWidget() {
   };
 
   const generate = useCallback((seedsOverride, lengthOverride, optsOverride, quantumOverride) => {
+    // ── Plan limit check ──────────────────────────────────────────
+    const plan = getPlan();
+    const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
+    const pwCount = getDailyCount("pg_pw_count");
+    if (pwCount >= limits.passwords) {
+      setPwLimitHit(true);
+      return;
+    }
+    // ── End plan limit check ──────────────────────────────────────
     setGenerating(true);
     setIsNew(false);
     setTimeout(() => {
@@ -199,6 +239,7 @@ export default function GeneratorWidget() {
         mode: "password",
       });
       setPassword(newPw);
+      incrementDailyCount("pg_pw_count");
       setAuditRecord(audit);
       setHistory((h) => [newPw, ...h.filter((x) => x !== newPw)].slice(0, 10));
       setGenerating(false);
@@ -246,6 +287,7 @@ export default function GeneratorWidget() {
   const toggleOpt = (key) => setOpts((o) => ({ ...o, [key]: !o[key] }));
 
   const handleProfessionClick = (id) => {
+    incrementDailyCount("pg_seed_count");
     setProfession(id);
     setCustomSeeds(null);
     setCustomLabel("");
@@ -280,7 +322,7 @@ export default function GeneratorWidget() {
             <>
               <PasswordDisplay password={password} generating={generating} strength={strength} entropy={entropy} crackTime={crackTime} isNew={isNew} />
               <div style={{ display:"flex", gap:8, marginTop:10, marginBottom:4, flexWrap:"wrap", position:"relative" }}>
-                <TogglePill label={showDNA?"Hide DNA Score":"Show DNA Score"} active={showDNA} onClick={()=>setShowDNA(d=>!d)} />
+                <TogglePill label={showDNA?"Hide DNA Score":"Show DNA Score"} active={showDNA} onClick={()=>{ if(!showDNA) incrementDailyCount("pg_dna_count"); setShowDNA(d=>!d); }} />
                 <TogglePill label={showAudit?"Hide Audit Log":"Show Audit Log"} active={showAudit} onClick={()=>setShowAudit(a=>!a)} />
                 <TogglePill label={showBulk?"Close Bulk":"Bulk Generator"} active={showBulk} onClick={()=>setShowBulk(b=>!b)} />
                 {/* Post-Quantum toggle — lock after 1 free use per day */}
@@ -375,6 +417,19 @@ export default function GeneratorWidget() {
               <button className="btn-primary" style={{ width:"100%", justifyContent:"center" }} onClick={()=>generate()}>
                 {generating ? "Generating…" : "Generate Secure Password →"}
               </button>
+              {pwLimitHit && (
+                <div style={{ marginTop:12, background:"#0a0a0c", border:"1px solid #1e1e1e", borderRadius:10, padding:"14px 18px", animation:"fadeIn .2s ease" }}>
+                  <div style={{ fontFamily:"var(--font-body)", fontSize:13, fontWeight:600, color:"#fff", marginBottom:6 }}>
+                    You&apos;ve used your {PLAN_LIMITS[getPlan()]?.passwords || 15} free passwords today.
+                  </div>
+                  <div style={{ fontFamily:"var(--font-body)", fontSize:12, color:"#777", marginBottom:10, lineHeight:1.6 }}>
+                    Come back tomorrow — or upgrade to Pro for 150/day.
+                  </div>
+                  <a href="/pricing#pro" style={{ fontFamily:"var(--font-body)", fontSize:13, fontWeight:700, color:"#C8FF00", textDecoration:"none" }}>
+                    Upgrade to Pro →
+                  </a>
+                </div>
+              )}
               <GeneratorTrustStrip />
               <PasswordHistory history={history} onClear={()=>setHistory([])} />
             </>
