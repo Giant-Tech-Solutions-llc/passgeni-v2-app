@@ -1,25 +1,26 @@
-import{useState,useEffect,useRef}from"react";
+import{useState,useEffect,useRef,useCallback}from"react";
+import{createPortal}from"react-dom";
 import{motion,AnimatePresence,useScroll,useTransform}from"framer-motion";
 import{useSession}from"next-auth/react";
 import{NAV}from"../../content/copy.js";
 import PassGeniLogo from"./Logo.js";
 
-
+// ─── Menu Data ────────────────────────────────────────────────
 const TOOLS_MENU={
   columns:[
     {label:"Security",items:[
-      {label:"Breach Checker",desc:"Check if your password appeared in a data breach",href:"/tools/breach-checker"},
-      {label:"Secure Password Sharing",desc:"Share credentials via encrypted one-time links",href:"/tools/secure-share"},
+      {icon:"🔍",label:"Breach Checker",desc:"Check if your password appeared in a data breach",href:"/tools/breach-checker"},
+      {icon:"🔗",label:"Secure Password Sharing",desc:"Share credentials via encrypted one-time links",href:"/tools/secure-share"},
     ]},
     {label:"Analysis",items:[
-      {label:"Password Strength Checker",desc:"Entropy score, crack time, DNA grade",href:"/tools/strength-checker"},
-      {label:"Password Audit Tool",desc:"Audit multiple passwords at once",href:"/tools/audit",business:true},
+      {icon:"📊",label:"Password Strength Checker",desc:"Entropy score, crack time, DNA grade",href:"/tools/strength-checker"},
+      {icon:"🛡️",label:"Password Audit Tool",desc:"Audit multiple passwords at once",href:"/tools/audit",business:true},
     ]},
     {label:"Business",items:[
-      {label:"Password Policy Generator",desc:"Generate a compliant written password policy",href:"/tools/policy-generator",business:true},
+      {icon:"📋",label:"Password Policy Generator",desc:"Generate a compliant written password policy",href:"/tools/policy-generator",business:true},
     ]},
     {label:"Utility",items:[
-      {label:"WiFi QR Generator",desc:"Create a scannable QR code for your WiFi",href:"/tools/wifi-qr",business:true},
+      {icon:"📶",label:"WiFi QR Generator",desc:"Create a scannable QR code for your WiFi",href:"/tools/wifi-qr",business:true},
     ]},
   ],
   footer:{label:"New to PassGeni? Start with the generator →",href:"/#generator"},
@@ -51,32 +52,67 @@ const GUIDES_MENU={
   footer:{label:"Browse all guides →",href:"/guides"},
 };
 
-const DROPDOWN_BASE={
-  position:"absolute",top:"calc(100% + 12px)",left:0,
-  background:"rgba(7,7,9,0.98)",border:"1px solid rgba(200,255,0,0.08)",
-  borderRadius:16,backdropFilter:"blur(24px)",
-  boxShadow:"0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(200,255,0,0.04)",
-  zIndex:200,
+// ─── Portal: positions dropdown via fixed layout, clamps to vw ─
+function MegaMenuPortal({triggerRef,dropWidth,onMouseEnter,onMouseLeave,children}){
+  const[mounted,setMounted]=useState(false);
+  const[pos,setPos]=useState({top:0,left:0});
+  const EDGE_PAD=16;
+
+  useEffect(()=>{ setMounted(true); },[]);
+
+  useEffect(()=>{
+    if(!mounted||!triggerRef.current)return;
+    const rect=triggerRef.current.getBoundingClientRect();
+    const vw=window.innerWidth;
+    const rawLeft=rect.left;
+    const clampedLeft=Math.min(rawLeft,vw-dropWidth-EDGE_PAD);
+    const safeLeft=Math.max(EDGE_PAD,clampedLeft);
+    setPos({top:rect.bottom+10,left:safeLeft});
+  },[mounted,triggerRef,dropWidth]);
+
+  if(!mounted)return null;
+  return createPortal(
+    <div
+      style={{position:"fixed",top:pos.top,left:pos.left,zIndex:9000,width:dropWidth}}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      {children}
+    </div>,
+    document.body
+  );
+}
+
+// ─── Shared dropdown shell ─────────────────────────────────────
+const SHELL={
+  background:"rgba(7,7,9,0.98)",
+  border:"1px solid rgba(200,255,0,0.08)",
+  borderRadius:16,
+  backdropFilter:"blur(24px)",
+  WebkitBackdropFilter:"blur(24px)",
+  boxShadow:"0 32px 80px rgba(0,0,0,0.75), 0 0 0 1px rgba(200,255,0,0.04)",
+  padding:"28px 28px 20px",
+  maxWidth:"calc(100vw - 32px)",
+  boxSizing:"border-box",
 };
 
-// column label
 function ColLabel({children}){
   return(
-    <div style={{fontFamily:"var(--font-body)",fontSize:10,fontWeight:700,color:"rgba(200,255,0,.5)",letterSpacing:".14em",textTransform:"uppercase",marginBottom:16,paddingBottom:10,borderBottom:"1px solid rgba(255,255,255,.04)"}}>
+    <div style={{fontFamily:"var(--font-body)",fontSize:10,fontWeight:700,color:"rgba(200,255,0,.5)",letterSpacing:".14em",textTransform:"uppercase",marginBottom:14,paddingBottom:10,borderBottom:"1px solid rgba(255,255,255,.05)"}}>
       {children}
     </div>
   );
 }
 
-// single menu item with icon box
 function MenuItem({href,icon,label,desc,badge}){
   return(
-    <a href={href} style={{display:"flex",alignItems:"flex-start",gap:14,padding:"10px 12px",borderRadius:10,textDecoration:"none",transition:"background .15s",marginBottom:2}}
-      onMouseEnter={e=>{e.currentTarget.style.background="rgba(200,255,0,0.05)";}}
-      onMouseLeave={e=>{e.currentTarget.style.background="transparent";}}
+    <a href={href}
+      style={{display:"flex",alignItems:"flex-start",gap:14,padding:"10px 12px",borderRadius:10,textDecoration:"none",transition:"background .15s",marginBottom:2}}
+      onMouseEnter={e=>e.currentTarget.style.background="rgba(200,255,0,0.05)"}
+      onMouseLeave={e=>e.currentTarget.style.background="transparent"}
     >
       <div style={{width:36,height:36,borderRadius:8,background:"rgba(200,255,0,0.06)",border:"1px solid rgba(200,255,0,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0,marginTop:1}}>
-        {icon}
+        {icon||"⚙️"}
       </div>
       <div style={{flex:1,minWidth:0}}>
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
@@ -89,58 +125,57 @@ function MenuItem({href,icon,label,desc,badge}){
   );
 }
 
-// simple link row (no icon) for Guides
 function GuideLink({href,label}){
+  const arrowRef=useRef(null);
   return(
-    <a href={href} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,padding:"9px 12px",borderRadius:8,textDecoration:"none",transition:"background .15s,color .15s",fontFamily:"var(--font-body)",fontSize:13,fontWeight:500,color:"#aaa",lineHeight:1.3,marginBottom:2}}
-      onMouseEnter={e=>{e.currentTarget.style.background="rgba(200,255,0,0.05)";e.currentTarget.style.color="#fff";e.currentTarget.querySelector("span").style.opacity="1";}}
-      onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color="#aaa";e.currentTarget.querySelector("span").style.opacity="0";}}
+    <a href={href}
+      style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,padding:"9px 12px",borderRadius:8,textDecoration:"none",transition:"background .15s,color .15s",fontFamily:"var(--font-body)",fontSize:13,fontWeight:500,color:"#aaa",lineHeight:1.4,marginBottom:2}}
+      onMouseEnter={e=>{e.currentTarget.style.background="rgba(200,255,0,0.05)";e.currentTarget.style.color="#fff";if(arrowRef.current)arrowRef.current.style.opacity="1";}}
+      onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color="#aaa";if(arrowRef.current)arrowRef.current.style.opacity="0";}}
     >
       {label}
-      <span style={{color:"rgba(200,255,0,.5)",fontSize:13,opacity:0,transition:"opacity .15s",flexShrink:0}}>→</span>
+      <span ref={arrowRef} style={{color:"rgba(200,255,0,.6)",fontSize:12,opacity:0,transition:"opacity .15s",flexShrink:0}}>→</span>
     </a>
   );
 }
 
-const TOOLS_ICONS={
-  "Breach Checker":"🔍",
-  "Secure Password Sharing":"🔗",
-  "Password Strength Checker":"📊",
-  "Password Audit Tool":"🛡️",
-  "Password Policy Generator":"📋",
-  "WiFi QR Generator":"📶",
-};
+function DropdownFooter({tagline,href,label}){
+  return(
+    <div style={{borderTop:"1px solid rgba(255,255,255,.05)",paddingTop:16,marginTop:4,display:"flex",alignItems:"center",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
+      <span style={{fontFamily:"var(--font-body)",fontSize:12,color:"#3a3a3a"}}>{tagline}</span>
+      <a href={href}
+        style={{fontFamily:"var(--font-body)",fontSize:13,fontWeight:600,color:"rgba(200,255,0,.7)",textDecoration:"none",transition:"color .15s",whiteSpace:"nowrap"}}
+        onMouseEnter={e=>e.currentTarget.style.color="#C8FF00"}
+        onMouseLeave={e=>e.currentTarget.style.color="rgba(200,255,0,.7)"}
+      >{label}</a>
+    </div>
+  );
+}
 
 function ToolsDropdown(){
   return(
-    <div style={{...DROPDOWN_BASE,width:640,padding:"28px 28px 20px"}}>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:0,columnGap:32,marginBottom:20}}>
+    <div style={SHELL}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",columnGap:24,rowGap:8}}>
         {TOOLS_MENU.columns.map(col=>(
-          <div key={col.label} style={{marginBottom:20}}>
+          <div key={col.label} style={{marginBottom:8}}>
             <ColLabel>{col.label}</ColLabel>
             {col.items.map(item=>(
-              <MenuItem key={item.label} href={item.href} icon={TOOLS_ICONS[item.label]||"⚙️"} label={item.label} desc={item.desc} badge={item.business}/>
+              <MenuItem key={item.label} href={item.href} icon={item.icon} label={item.label} desc={item.desc} badge={item.business}/>
             ))}
           </div>
         ))}
       </div>
-      <div style={{borderTop:"1px solid rgba(255,255,255,.05)",paddingTop:16,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <span style={{fontFamily:"var(--font-body)",fontSize:12,color:"#444"}}>All tools are free · No account needed</span>
-        <a href={TOOLS_MENU.footer.href} style={{fontFamily:"var(--font-body)",fontSize:13,fontWeight:600,color:"rgba(200,255,0,.7)",textDecoration:"none",display:"flex",alignItems:"center",gap:6,transition:"color .15s"}}
-          onMouseEnter={e=>e.currentTarget.style.color="#C8FF00"}
-          onMouseLeave={e=>e.currentTarget.style.color="rgba(200,255,0,.7)"}
-        >{TOOLS_MENU.footer.label}</a>
-      </div>
+      <DropdownFooter tagline="All tools are free · No account needed" href={TOOLS_MENU.footer.href} label={TOOLS_MENU.footer.label}/>
     </div>
   );
 }
 
 function GuidesDropdown(){
   return(
-    <div style={{...DROPDOWN_BASE,width:700,padding:"28px 28px 20px"}}>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:0,columnGap:28,marginBottom:20}}>
+    <div style={SHELL}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",columnGap:20,rowGap:8}}>
         {GUIDES_MENU.columns.map(col=>(
-          <div key={col.label}>
+          <div key={col.label} style={{marginBottom:8}}>
             <ColLabel>{col.label}</ColLabel>
             {col.items.map(item=>(
               <GuideLink key={item.label} href={item.href} label={item.label}/>
@@ -148,17 +183,12 @@ function GuidesDropdown(){
           </div>
         ))}
       </div>
-      <div style={{borderTop:"1px solid rgba(255,255,255,.05)",paddingTop:16,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <span style={{fontFamily:"var(--font-body)",fontSize:12,color:"#444"}}>Free compliance guides · Updated 2024</span>
-        <a href={GUIDES_MENU.footer.href} style={{fontFamily:"var(--font-body)",fontSize:13,fontWeight:600,color:"rgba(200,255,0,.7)",textDecoration:"none",display:"flex",alignItems:"center",gap:6,transition:"color .15s"}}
-          onMouseEnter={e=>e.currentTarget.style.color="#C8FF00"}
-          onMouseLeave={e=>e.currentTarget.style.color="rgba(200,255,0,.7)"}
-        >{GUIDES_MENU.footer.label}</a>
-      </div>
+      <DropdownFooter tagline="Free compliance guides · Updated 2024" href={GUIDES_MENU.footer.href} label={GUIDES_MENU.footer.label}/>
     </div>
   );
 }
 
+// ─── Main Header ──────────────────────────────────────────────
 export default function Header(){
   const{data:session,status}=useSession();
   const{scrollY,scrollYProgress}=useScroll();
@@ -170,6 +200,8 @@ export default function Header(){
   const[megaOpen,setMegaOpen]=useState(null);
   const[mobileExpanded,setMobileExpanded]=useState(null);
   const closeTimer=useRef(null);
+  const toolsRef=useRef(null);
+  const guidesRef=useRef(null);
 
   useEffect(()=>{
     const fn=()=>setScrolled(window.scrollY>24);
@@ -194,20 +226,23 @@ export default function Header(){
     return()=>document.removeEventListener("keydown",fn);
   },[]);
 
-  function openMega(key){
+  const openMega=useCallback((key)=>{
     clearTimeout(closeTimer.current);
     setMegaOpen(key);
-  }
-  function scheduleMegaClose(){
+  },[]);
+  const scheduleMegaClose=useCallback(()=>{
     closeTimer.current=setTimeout(()=>setMegaOpen(null),200);
-  }
+  },[]);
+
+  const triggerRef=(key)=>key==="tools"?toolsRef:guidesRef;
+  const dropWidth=(key)=>key==="tools"?640:700;
 
   return(
     <>
       {/* Scroll progress bar */}
       <motion.div style={{scaleX:scrollYProgress,transformOrigin:"0%",position:"fixed",top:0,left:0,right:0,height:2,background:"#C8FF00",boxShadow:"0 0 6px rgba(200,255,0,0.5)",zIndex:9999}}/>
-      <motion.header style={{backgroundColor:headerBg,backdropFilter:headerBlur,position:"fixed",top:0,left:0,right:0,zIndex:100}}>
-        {/* Main nav */}
+
+      <motion.header style={{backgroundColor:headerBg,backdropFilter:headerBlur,position:"fixed",top:0,left:0,right:0,zIndex:1000}}>
         <nav className={`nav-root${scrolled?" scrolled":""}`} aria-label="Main navigation">
           <a href="/" className="nav-logo" aria-label="PassGeni home">
             <PassGeniLogo height="28px"/>
@@ -227,8 +262,10 @@ export default function Header(){
                   >{l.label}</a>
                 );
               }
+              const tRef=triggerRef(key);
+              const isOpen=megaOpen===key;
               return(
-                <div key={l.label} style={{position:"relative"}} role="listitem"
+                <div key={l.label} ref={tRef} style={{position:"relative"}} role="listitem"
                   onMouseEnter={()=>openMega(key)}
                   onMouseLeave={scheduleMegaClose}
                 >
@@ -238,13 +275,31 @@ export default function Header(){
                     style={{display:"flex",alignItems:"center",gap:4}}
                   >
                     {l.label}
-                    <span style={{fontSize:8,opacity:.5,marginTop:1}}>▼</span>
+                    <motion.span
+                      animate={{rotate:isOpen?180:0}}
+                      transition={{duration:0.2}}
+                      style={{fontSize:8,opacity:.5,display:"inline-block",marginTop:1}}
+                    >▼</motion.span>
                   </a>
-                  {megaOpen===key&&(
-                    <div onMouseEnter={()=>openMega(key)} onMouseLeave={scheduleMegaClose}>
-                      {key==="tools"?<ToolsDropdown/>:<GuidesDropdown/>}
-                    </div>
-                  )}
+                  <AnimatePresence>
+                    {isOpen&&(
+                      <MegaMenuPortal
+                        triggerRef={tRef}
+                        dropWidth={dropWidth(key)}
+                        onMouseEnter={()=>openMega(key)}
+                        onMouseLeave={scheduleMegaClose}
+                      >
+                        <motion.div
+                          initial={{opacity:0,y:8,scale:0.98}}
+                          animate={{opacity:1,y:0,scale:1}}
+                          exit={{opacity:0,y:4,scale:0.98}}
+                          transition={{duration:0.18,ease:"easeOut"}}
+                        >
+                          {key==="tools"?<ToolsDropdown/>:<GuidesDropdown/>}
+                        </motion.div>
+                      </MegaMenuPortal>
+                    )}
+                  </AnimatePresence>
                 </div>
               );
             })}
@@ -265,10 +320,9 @@ export default function Header(){
             </button>
           </div>
         </nav>
-
       </motion.header>
 
-      {/* Mobile drawer — animated */}
+      {/* Mobile drawer */}
       <AnimatePresence>
         {open&&(
           <motion.nav
@@ -283,6 +337,7 @@ export default function Header(){
             {NAV.links.map((l,li)=>{
               const isMega=l.label==="Tools"||l.label==="Guides";
               const key=l.label.toLowerCase();
+
               if(!isMega){
                 return(
                   <motion.a key={l.label} href={l.href} className="mobile-nav-link"
@@ -292,8 +347,10 @@ export default function Header(){
                   >{l.label}</motion.a>
                 );
               }
+
               const menuData=key==="tools"?TOOLS_MENU:GUIDES_MENU;
               const isExpanded=mobileExpanded===key;
+
               return(
                 <div key={l.label} style={{borderBottom:"1px solid rgba(255,255,255,.06)"}}>
                   <motion.button
@@ -309,6 +366,7 @@ export default function Header(){
                       style={{fontSize:20,lineHeight:1,color:"rgba(200,255,0,.5)",display:"inline-block"}}
                     >+</motion.span>
                   </motion.button>
+
                   <AnimatePresence>
                     {isExpanded&&(
                       <motion.div
@@ -318,29 +376,34 @@ export default function Header(){
                         transition={{duration:0.25,ease:"easeOut"}}
                         style={{overflow:"hidden"}}
                       >
-                        <div style={{paddingBottom:16,display:"flex",flexDirection:"column",gap:20}}>
+                        <div style={{paddingBottom:20,display:"flex",flexDirection:"column",gap:20}}>
                           {menuData.columns.map(col=>(
                             <div key={col.label}>
-                              <div style={{fontFamily:"var(--font-body)",fontSize:9,fontWeight:700,color:"rgba(200,255,0,.4)",letterSpacing:".14em",textTransform:"uppercase",marginBottom:8,paddingLeft:2}}>{col.label}</div>
+                              <div style={{fontFamily:"var(--font-body)",fontSize:9,fontWeight:700,color:"rgba(200,255,0,.45)",letterSpacing:".14em",textTransform:"uppercase",marginBottom:10,paddingBottom:8,borderBottom:"1px solid rgba(255,255,255,.04)"}}>{col.label}</div>
                               {col.items.map(item=>(
                                 <a key={item.label} href={item.href}
-                                  style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderRadius:8,textDecoration:"none",background:"rgba(255,255,255,.02)",marginBottom:4,border:"1px solid rgba(255,255,255,.04)"}}
+                                  style={{display:"flex",alignItems:"center",gap:12,padding:"11px 12px",borderRadius:10,textDecoration:"none",background:"rgba(255,255,255,.02)",marginBottom:4,border:"1px solid rgba(255,255,255,.04)",transition:"background .15s"}}
                                   onClick={()=>setOpen(false)}
                                   onTouchStart={e=>e.currentTarget.style.background="rgba(200,255,0,.06)"}
                                   onTouchEnd={e=>e.currentTarget.style.background="rgba(255,255,255,.02)"}
                                 >
-                                  <div style={{flex:1}}>
+                                  {item.icon&&(
+                                    <div style={{width:32,height:32,borderRadius:7,background:"rgba(200,255,0,0.06)",border:"1px solid rgba(200,255,0,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>
+                                      {item.icon}
+                                    </div>
+                                  )}
+                                  <div style={{flex:1,minWidth:0}}>
                                     <div style={{fontFamily:"var(--font-body)",fontSize:14,fontWeight:600,color:"#e8e8e8",lineHeight:1.3}}>{item.label}</div>
                                     {item.desc&&<div style={{fontFamily:"var(--font-body)",fontSize:11,color:"#555",marginTop:2,lineHeight:1.4}}>{item.desc}</div>}
                                   </div>
-                                  {item.business&&<span style={{background:"rgba(255,255,255,.05)",color:"#555",fontSize:9,borderRadius:100,padding:"2px 7px",fontFamily:"var(--font-body)",fontWeight:600,whiteSpace:"nowrap"}}>🏢</span>}
-                                  <span style={{color:"rgba(200,255,0,.3)",fontSize:12}}>›</span>
+                                  {item.business&&<span style={{background:"rgba(200,255,0,.07)",color:"rgba(200,255,0,.45)",fontSize:9,borderRadius:100,padding:"2px 7px",fontFamily:"var(--font-body)",fontWeight:700,letterSpacing:".08em",textTransform:"uppercase",whiteSpace:"nowrap",flexShrink:0}}>Team</span>}
+                                  <span style={{color:"rgba(200,255,0,.25)",fontSize:13,flexShrink:0}}>›</span>
                                 </a>
                               ))}
                             </div>
                           ))}
                           <a href={menuData.footer.href}
-                            style={{fontFamily:"var(--font-body)",fontSize:13,fontWeight:600,color:"rgba(200,255,0,.6)",textDecoration:"none",padding:"8px 2px",display:"flex",alignItems:"center",gap:6}}
+                            style={{fontFamily:"var(--font-body)",fontSize:13,fontWeight:600,color:"rgba(200,255,0,.65)",textDecoration:"none",padding:"8px 2px",display:"flex",alignItems:"center",gap:6}}
                             onClick={()=>setOpen(false)}
                           >{menuData.footer.label}</a>
                         </div>
@@ -350,6 +413,7 @@ export default function Header(){
                 </div>
               );
             })}
+
             <div style={{marginTop:28,display:"flex",flexDirection:"column",gap:12}}>
               <a href="/auth/signin" className="btn-ghost"
                 style={{justifyContent:"center",fontSize:15,padding:"14px"}}
