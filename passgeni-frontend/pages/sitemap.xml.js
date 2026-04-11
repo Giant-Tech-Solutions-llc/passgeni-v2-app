@@ -13,9 +13,12 @@ const SITE_URL = "https://passgeni.ai";
 
 const STATIC_PAGES = [
   { url: "/",                    priority: "1.0",  changefreq: "weekly"  },
+  { url: "/about",               priority: "0.9",  changefreq: "monthly" },
+  { url: "/pricing",             priority: "0.9",  changefreq: "monthly" },
   { url: "/tools",               priority: "0.9",  changefreq: "weekly"  },
   { url: "/guides",              priority: "0.9",  changefreq: "weekly"  },
   { url: "/blog",                priority: "0.8",  changefreq: "daily"   },
+  { url: "/contact",             priority: "0.6",  changefreq: "monthly" },
   { url: "/tools/breach-checker",    priority: "0.85", changefreq: "monthly" },
   { url: "/tools/strength-checker",  priority: "0.85", changefreq: "monthly" },
   { url: "/tools/audit",             priority: "0.8",  changefreq: "monthly" },
@@ -23,6 +26,8 @@ const STATIC_PAGES = [
   { url: "/tools/secure-share",      priority: "0.8",  changefreq: "monthly" },
   { url: "/tools/wifi-qr",           priority: "0.8",  changefreq: "monthly" },
   { url: "/refund",                  priority: "0.5",  changefreq: "monthly" },
+  { url: "/privacy",                 priority: "0.5",  changefreq: "monthly" },
+  { url: "/terms",                   priority: "0.5",  changefreq: "monthly" },
 ];
 
 function buildSitemap() {

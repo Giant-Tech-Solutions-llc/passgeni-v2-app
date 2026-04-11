@@ -4,7 +4,7 @@ import PassGeniLogo from"./Logo.js";
 const COLS=[
   {h:"Product",links:[{l:"Generator",href:"#generator"},{l:"Tools",href:"/tools"},{l:"Guides",href:"/guides"},{l:"Blog",href:"/blog"},{l:"Changelog",href:"/changelog"}]},
   {h:"Compliance",links:[{l:"HIPAA",href:"/guides/hipaa-password-requirements"},{l:"PCI-DSS",href:"/guides/pci-dss-password-requirements"},{l:"SOC 2",href:"/guides/soc2-password-requirements"},{l:"Post-Quantum",href:"/guides/post-quantum-password-security"},{l:"NIST SP 800-63B",href:"/guides/nist-800-63b-password-guidelines"}]},
-  {h:"Company",links:[{l:"Pricing",href:"#pricing"},{l:"API",href:"/api"},{l:"Privacy",href:"/privacy"},{l:"Terms",href:"/terms"},{l:"Refund Policy",href:"/refund"},{l:"Contact",href:"mailto:hello@passgeni.ai"}]},
+  {h:"Company",links:[{l:"About",href:"/about"},{l:"Pricing",href:"/pricing"},{l:"API",href:"/api-docs"},{l:"Privacy",href:"/privacy"},{l:"Terms",href:"/terms"},{l:"Refund",href:"/refund"},{l:"Contact",href:"/contact"}]},
 ];
 
 export default function Footer(){

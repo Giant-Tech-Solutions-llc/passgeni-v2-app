@@ -23,13 +23,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { email } = req.body || {};
+  const { email, plan = "team", billing = "monthly" } = req.body || {};
 
-  const priceId = PADDLE_PRICE_IDS.team_monthly;
-  const apiKey  = process.env.PADDLE_API_KEY;
+  const priceKey = `${plan}_${billing}`;
+  const priceId  = PADDLE_PRICE_IDS[priceKey] || PADDLE_PRICE_IDS.team_monthly;
+  const apiKey   = process.env.PADDLE_API_KEY;
 
   if (!priceId || !apiKey) {
-    console.error("Paddle checkout: missing PADDLE_API_KEY or PADDLE_PRICE_ID_TEAM_MONTHLY");
+    console.error(`Paddle checkout: missing PADDLE_API_KEY or price ID for ${priceKey}`);
     return res.status(500).json({ error: "Checkout not configured. Contact hello@passgeni.ai" });
   }
 

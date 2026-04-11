@@ -34,10 +34,12 @@ export default function CheckoutPage() {
     // Signed in → create Paddle checkout
     async function startCheckout() {
       try {
+        const plan    = router.query.plan    || "team";
+        const billing = router.query.billing || "monthly";
         const res  = await fetch("/api/paddle/checkout", {
           method:  "POST",
           headers: { "Content-Type": "application/json" },
-          body:    JSON.stringify({ email: session.user.email }),
+          body:    JSON.stringify({ email: session.user.email, plan, billing }),
         });
         const data = await res.json();
 
@@ -88,7 +90,8 @@ export default function CheckoutPage() {
               Opening secure checkout…
             </p>
             <p style={{ color: "#555", fontSize: 13, marginTop: 8 }}>
-              You'll be redirected to Paddle to complete your 14-day free trial.
+              You&apos;ll be redirected to Paddle to complete your{" "}
+              {router.query.plan === "pro" ? "Pro" : "Team"} plan setup.
             </p>
           </div>
         ) : (

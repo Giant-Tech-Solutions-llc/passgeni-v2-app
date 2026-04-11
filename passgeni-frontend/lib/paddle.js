@@ -10,7 +10,10 @@
 export const PADDLE_API = "https://api.paddle.com";
 
 export const PADDLE_PRICE_IDS = {
+  pro_monthly:  process.env.PADDLE_PRICE_ID_PRO_MONTHLY  || "",
+  pro_annual:   process.env.PADDLE_PRICE_ID_PRO_ANNUAL   || "",
   team_monthly: process.env.PADDLE_PRICE_ID_TEAM_MONTHLY || "",
+  team_annual:  process.env.PADDLE_PRICE_ID_TEAM_ANNUAL  || "",
 };
 
 export const PLANS = {
