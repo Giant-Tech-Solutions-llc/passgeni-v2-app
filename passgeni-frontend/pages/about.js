@@ -249,7 +249,7 @@ export default function AboutPage() {
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.55, ease: "easeOut", delay: 0.1 }}
-            style={{ maxWidth: 720, margin: "0 auto" }}
+            style={{ maxWidth: 720, margin: "0 auto", textAlign: "center" }}
           >
             {[
               "In 2021, we were building internal security tooling for a small team. We tried every major generator. They were fine. Until we opened DevTools.",
@@ -373,7 +373,7 @@ export default function AboutPage() {
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.55, ease: "easeOut" }}
-            style={{ maxWidth: 720, margin: "0 auto" }}
+            style={{ maxWidth: 720, margin: "0 auto", textAlign: "center" }}
           >
             {[
               "PassGeni is built by a small team of engineers and security researchers who believe that good security tooling should be auditable, honest, and boring in the best possible way.",
@@ -396,17 +396,17 @@ export default function AboutPage() {
               </p>
             ))}
 
-            <div className="hero-trust" style={{ justifyContent: "flex-start", flexDirection: "column", alignItems: "flex-start", gap: 14 }}>
+            <div className="hero-trust" style={{ justifyContent: "center", flexWrap: "wrap" }}>
               {[
                 { icon: "◈", label: "Founded 2021" },
-                { icon: "✦", label: "Bootstrapped — no VC pressure to monetize your data" },
-                { icon: "⬡", label: "Client-side architecture open to inspection" },
-                { icon: "◎", label: "NIST SP\u00a0800-63B aligned since day one" },
-                { icon: "⚡", label: "Zero breach history — nothing to breach" },
+                { icon: "✦", label: "Bootstrapped" },
+                { icon: "⬡", label: "Client-side" },
+                { icon: "◎", label: "NIST SP\u00a0800-63B" },
+                { icon: "⚡", label: "Zero breach history" },
               ].map(({ icon, label }) => (
-                <div key={label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span aria-hidden style={{ color: "rgba(200,255,0,.5)", fontSize: 13 }}>{icon}</span>
-                  <span style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-base)", color: "var(--muted)", letterSpacing: ".02em" }}>{label}</span>
+                <div key={label} style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                  <span aria-hidden style={{ color: "rgba(200,255,0,.5)", fontSize: "clamp(10px,1.5vw,13px)" }}>{icon}</span>
+                  <span style={{ fontFamily: "var(--font-body)", fontSize: "clamp(9px,1.2vw,11px)", fontWeight: 600, color: "var(--muted)", letterSpacing: ".08em", textTransform: "uppercase" }}>{label}</span>
                 </div>
               ))}
             </div>
@@ -428,8 +428,7 @@ export default function AboutPage() {
                 key={pledge.title}
                 {...cardReveal(i)}
                 style={{
-                  borderLeft: "2px solid rgba(200,255,0,0.3)",
-                  paddingLeft: 24,
+                  textAlign: "center",
                   marginBottom: i < PLEDGES.length - 1 ? 36 : 0,
                 }}
               >
