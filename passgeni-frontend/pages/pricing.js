@@ -155,13 +155,19 @@ export default function PricingPage() {
 
           {/* Hero */}
           <section style={{ padding: "var(--section) var(--pad)", maxWidth: 1200, margin: "0 auto", textAlign: "center" }}>
-            <div style={{ fontFamily: "var(--font-body)", fontSize: 10, fontWeight: 700, color: "var(--accent)", letterSpacing: ".14em", textTransform: "uppercase", marginBottom: 16 }}>Pricing</div>
-            <h1 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(32px,6vw,64px)", letterSpacing: "-.03em", lineHeight: 1.05, marginBottom: 16 }}>
+            <motion.div
+              initial={{ opacity: 0, y: 28 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            >
+            <div className="eyebrow" style={{ justifyContent: "center" }}>Pricing</div>
+            <h1 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(36px,6vw,68px)", letterSpacing: "-.03em", lineHeight: 1.05, marginBottom: 18 }}>
               Free forever.<br /><span style={{ color: "var(--accent)" }}>Upgrade when you need more.</span>
             </h1>
-            <p style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-md)", color: "var(--muted)", maxWidth: 480, margin: "0 auto 32px" }}>
+            <p style={{ fontFamily: "var(--font-body)", fontSize: "clamp(16px,1.6vw,18px)", color: "var(--muted)", maxWidth: 500, margin: "0 auto 36px", lineHeight: 1.85 }}>
               No credit card for the free plan. No card for the Team trial. Pay only when you're ready.
             </p>
+            </motion.div>
 
             {/* Billing toggle */}
             <div style={{ display: "inline-flex", background: "#0a0a0c", border: "1px solid #1e1e1e", borderRadius: 100, padding: 4, gap: 4 }}>
@@ -184,14 +190,20 @@ export default function PricingPage() {
           {/* Plan cards */}
           <section style={{ padding: "0 var(--pad) var(--section)", maxWidth: 1200, margin: "0 auto" }}>
             <div className="pricing-grid">
-              {PLANS.map((plan) => {
+              {PLANS.map((plan, pi) => {
                 const price = billing === "annual" && plan.annual !== "Custom" ? plan.annual : plan.monthly;
                 const period = billing === "annual" && plan.annualPeriod ? plan.annualPeriod : plan.period;
                 const ctaHref = plan.ctaHref
                   ? plan.ctaHref
                   : (billing === "annual" ? plan.ctaAnnual : plan.ctaMonthly);
                 return (
-                  <div key={plan.name} style={{
+                  <motion.div
+                    key={plan.name}
+                    initial={{ opacity: 0, y: 32 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.15 }}
+                    transition={{ duration: 0.5, delay: pi * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                    style={{
                     background: plan.featured ? "linear-gradient(135deg,rgba(13,13,16,.9) 0%,rgba(200,255,0,.05) 100%)" : "rgba(13,13,16,.75)",
                     border: plan.featured ? "1px solid rgba(200,255,0,.28)" : "1px solid rgba(200,255,0,.08)",
                     borderRadius: "var(--radius-l)", padding: "clamp(24px,3vw,36px)",
@@ -232,7 +244,7 @@ export default function PricingPage() {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
@@ -240,10 +252,16 @@ export default function PricingPage() {
 
           {/* Feature comparison table */}
           <section style={{ padding: "0 var(--pad) var(--section)", maxWidth: 1200, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: "clamp(24px,4vw,40px)" }}>
-              <div style={{ fontFamily: "var(--font-body)", fontSize: 10, fontWeight: 700, color: "var(--accent)", letterSpacing: ".14em", textTransform: "uppercase", marginBottom: 12 }}>Compare plans</div>
-              <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(24px,4vw,40px)", letterSpacing: "-.03em" }}>Everything, side by side.</h2>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              style={{ textAlign: "center", marginBottom: "clamp(24px,4vw,48px)" }}
+            >
+              <div className="eyebrow" style={{ justifyContent: "center" }}>Compare plans</div>
+              <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(26px,4vw,42px)", letterSpacing: "-.03em" }}>Everything, side by side.</h2>
+            </motion.div>
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "var(--font-body)" }}>
                 <thead>
@@ -260,7 +278,7 @@ export default function PricingPage() {
                       onMouseEnter={e => e.currentTarget.style.background = "rgba(200,255,0,0.02)"}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                     >
-                      <td style={{ padding: "12px 16px", fontSize: 14, color: "var(--muted)", lineHeight: 1.4 }}>{row.feature}</td>
+                      <td style={{ padding: "12px 16px", fontSize: "clamp(13px,1.4vw,15px)", color: "var(--muted)", lineHeight: 1.45 }}>{row.feature}</td>
                       <td style={{ padding: "12px 16px", textAlign: "center" }}><Check value={row.free} /></td>
                       <td style={{ padding: "12px 16px", textAlign: "center" }}><Check value={row.pro} /></td>
                       <td style={{ padding: "12px 16px", textAlign: "center" }}><Check value={row.team} /></td>
@@ -273,10 +291,16 @@ export default function PricingPage() {
 
           {/* FAQ */}
           <section style={{ padding: "0 var(--pad) var(--section)", maxWidth: 720, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: "clamp(24px,4vw,40px)" }}>
-              <div style={{ fontFamily: "var(--font-body)", fontSize: 10, fontWeight: 700, color: "var(--accent)", letterSpacing: ".14em", textTransform: "uppercase", marginBottom: 12 }}>FAQ</div>
-              <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(24px,4vw,36px)", letterSpacing: "-.03em" }}>Common questions.</h2>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              style={{ textAlign: "center", marginBottom: "clamp(24px,4vw,48px)" }}
+            >
+              <div className="eyebrow" style={{ justifyContent: "center" }}>FAQ</div>
+              <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(26px,4vw,38px)", letterSpacing: "-.03em" }}>Common questions.</h2>
+            </motion.div>
             {PRICING_FAQS.map((item, i) => (
               <div key={i} className="faq-item" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "clamp(12px,3vw,24px)" }}>

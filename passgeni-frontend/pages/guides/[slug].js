@@ -6,6 +6,7 @@
 // Falls back to a placeholder if content file doesn't exist yet.
 // =============================================================
 
+import { motion } from "framer-motion";
 import PageLayout from "../../components/layout/PageLayout.js";
 import { ALL_GUIDES, getGuideBySlug, getRelatedGuides } from "../../content/guides.js";
 import { getGuideSchema, getFAQSchema } from "../../seo/schema.js";
@@ -30,7 +31,7 @@ export function H3({ children }) {
 
 export function P({ children }) {
   return (
-    <p style={{ fontFamily: "var(--font-body)", fontSize: 15, color: "#aaa", lineHeight: 1.9, marginBottom: 20 }}>
+    <p style={{ fontFamily: "var(--font-body)", fontSize: "clamp(15px,1.5vw,17px)", color: "var(--muted)", lineHeight: 1.9, marginBottom: 20 }}>
       {children}
     </p>
   );
@@ -46,8 +47,8 @@ export function UL({ children }) {
 
 export function LI({ children }) {
   return (
-    <li style={{ display: "flex", gap: 12, alignItems: "flex-start", fontFamily: "var(--font-body)", fontSize: 15, color: "#aaa", lineHeight: 1.8 }}>
-      <span style={{ color: "#C8FF00", marginTop: 2, flexShrink: 0 }}>◈</span>
+    <li style={{ display: "flex", gap: 12, alignItems: "flex-start", fontFamily: "var(--font-body)", fontSize: "clamp(15px,1.5vw,17px)", color: "var(--muted)", lineHeight: 1.85 }}>
+      <span style={{ color: "var(--accent)", marginTop: 3, flexShrink: 0 }}>◈</span>
       <span>{children}</span>
     </li>
   );
@@ -64,8 +65,8 @@ export function OL({ children }) {
 export function OLI({ n, children }) {
   return (
     <li style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-      <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#C8FF00", background: "#C8FF0011", border: "1px solid #C8FF0033", borderRadius: 4, padding: "2px 7px", flexShrink: 0, marginTop: 2 }}>{n}</span>
-      <span style={{ fontFamily: "var(--font-body)", fontSize: 15, color: "#aaa", lineHeight: 1.8 }}>{children}</span>
+      <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--accent)", background: "rgba(200,255,0,0.07)", border: "1px solid rgba(200,255,0,0.2)", borderRadius: 4, padding: "2px 7px", flexShrink: 0, marginTop: 2 }}>{n}</span>
+      <span style={{ fontFamily: "var(--font-body)", fontSize: "clamp(15px,1.5vw,17px)", color: "var(--muted)", lineHeight: 1.85 }}>{children}</span>
     </li>
   );
 }
@@ -182,14 +183,14 @@ function TableOfContents({ sections }) {
 function FAQSection({ items }) {
   if (!items?.length) return null;
   return (
-    <section aria-label="Frequently asked questions" style={{ marginTop: 56 }}>
-      <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 24, color: "#fff", marginBottom: 28, letterSpacing: "-0.02em" }}>
+    <section aria-label="Frequently asked questions" style={{ marginTop: 64 }}>
+      <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(20px,2.5vw,26px)", color: "#fff", marginBottom: 28, letterSpacing: "-0.02em" }}>
         Frequently asked questions
       </h2>
       {items.map(({ q, a }, i) => (
-        <div key={i} style={{ borderBottom: "1px solid #111", padding: "20px 0" }}>
-          <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 16, color: "#fff", marginBottom: 10 }}>{q}</h3>
-          <p style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "#aaa", lineHeight: 1.8, margin: 0 }}>{a}</p>
+        <div key={i} style={{ borderBottom: "1px solid var(--border)", padding: "22px 0" }}>
+          <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "clamp(14px,1.6vw,17px)", color: "var(--text)", marginBottom: 12, lineHeight: 1.4 }}>{q}</h3>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: "clamp(14px,1.5vw,16px)", color: "var(--muted)", lineHeight: 1.9, margin: 0 }}>{a}</p>
         </div>
       ))}
     </section>
@@ -199,16 +200,19 @@ function FAQSection({ items }) {
 function RelatedGuides({ guides }) {
   if (!guides?.length) return null;
   return (
-    <section aria-label="Related guides" style={{ marginTop: 64, paddingTop: 40, borderTop: "1px solid #141416" }}>
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#888", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 20 }}>Related guides</div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <section aria-label="Related guides" style={{ marginTop: 64, paddingTop: 40, borderTop: "1px solid var(--border)" }}>
+      <div className="eyebrow">Related guides</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {guides.map((g) => (
-          <a key={g.slug} href={`/guides/${g.slug}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", background: "#0a0a0c", border: "1px solid #141416", borderRadius: 10, textDecoration: "none", transition: "border-color 0.2s", gap: 16 }}
-            onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#C8FF0033")}
-            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#141416")}
+          <a key={g.slug} href={`/guides/${g.slug}`}
+            className="bc bc-a"
+            style={{ display: "flex", justifyContent: "space-between", alignItems: "center", textDecoration: "none", gap: 16, flexDirection: "row" }}
+            onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(200,255,0,0.3)")}
+            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "rgba(200,255,0,0.08)")}
           >
-            <span style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "#ccc" }}>{g.title}</span>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#C8FF00", flexShrink: 0 }}>{g.readTime} min →</span>
+            <div className="bc-line" />
+            <span style={{ fontFamily: "var(--font-body)", fontSize: "clamp(14px,1.5vw,15px)", color: "var(--text)", lineHeight: 1.4 }}>{g.title}</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--accent)", flexShrink: 0 }}>{g.readTime} min →</span>
           </a>
         ))}
       </div>
@@ -237,25 +241,31 @@ export default function GuidePage({ guide, related, contentHtml, toc }) {
 
   return (
     <PageLayout title={guide.metaTitle} description={guide.metaDescription} canonical={`https://passgeni.ai/guides/${guide.slug}`} schema={schema}>
-      <main style={{ maxWidth: 760, margin: "0 auto", padding: "60px var(--page-pad) 80px" }}>
+      <main style={{ maxWidth: 780, margin: "0 auto", padding: "60px var(--page-pad) 100px" }}>
 
-        <nav aria-label="Breadcrumb" style={{ marginBottom: 28 }}>
-          <a href="/"       style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#888", textDecoration: "none" }}>PassGeni</a>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#444", margin: "0 8px" }}>→</span>
-          <a href="/guides" style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#888", textDecoration: "none" }}>Guides</a>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#444", margin: "0 8px" }}>→</span>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#C8FF00" }}>{guide.badge}</span>
-        </nav>
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <nav aria-label="Breadcrumb" style={{ marginBottom: 28 }}>
+            <a href="/" style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--muted-2)", textDecoration: "none" }}>PassGeni</a>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--border-2)", margin: "0 8px" }}>→</span>
+            <a href="/guides" style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--muted-2)", textDecoration: "none" }}>Guides</a>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--border-2)", margin: "0 8px" }}>→</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--accent)" }}>{guide.badge}</span>
+          </nav>
 
-        <GuideMeta guide={guide} />
+          <GuideMeta guide={guide} />
 
-        <h1 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(26px,3.5vw,42px)", color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.15, marginBottom: 20 }}>
-          {guide.title}
-        </h1>
+          <h1 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(28px,3.8vw,46px)", color: "#fff", letterSpacing: "-0.025em", lineHeight: 1.1, marginBottom: 22 }}>
+            {guide.title}
+          </h1>
 
-        <p style={{ fontFamily: "var(--font-body)", fontSize: 17, color: "#999", lineHeight: 1.8, marginBottom: 40, paddingBottom: 40, borderBottom: "1px solid #141416" }}>
-          {guide.excerpt}
-        </p>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: "clamp(15px,1.6vw,18px)", color: "var(--muted)", lineHeight: 1.9, marginBottom: 40, paddingBottom: 40, borderBottom: "1px solid var(--border)" }}>
+            {guide.excerpt}
+          </p>
+        </motion.div>
 
         {toc?.length > 0 && <TableOfContents sections={toc} />}
 

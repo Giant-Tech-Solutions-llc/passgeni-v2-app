@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import PageLayout from "../components/layout/PageLayout.js";
 
 const LINK = { color: "#C8FF00", textDecoration: "none" };
@@ -31,34 +32,55 @@ export default function ContactPage() {
       canonical="https://passgeni.ai/contact"
     >
       <main style={{ maxWidth: 720, margin: "0 auto", padding: "80px var(--page-pad) 120px" }}>
-        <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#555", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 16 }}>Get in touch</div>
-        <h1 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(28px,4vw,48px)", color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 16 }}>Contact us</h1>
-        <p style={{ fontFamily: "var(--font-body)", fontSize: 16, color: "#bbb", lineHeight: 1.85, marginBottom: 48 }}>
-          We're a small team and we read every email. Usually respond within 1 business day.
-        </p>
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="eyebrow">Get in touch</div>
+          <h1 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(32px,4.5vw,52px)", color: "#fff", letterSpacing: "-0.025em", lineHeight: 1.1, marginBottom: 18 }}>Contact us</h1>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: "clamp(16px,1.6vw,18px)", color: "var(--muted)", lineHeight: 1.9, marginBottom: 52 }}>
+            We're a small team and we read every email. Usually respond within 1 business day.
+          </p>
+        </motion.div>
 
         {/* Contact options */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 48 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 52 }}>
           {[
             { icon: "💬", label: "General questions",     email: "hello@passgeni.ai" },
             { icon: "🔧", label: "API & Team plan",       email: "api@passgeni.ai" },
             { icon: "💳", label: "Billing & refunds",     email: "billing@passgeni.ai" },
             { icon: "🔒", label: "Security disclosures",  email: "security@passgeni.ai" },
-          ].map(({ icon, label, email }) => (
-            <a key={email} href={`mailto:${email}`} style={{ background: "#0a0a0c", border: "1px solid #141416", borderRadius: 12, padding: "20px 22px", textDecoration: "none", display: "block", transition: "border-color 0.2s" }}
-              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#C8FF0044")}
-              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#141416")}
+          ].map(({ icon, label, email }, i) => (
+            <motion.a
+              key={email}
+              href={`mailto:${email}`}
+              className="bc bc-a"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: i * 0.07, ease: [0.16, 1, 0.3, 1] }}
+              style={{ textDecoration: "none", display: "block" }}
             >
+              <div className="bc-line" />
               <div style={{ fontSize: 22, marginBottom: 10 }}>{icon}</div>
-              <div style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#888", marginBottom: 6 }}>{label}</div>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#C8FF00" }}>{email}</div>
-            </a>
+              <div style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "var(--muted)", marginBottom: 6 }}>{label}</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--accent)" }}>{email}</div>
+            </motion.a>
           ))}
         </div>
 
         {/* Quick form */}
-        <div style={{ background: "#0a0a0c", border: "1px solid #141416", borderRadius: 16, padding: "32px" }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#888", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 24 }}>
+        <motion.div
+          className="bc"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          style={{ padding: "36px" }}
+        >
+          <div className="bc-line" />
+          <div className="eyebrow" style={{ marginBottom: 24 }}>
             Send a message
           </div>
           {sent ? (
@@ -81,9 +103,9 @@ export default function ContactPage() {
               </button>
             </form>
           )}
-        </div>
+        </motion.div>
 
-        <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#555", marginTop: 24, lineHeight: 1.75 }}>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "var(--muted-2)", marginTop: 28, lineHeight: 1.8 }}>
           For security vulnerability disclosures, please use PGP if possible. Our security contact is <a href="mailto:security@passgeni.ai" style={LINK}>security@passgeni.ai</a>.
           We take all security reports seriously and aim to respond within 24 hours.
         </p>

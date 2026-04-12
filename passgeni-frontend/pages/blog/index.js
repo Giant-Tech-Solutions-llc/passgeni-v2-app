@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
+import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '../../components/Layout';
 import BlogHeroSVG from '../../components/BlogHeroSVG';
-import { BLOG_POSTS } from '../../data/blogPosts';  // centralised data
+import { BLOG_POSTS } from '../../data/blogPosts';
 
 const POSTS_PER_PAGE = 9;
 
@@ -17,6 +18,14 @@ const CAT_COLORS = {
   DEVELOPER:  { color: '#a78bfa', bg: '#a78bfa15' },
   TOOLS:      { color: '#34d399', bg: '#34d39915' },
   PRODUCT:    { color: '#f472b6', bg: '#f472b615' },
+};
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  visible: (i = 0) => ({
+    opacity: 1, y: 0,
+    transition: { duration: 0.48, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] },
+  }),
 };
 
 function CategoryBadge({ cat }) {
@@ -33,34 +42,43 @@ function CategoryBadge({ cat }) {
   );
 }
 
-function BlogCard({ post, featured = false }) {
+function BlogCard({ post, featured = false, index = 0 }) {
   return (
-    <Link href={`/blog/${post.slug}`} className="blog-card" style={featured ? { gridColumn: 'span 2' } : {}}>
-      {/* Hero image */}
-      <div style={{ position: 'relative', overflow: 'hidden', aspectRatio: featured ? '21/9' : '16/9', background: '#0c0c0e' }}>
-        <BlogHeroSVG category={post.category} slug={post.slug} title={post.title}
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'linear-gradient(to top, #060608cc 0%, transparent 60%)',
-          pointerEvents: 'none',
-        }} />
-      </div>
-      <div className="blog-card-body">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-          <CategoryBadge cat={post.category} />
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: '#555', letterSpacing: '0.06em' }}>
-            {new Date(post.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-          </span>
+    <motion.div
+      custom={index}
+      variants={fadeUp}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.1 }}
+      style={featured ? { gridColumn: 'span 2' } : {}}
+    >
+      <Link href={`/blog/${post.slug}`} className="blog-card" style={{ display: 'flex', flexDirection: 'column' }}>
+        {/* Hero image */}
+        <div style={{ position: 'relative', overflow: 'hidden', aspectRatio: featured ? '21/9' : '16/9', background: '#0c0c0e' }}>
+          <BlogHeroSVG category={post.category} slug={post.slug} title={post.title}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(to top, #060608cc 0%, transparent 60%)',
+            pointerEvents: 'none',
+          }} />
         </div>
-        <h2 className="blog-card-title" style={{ fontSize: featured ? 22 : 16 }}>{post.title}</h2>
-        <p className="blog-card-excerpt">{post.excerpt}</p>
-        <div className="blog-card-meta">
-          <span>{post.readTime} min read</span>
-          <span style={{ color: '#C8FF00', fontSize: 10 }}>→</span>
+        <div className="blog-card-body">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <CategoryBadge cat={post.category} />
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--muted-2)', letterSpacing: '0.06em' }}>
+              {new Date(post.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+          </div>
+          <h2 className="blog-card-title" style={{ fontSize: featured ? 22 : 16, color: 'var(--text)' }}>{post.title}</h2>
+          <p className="blog-card-excerpt">{post.excerpt}</p>
+          <div className="blog-card-meta">
+            <span style={{ color: 'var(--muted)' }}>{post.readTime} min read</span>
+            <span style={{ color: 'var(--accent)', fontSize: 10 }}>→</span>
+          </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+    </motion.div>
   );
 }
 
@@ -84,12 +102,11 @@ function Pagination({ current, total, onChange }) {
       >← Prev</button>
 
       {pages.map(p => {
-        // Show first, last, current ±1, and ellipsis
         const show = p === 1 || p === total || (p >= current - 1 && p <= current + 1);
         const ellipsisBefore = p === current - 2 && current > 3;
         const ellipsisAfter  = p === current + 2 && current < total - 2;
         if (ellipsisBefore || ellipsisAfter) {
-          return <span key={p} style={{ color: '#444', fontFamily: 'var(--font-mono)', fontSize: 12, padding: '0 4px' }}>…</span>;
+          return <span key={p} style={{ color: 'var(--muted-2)', fontFamily: 'var(--font-mono)', fontSize: 12, padding: '0 4px' }}>…</span>;
         }
         if (!show) return null;
         return (
@@ -119,7 +136,6 @@ export default function BlogIndex() {
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Filter posts
   const filtered = useMemo(() => {
     return BLOG_POSTS.filter(p => {
       const matchesCat = activeCategory === 'All' || p.category === activeCategory;
@@ -132,11 +148,9 @@ export default function BlogIndex() {
   const totalPages = Math.ceil(filtered.length / POSTS_PER_PAGE);
   const pagePosts  = filtered.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE);
 
-  // Reset to page 1 on filter change
   const handleCategory = (cat) => { setActiveCategory(cat); setCurrentPage(1); };
   const handleSearch   = (e)   => { setSearchQuery(e.target.value); setCurrentPage(1); };
 
-  // Scroll to top when page changes
   const handlePageChange = (p) => {
     setCurrentPage(p);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -153,95 +167,121 @@ export default function BlogIndex() {
       </Head>
 
       {/* ── PAGE HEADER ── */}
-      <section style={{ padding: 'clamp(60px,8vw,100px) clamp(20px,5vw,60px) 48px', maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#888', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 16 }}>
-          the passgeni blog
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 24, marginBottom: 40 }}>
-          <div>
-            <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: 'clamp(30px,5vw,52px)', color: '#fff', marginBottom: 12 }}>
-              Real users. <span style={{ color: '#C8FF00' }}>Real opinions.</span>
-            </h1>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: '#888', maxWidth: 500, lineHeight: 1.75 }}>
-              Password security news, compliance changes, breach analysis, and practical advice. No fluff.
-            </p>
+      <section style={{ padding: 'clamp(72px,8vw,108px) clamp(20px,5vw,60px) 52px', maxWidth: 1200, margin: '0 auto' }}>
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+            <span style={{ display: 'block', width: 18, height: 1, background: 'var(--accent)', opacity: 0.6 }} />
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+              the passgeni blog
+            </span>
           </div>
-          {/* Search */}
-          <div style={{ position: 'relative' }}>
-            <input
-              type="search"
-              placeholder="Search posts…"
-              value={searchQuery}
-              onChange={handleSearch}
-              style={{
-                background: '#0c0c0e', border: '1px solid #1e1e1e', borderRadius: 8,
-                padding: '10px 16px 10px 36px', fontFamily: 'var(--font-body)', fontSize: 13,
-                color: '#e0e0e0', outline: 'none', width: 220,
-              }}
-              onFocus={e => e.target.style.borderColor = '#C8FF0044'}
-              onBlur={e => e.target.style.borderColor = '#1e1e1e'}
-            />
-            <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#555', fontSize: 14 }}>⌕</span>
-          </div>
-        </div>
 
-        {/* Category filter pills */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {CATEGORIES.map(cat => (
-            <button
-              key={cat}
-              onClick={() => handleCategory(cat)}
-              className={`toggle-pill${activeCategory === cat ? ' active' : ''}`}
-              style={{ fontSize: 11 }}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 24, marginBottom: 44 }}>
+            <div>
+              <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: 'clamp(32px,5vw,56px)', color: '#fff', marginBottom: 14, lineHeight: 1.05, letterSpacing: '-0.03em' }}>
+                Real users. <span style={{ color: 'var(--accent)' }}>Real opinions.</span>
+              </h1>
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: 'clamp(15px,1.6vw,17px)', color: 'var(--muted)', maxWidth: 520, lineHeight: 1.85, margin: 0 }}>
+                Password security news, compliance changes, breach analysis, and practical advice. No fluff.
+              </p>
+            </div>
+
+            {/* Search */}
+            <div style={{ position: 'relative' }}>
+              <input
+                type="search"
+                placeholder="Search posts…"
+                value={searchQuery}
+                onChange={handleSearch}
+                style={{
+                  background: 'rgba(13,13,16,0.8)', border: '1px solid var(--border-2)', borderRadius: 8,
+                  padding: '11px 16px 11px 38px', fontFamily: 'var(--font-body)', fontSize: 14,
+                  color: 'var(--text)', outline: 'none', width: 220,
+                  backdropFilter: 'blur(8px)', transition: 'border-color 0.2s',
+                }}
+                onFocus={e => e.target.style.borderColor = 'rgba(200,255,0,0.4)'}
+                onBlur={e => e.target.style.borderColor = 'var(--border-2)'}
+              />
+              <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted-2)', fontSize: 15 }}>⌕</span>
+            </div>
+          </div>
+
+          {/* Category filter pills */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {CATEGORIES.map(cat => (
+              <button
+                key={cat}
+                onClick={() => handleCategory(cat)}
+                className={`toggle-pill${activeCategory === cat ? ' active' : ''}`}
+                style={{ fontSize: 11 }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </motion.div>
       </section>
 
       {/* ── BLOG GRID ── */}
       <section style={{ padding: '0 clamp(20px,5vw,60px) clamp(60px,8vw,100px)', maxWidth: 1200, margin: '0 auto' }}>
 
-        {pagePosts.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '80px 0', color: '#555' }}>
-            <div style={{ fontSize: 40, marginBottom: 16 }}>⌕</div>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15 }}>No posts match your search.</p>
-          </div>
-        ) : (
-          <>
-            {/* Featured post (first on page 1) */}
-            {featuredPost && (
-              <div style={{ marginBottom: 20 }}>
-                <BlogCard post={featuredPost} featured />
+        <AnimatePresence mode="wait">
+          {pagePosts.length === 0 ? (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{ textAlign: 'center', padding: '80px 0', color: 'var(--muted-2)' }}
+            >
+              <div style={{ fontSize: 40, marginBottom: 16 }}>⌕</div>
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--muted)' }}>No posts match your search.</p>
+            </motion.div>
+          ) : (
+            <motion.div key={`${activeCategory}-${currentPage}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
+              {/* Featured post (first on page 1) */}
+              {featuredPost && (
+                <div style={{ marginBottom: 20 }}>
+                  <BlogCard post={featuredPost} featured index={0} />
+                </div>
+              )}
+
+              {/* Grid */}
+              <div className="blog-grid">
+                {gridPosts.map((post, i) => (
+                  <BlogCard key={post.slug} post={post} index={i + (featuredPost ? 1 : 0)} />
+                ))}
               </div>
-            )}
 
-            {/* Grid */}
-            <div className="blog-grid">
-              {gridPosts.map(post => (
-                <BlogCard key={post.slug} post={post} />
-              ))}
-            </div>
+              {/* Post count */}
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--muted-2)', letterSpacing: '0.08em', textAlign: 'center', marginTop: 36 }}>
+                Showing {((currentPage - 1) * POSTS_PER_PAGE) + 1}–{Math.min(currentPage * POSTS_PER_PAGE, filtered.length)} of {filtered.length} posts
+              </p>
 
-            {/* Post count */}
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#555', letterSpacing: '0.08em', textAlign: 'center', marginTop: 32 }}>
-              Showing {((currentPage - 1) * POSTS_PER_PAGE) + 1}–{Math.min(currentPage * POSTS_PER_PAGE, filtered.length)} of {filtered.length} posts
-            </p>
-
-            <Pagination current={currentPage} total={totalPages} onChange={handlePageChange} />
-          </>
-        )}
+              <Pagination current={currentPage} total={totalPages} onChange={handlePageChange} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </section>
 
       {/* ── NEWSLETTER CTA ── */}
-      <section style={{ borderTop: '1px solid #141416', padding: 'clamp(48px,6vw,80px) clamp(20px,5vw,60px)', maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ maxWidth: 480 }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#C8FF0066', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 16 }}>newsletter</div>
-          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: 'clamp(22px,3vw,32px)', color: '#fff', marginBottom: 16 }}>
+      <motion.section
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        style={{ borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,80px) clamp(20px,5vw,60px)', maxWidth: 1200, margin: '0 auto' }}
+      >
+        <div style={{ maxWidth: 500 }}>
+          <div className="eyebrow">Newsletter</div>
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: 'clamp(22px,3vw,32px)', color: '#fff', marginBottom: 14, letterSpacing: '-0.02em' }}>
             Get new posts in your inbox.
           </h2>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: '#888', marginBottom: 24, lineHeight: 1.75 }}>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 'clamp(14px,1.5vw,16px)', color: 'var(--muted)', marginBottom: 28, lineHeight: 1.85 }}>
             No spam. Security-relevant updates only. Unsubscribe any time.
           </p>
           <form
@@ -254,17 +294,19 @@ export default function BlogIndex() {
               required
               style={{
                 flex: 1, minWidth: 200,
-                background: '#0c0c0e', border: '1px solid #1e1e1e', borderRadius: 6,
-                padding: '12px 16px', fontFamily: 'var(--font-body)', fontSize: 14,
-                color: '#e0e0e0', outline: 'none',
+                background: 'rgba(13,13,16,0.8)', border: '1px solid var(--border-2)', borderRadius: 6,
+                padding: '13px 16px', fontFamily: 'var(--font-body)', fontSize: 14,
+                color: 'var(--text)', outline: 'none', transition: 'border-color 0.2s',
               }}
+              onFocus={e => e.target.style.borderColor = 'rgba(200,255,0,0.4)'}
+              onBlur={e => e.target.style.borderColor = 'var(--border-2)'}
             />
-            <button type="submit" className="cta-primary" style={{ fontSize: 13, padding: '12px 24px' }}>
+            <button type="submit" className="cta-primary" style={{ fontSize: 13, padding: '13px 24px' }}>
               Subscribe
             </button>
           </form>
         </div>
-      </section>
+      </motion.section>
     </Layout>
   );
 }

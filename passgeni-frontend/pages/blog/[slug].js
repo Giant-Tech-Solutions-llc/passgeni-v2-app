@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
+import { motion } from 'framer-motion';
 import Layout from '../../components/Layout';
 import BlogHeroSVG from '../../components/BlogHeroSVG';
 import { BLOG_POSTS } from '../../data/blogPosts';
@@ -109,7 +110,7 @@ function SocialShare({ title, url }) {
 
   return (
     <div>
-      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#555', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 14 }}>
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--muted-2)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 14 }}>
         Share this post
       </div>
       <div className="social-share">
@@ -143,11 +144,9 @@ function BlogFAQs({ faqs }) {
   const [open, setOpen] = useState(null);
   if (!faqs || faqs.length === 0) return null;
   return (
-    <section style={{ marginTop: 64, paddingTop: 48, borderTop: '1px solid #141416' }}>
-      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#888', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 16 }}>
-        Frequently asked questions
-      </div>
-      <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: 'clamp(22px,3vw,32px)', color: '#fff', marginBottom: 32 }}>
+    <section style={{ marginTop: 64, paddingTop: 48, borderTop: '1px solid var(--border)' }}>
+      <div className="eyebrow">Frequently asked questions</div>
+      <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: 'clamp(22px,3vw,32px)', color: '#fff', marginBottom: 32, letterSpacing: '-0.02em' }}>
         Questions about this topic
       </h2>
       <div style={{ maxWidth: 720 }}>
@@ -159,21 +158,21 @@ function BlogFAQs({ faqs }) {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24 }}>
               <h3 style={{
-                fontFamily: 'var(--font-heading)', fontSize: 15, fontWeight: 700,
-                color: open === i ? '#C8FF00' : '#fff', margin: 0, lineHeight: 1.4,
+                fontFamily: 'var(--font-heading)', fontSize: 'clamp(14px,1.6vw,16px)', fontWeight: 700,
+                color: open === i ? 'var(--accent)' : 'var(--text)', margin: 0, lineHeight: 1.45,
               }}>
                 {faq.q}
               </h3>
               <span style={{
-                color: '#C8FF00', fontSize: 18, flexShrink: 0,
+                color: 'var(--accent)', fontSize: 18, flexShrink: 0,
                 transition: 'transform 0.2s',
                 transform: open === i ? 'rotate(45deg)' : 'none',
               }}>+</span>
             </div>
             {open === i && (
               <p style={{
-                fontFamily: 'var(--font-body)', fontSize: 14, color: '#aaa',
-                lineHeight: 1.85, marginTop: 16, marginBottom: 0,
+                fontFamily: 'var(--font-body)', fontSize: 'clamp(14px,1.5vw,16px)', color: 'var(--muted)',
+                lineHeight: 1.9, marginTop: 16, marginBottom: 0,
                 animation: 'fadeIn 0.2s ease',
               }}>
                 {faq.a}
@@ -244,7 +243,7 @@ function ReactionWidget() {
 
   return (
     <div style={{ marginTop: 48, padding: '28px 32px', background: '#0a0a0c', border: '1px solid #141416', borderRadius: 12 }}>
-      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#555', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 16 }}>
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--muted-2)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 16 }}>
         Was this post useful?
       </div>
       <div className="reaction-widget">
@@ -279,7 +278,7 @@ function RelatedPosts({ currentSlug, category }) {
 
   return (
     <section style={{ marginTop: 64, paddingTop: 48, borderTop: '1px solid #141416' }}>
-      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#888', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 16 }}>
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--muted-2)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 16 }}>
         More posts
       </div>
       <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: 'clamp(20px,2.5vw,28px)', color: '#fff', marginBottom: 28 }}>
@@ -302,7 +301,7 @@ function RelatedPosts({ currentSlug, category }) {
                 <p style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 14, color: '#fff', lineHeight: 1.35, marginBottom: 8 }}>
                   {post.title}
                 </p>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#555', letterSpacing: '0.06em' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--muted-2)', letterSpacing: '0.06em' }}>
                   {post.readTime} min read →
                 </span>
               </div>
@@ -383,33 +382,37 @@ export default function BlogPost({ post }) {
 
         {/* Breadcrumb */}
         <nav aria-label="Breadcrumb" style={{ padding: '20px 0 0', marginBottom: 24 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-mono)', fontSize: 10, color: '#555', letterSpacing: '0.08em', flexWrap: 'wrap' }}>
-            <Link href="/" style={{ color: '#555', textDecoration: 'none' }}>PassGeni</Link>
-            <span>→</span>
-            <Link href="/blog" style={{ color: '#555', textDecoration: 'none' }}>Blog</Link>
-            <span>→</span>
-            <span style={{ color: '#C8FF0088' }}>{post.category}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--muted-2)', letterSpacing: '0.08em', flexWrap: 'wrap' }}>
+            <Link href="/" style={{ color: 'var(--muted-2)', textDecoration: 'none' }}>PassGeni</Link>
+            <span style={{ color: 'var(--border-2)' }}>→</span>
+            <Link href="/blog" style={{ color: 'var(--muted-2)', textDecoration: 'none' }}>Blog</Link>
+            <span style={{ color: 'var(--border-2)' }}>→</span>
+            <span style={{ color: 'var(--accent)', opacity: 0.7 }}>{post.category}</span>
           </div>
         </nav>
 
         <div className="blog-post-layout">
 
           {/* ── MAIN CONTENT ── */}
-          <article>
+          <motion.article
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          >
             {/* Category + meta */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 22, flexWrap: 'wrap' }}>
               <span style={{
                 fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em',
-                textTransform: 'uppercase', color: post.categoryColor || '#C8FF00',
+                textTransform: 'uppercase', color: post.categoryColor || 'var(--accent)',
                 background: `${post.categoryColor || '#C8FF00'}18`, padding: '3px 10px', borderRadius: 4,
               }}>
                 {post.category}
               </span>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#555', letterSpacing: '0.06em' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--muted-2)', letterSpacing: '0.06em' }}>
                 {new Date(post.publishedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
               </span>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#555' }}>·</span>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#555', letterSpacing: '0.06em' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--border-2)' }}>·</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--muted-2)', letterSpacing: '0.06em' }}>
                 {post.readTime} min read
               </span>
             </div>
@@ -417,14 +420,14 @@ export default function BlogPost({ post }) {
             {/* Title */}
             <h1 style={{
               fontFamily: 'var(--font-heading)', fontWeight: 800,
-              fontSize: 'clamp(26px,4vw,44px)', color: '#fff',
-              marginBottom: 20,
+              fontSize: 'clamp(28px,4vw,48px)', color: '#fff',
+              marginBottom: 22, letterSpacing: '-0.025em', lineHeight: 1.1,
             }}>
               {post.title}
             </h1>
 
             {/* Excerpt / deck */}
-            <p style={{ fontSize: 17, color: '#aaa', lineHeight: 1.8, marginBottom: 36, borderLeft: '3px solid #C8FF00', paddingLeft: 20 }}>
+            <p style={{ fontSize: 'clamp(15px,1.6vw,18px)', color: 'var(--muted)', lineHeight: 1.85, marginBottom: 36, borderLeft: '3px solid var(--accent)', paddingLeft: 20 }}>
               {post.excerpt}
             </p>
 
@@ -491,11 +494,11 @@ export default function BlogPost({ post }) {
 
             {/* Back to blog */}
             <div style={{ marginTop: 60, paddingTop: 40, borderTop: '1px solid #141416' }}>
-              <Link href="/blog" style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#C8FF00', textDecoration: 'none', letterSpacing: '0.06em', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <Link href="/blog" style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--accent)', textDecoration: 'none', letterSpacing: '0.06em', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 ← Back to all posts
               </Link>
             </div>
-          </article>
+          </motion.article>
 
           {/* ── SIDEBAR ── */}
           <aside className="blog-post-sidebar" style={{ paddingTop: 8 }}>
