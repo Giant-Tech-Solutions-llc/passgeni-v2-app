@@ -471,11 +471,11 @@ export const BOTTOM_CTA = {
   },
   pdf: {
     eyebrow:    "FREE DOWNLOAD",
-    headline:   "HIPAA + PCI-DSS in two minutes.",
-    body:       "The exact password requirements for both standards on one page. Used by compliance teams as a desk reference during audits.",
+    headline:   "PassGeni — 6-volume compliance cheat sheet series.",
+    body:       "HIPAA, PCI-DSS v4.0, SOC 2, ISO 27001, NIST SP 800-63B, DoD STIG, and a ready-to-sign password policy template. Exact requirements, plain English, no filler.",
     cta:        "Download free PDF →",
     disclaimer: "Instant download. No signup. No email.",
-    href:       "/downloads/passgeni-hipaa-pcidss-cheatsheet.pdf",
+    href:       "/downloads/passgeni-compliance-cheatsheet.pdf",
   },
 };
 
