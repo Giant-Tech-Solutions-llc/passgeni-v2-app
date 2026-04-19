@@ -1,10 +1,12 @@
 /**
  * GET /api/dashboard/compliance
  * Single round-trip for the compliance monitoring dashboard.
+ * Uses requireAuth (same as summary.js) to avoid getToken issues.
  */
 
-import { getToken } from "next-auth/jwt";
-import { getDB }    from "../../../lib/db/client.js";
+import { requireAuth } from "../../../lib/auth.js";
+import { getToken }    from "next-auth/jwt";
+import { getDB }       from "../../../lib/db/client.js";
 
 const STANDARD_LABELS = {
   nist:  "NIST SP 800-63B",
@@ -18,16 +20,20 @@ const STANDARD_LABELS = {
 export default async function handler(req, res) {
   if (req.method !== "GET") return res.status(405).end();
 
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-  if (!token) return res.status(401).json({ error: "Unauthorized" });
+  // Use requireAuth (getServerSession) — same approach as summary.js which is confirmed working
+  const session = await requireAuth(req, res);
+  if (!session) return; // requireAuth already sent 401
 
-  const userId = token.sub;
-  const plan   = token.plan   ?? "free";
+  // Also get raw JWT token for userId (token.sub = nextauth user ID)
+  const token  = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const userId = token?.sub ?? null;
+  const plan   = session.user.plan        ?? token?.plan        ?? "free";
   const isPaid = plan !== "free";
 
-  // If no userId (shouldn't happen but be defensive), return empty state
+  // Guard: if we can't identify the user, return empty state (not an error)
   if (!userId) {
-    return res.status(200).json(emptyResponse(plan, token));
+    console.warn("[compliance] No userId from token.sub — returning empty state");
+    return res.status(200).json(buildEmpty(plan, session, token));
   }
 
   const db         = getDB();
@@ -36,33 +42,43 @@ export default async function handler(req, res) {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
   try {
-    // Fetch everything in parallel — simple queries only (no complex OR filters)
-    const [certsResult, monthResult, viewsPrep] = await Promise.all([
-      // All certs for the user (last 200 — covers table, score, and risks)
+    // ── Parallel queries — simple filters only ────────────────
+    const [certsResult, monthResult] = await Promise.all([
       db.from("certificates")
         .select("id, compliance_standard, entropy_bits, char_pool_size, generation_params, standards_met, created_at, expires_at, is_revoked, revoked_at")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(200),
 
-      // Monthly count: certs issued this month, not revoked
       db.from("certificates")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId)
         .eq("is_revoked", false)
         .gte("created_at", monthStart),
-
-      // Defer views query — we need cert IDs first
-      Promise.resolve(null),
     ]);
 
-    if (certsResult.error) throw certsResult.error;
-    if (monthResult.error) throw monthResult.error;
+    // Surface real DB errors instead of swallowing them
+    if (certsResult.error) {
+      console.error("[compliance] certs query error:", certsResult.error);
+      return res.status(500).json({
+        error:   "Database query failed",
+        detail:  certsResult.error.message,
+        hint:    certsResult.error.hint ?? null,
+      });
+    }
+    if (monthResult.error) {
+      console.error("[compliance] monthly count error:", monthResult.error);
+      return res.status(500).json({
+        error:  "Database query failed",
+        detail: monthResult.error.message,
+        hint:   monthResult.error.hint ?? null,
+      });
+    }
 
-    const allCerts    = certsResult.data ?? [];
+    const allCerts     = certsResult.data  ?? [];
     const monthlyCount = monthResult.count ?? 0;
 
-    // ── Compliance score (computed in JS — no extra query) ────
+    // ── Compliance score ──────────────────────────────────────
     const totalCerts = allCerts.length;
     const validCerts = allCerts.filter(
       (c) => !c.is_revoked && new Date(c.expires_at) > now
@@ -70,14 +86,12 @@ export default async function handler(req, res) {
     const complianceScore = totalCerts === 0 ? 100 : Math.round((validCerts / totalCerts) * 100);
     const scoreColor = complianceScore >= 85 ? "green" : complianceScore >= 60 ? "amber" : "red";
 
-    // ── Build risk list (computed in JS) ──────────────────────
+    // ── Risks (JS-side filtering) ─────────────────────────────
     const risks = allCerts
       .filter((cert) => {
         if (cert.is_revoked) return true;
         const exp = new Date(cert.expires_at);
-        if (exp < now) return true;
-        if (exp - now < soonMs) return true;
-        return false;
+        return exp < now || (exp - now) < soonMs;
       })
       .slice(0, 20)
       .map((cert) => {
@@ -98,36 +112,39 @@ export default async function handler(req, res) {
       });
 
     // ── Recent activity ───────────────────────────────────────
-    const certIds   = allCerts.map((c) => c.id);
+    const certIds   = allCerts.slice(0, 50).map((c) => c.id);
     let recentViews = [];
 
     if (certIds.length > 0) {
       const { data: views, error: viewErr } = await db
         .from("cert_views")
         .select("cert_id, created_at")
-        .in("cert_id", certIds.slice(0, 50))   // avoid huge IN clause
+        .in("cert_id", certIds)
         .order("created_at", { ascending: false })
         .limit(10);
-      if (!viewErr) recentViews = views ?? [];
+      if (viewErr) {
+        console.warn("[compliance] cert_views query error (non-fatal):", viewErr.message);
+      } else {
+        recentViews = views ?? [];
+      }
     }
 
     const certStdMap = Object.fromEntries(allCerts.map((c) => [c.id, c.compliance_standard]));
 
-    const generatedEvents = allCerts.slice(0, 10).map((c) => ({
-      type:    "generated",
-      cert_id: c.id,
-      label:   STANDARD_LABELS[c.compliance_standard] ?? c.compliance_standard,
-      at:      c.created_at,
-    }));
-
-    const viewedEvents = recentViews.map((v) => ({
-      type:    "viewed",
-      cert_id: v.cert_id,
-      label:   STANDARD_LABELS[certStdMap[v.cert_id]] ?? "Certificate",
-      at:      v.created_at,
-    }));
-
-    const recentActivity = [...generatedEvents, ...viewedEvents]
+    const recentActivity = [
+      ...allCerts.slice(0, 10).map((c) => ({
+        type: "generated",
+        cert_id: c.id,
+        label: STANDARD_LABELS[c.compliance_standard] ?? c.compliance_standard,
+        at: c.created_at,
+      })),
+      ...recentViews.map((v) => ({
+        type: "viewed",
+        cert_id: v.cert_id,
+        label: STANDARD_LABELS[certStdMap[v.cert_id]] ?? "Certificate",
+        at: v.created_at,
+      })),
+    ]
       .sort((a, b) => new Date(b.at) - new Date(a.at))
       .slice(0, 10);
 
@@ -137,22 +154,25 @@ export default async function handler(req, res) {
       totalCerts,
       validCerts,
       risks,
-      certs:        allCerts.slice(0, 100),    // table shows last 100
+      certs:        allCerts.slice(0, 100),
       recentActivity,
       monthlyCount,
       monthlyLimit: isPaid ? null : 3,
       plan,
-      planStatus:   token.planStatus ?? null,
-      trialEnd:     token.trialEnd   ?? null,
+      planStatus:   session.user.planStatus ?? token?.planStatus ?? null,
+      trialEnd:     session.user.trialEnd   ?? token?.trialEnd   ?? null,
     });
 
   } catch (err) {
-    console.error("[compliance] API error:", err?.message ?? err);
-    return res.status(500).json({ error: "Failed to load compliance data" });
+    console.error("[compliance] unhandled error:", err?.message ?? err);
+    return res.status(500).json({
+      error:  "Failed to load compliance data",
+      detail: err?.message ?? String(err),
+    });
   }
 }
 
-function emptyResponse(plan, token) {
+function buildEmpty(plan, session, token) {
   return {
     complianceScore: 100,
     scoreColor:      "green",
@@ -164,7 +184,7 @@ function emptyResponse(plan, token) {
     monthlyCount:    0,
     monthlyLimit:    plan === "free" ? 3 : null,
     plan,
-    planStatus:      token.planStatus ?? null,
-    trialEnd:        token.trialEnd   ?? null,
+    planStatus:      session?.user?.planStatus ?? token?.planStatus ?? null,
+    trialEnd:        session?.user?.trialEnd   ?? token?.trialEnd   ?? null,
   };
 }
