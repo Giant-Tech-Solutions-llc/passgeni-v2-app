@@ -63,9 +63,12 @@ async function sendVerificationRequest({ identifier: email, url }) {
 
 // ─── AUTH OPTIONS ────────────────────────────────────────────
 export const authOptions = {
-  url: process.env.NEXTAUTH_URL,  // ← ADD THIS LINE
   adapter: SupabaseAdapter(),
-  // ... rest unchanged                   10 * 60, // 10 minutes
+
+  providers: [
+    EmailProvider({
+      maxAge: 10 * 60,
+      sendVerificationRequest,
     }),
   ],
 
