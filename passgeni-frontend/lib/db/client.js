@@ -372,6 +372,61 @@ export async function setTeamPolicy(customerId, standard) {
   return data;
 }
 
+// ─── USER API KEYS (W7 developer API) ─────────────────────────
+// Separate from the billing-tier api_keys table.
+// Keyed by nextauth_users.id (identity), not customers.id (billing).
+
+export async function createUserApiKey({ userId, name, keyHash, keyPrefix, scopes }) {
+  const db = getDB();
+  const { data, error } = await db
+    .from("user_api_keys")
+    .insert({ user_id: userId, name, key_hash: keyHash, key_prefix: keyPrefix, scopes: scopes || ["generate", "certify", "read"] })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function listUserApiKeys(userId) {
+  const db = getDB();
+  const { data, error } = await db
+    .from("user_api_keys")
+    .select("id, name, key_prefix, scopes, last_used_at, created_at, is_active")
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function revokeUserApiKey(keyId, userId) {
+  const db = getDB();
+  const { error } = await db
+    .from("user_api_keys")
+    .update({ is_active: false })
+    .eq("id", keyId)
+    .eq("user_id", userId);
+  if (error) throw error;
+}
+
+export async function validateUserApiKey(rawKey) {
+  if (!rawKey || !rawKey.startsWith("pk_live_")) return null;
+  const { createHash } = await import("crypto");
+  const hash = createHash("sha256").update(rawKey).digest("hex");
+  const db = getDB();
+  const { data, error } = await db
+    .from("user_api_keys")
+    .select("*, nextauth_users!inner(id, email)")
+    .eq("key_hash", hash)
+    .eq("is_active", true)
+    .single();
+  if (error && error.code !== "PGRST116") throw error;
+  if (!data) return null;
+  // Update last_used_at (fire and forget)
+  db.from("user_api_keys").update({ last_used_at: new Date().toISOString() }).eq("id", data.id).then(() => {}).catch(() => {});
+  return { userId: data.nextauth_users.id, email: data.nextauth_users.email, keyId: data.id, scopes: data.scopes };
+}
+
 /**
  * Get all nextauth_users.id values for active team members of a customer.
  * Used to query certificates across a whole team.
