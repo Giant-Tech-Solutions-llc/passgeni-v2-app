@@ -21,6 +21,7 @@ import {
   inferCharPoolSize,
 } from "../../lib/compliance.js";
 import { createCertificate, getMonthlyCount } from "../../lib/db/certs.js";
+import { getDB } from "../../lib/db/client.js";
 import { resolveApiCaller } from "../../lib/apiAuth.js";
 import { createRateLimiter, burstLimit } from "../../lib/rateLimit.js";
 
@@ -49,6 +50,26 @@ export default async function handler(req, res) {
       retryAfterMs: burst.waitMs,
       fix: "Wait 1 second between certificate generation requests.",
     });
+  }
+
+  // ── API key daily limit (enterprise callers only) ────────────────────────
+  if (caller.source === "apikey") {
+    const db = getDB();
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { count } = await db
+      .from("usage_events")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("event_type", "cert_generated")
+      .gte("created_at", since);
+    const dailyLimit = 1000;
+    if ((count ?? 0) >= dailyLimit) {
+      return res.status(429).json({
+        error: `Daily API limit of ${dailyLimit} certificates reached.`,
+        fix: "Contact support to increase your daily limit, or wait until tomorrow.",
+        resets_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      });
+    }
   }
 
   // ── Session token validation (generation_session_id primary, session_token legacy) ─
