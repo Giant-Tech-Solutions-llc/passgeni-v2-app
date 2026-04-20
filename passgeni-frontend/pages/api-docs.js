@@ -481,6 +481,8 @@ function SH({ id, eyebrow, title }) {
   );
 }
 
+const METHOD_COLOR = { GET: "#3b82f6", POST: "#22c55e", DELETE: "#ef4444", PATCH: "#f59e0b" };
+
 // ─── PAGE ─────────────────────────────────────────────────────
 const SCHEMA = {
   "@context": "https://schema.org",
@@ -947,6 +949,36 @@ X-RateLimit-Reset:     1735689600000  // Unix ms — midnight UTC`} label="Rate 
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* ═══ CERTIFICATE API ════════════════════════════ */}
+            <div style={{ borderTop: "1px solid #1e1e1e", paddingTop: 48, marginTop: 8 }}>
+              <p style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "rgba(200,255,0,.6)", letterSpacing: ".16em", textTransform: "uppercase", marginBottom: 8 }}>Certificate API</p>
+              <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "clamp(20px,2.5vw,26px)", color: "#fff", margin: "0 0 14px" }}>Compliance Certificates</h2>
+              <p style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "#777", lineHeight: 1.8, marginBottom: 20 }}>
+                Issue and manage ES256-signed compliance certificates programmatically.
+                Accepts <code style={{ background: "rgba(200,255,0,.08)", color: "#C8FF00", padding: "2px 5px", borderRadius: 4, fontSize: 12 }}>Authorization: Bearer pk_live_…</code> or a session cookie.
+                Get your API key from{" "}
+                <a href="/dashboard/api-keys" style={{ color: "#C8FF00", textDecoration: "none" }}>the dashboard</a>.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+                {[
+                  { method: "POST",   path: "/api/generate-certificate", desc: "Issue an ES256-signed compliance certificate for a generated password." },
+                  { method: "GET",    path: "/api/audit",                desc: "List your certificates with pagination — ?limit=20&offset=0." },
+                  { method: "POST",   path: "/api/revoke/[id]",          desc: "Revoke a certificate by ID. Only the owner can revoke." },
+                  { method: "GET",    path: "/api/keys",                  desc: "List your active API keys (session cookie required)." },
+                  { method: "POST",   path: "/api/keys",                  desc: "Create an API key — returns the raw key once only (session cookie required)." },
+                  { method: "DELETE", path: "/api/keys?id=uuid",          desc: "Revoke an API key by ID (session cookie required)." },
+                ].map(ep => (
+                  <div key={ep.method + ep.path} style={{ display: "flex", gap: 14, alignItems: "flex-start", background: "rgba(8,8,13,.9)", border: "1px solid rgba(255,255,255,.05)", borderRadius: 10, padding: "12px 16px" }}>
+                    <span style={{ background: (METHOD_COLOR[ep.method] ?? "#888") + "22", color: METHOD_COLOR[ep.method] ?? "#888", border: `1px solid ${(METHOD_COLOR[ep.method] ?? "#888")}44`, borderRadius: 5, padding: "2px 8px", fontSize: 10, fontWeight: 700, fontFamily: "monospace", minWidth: 52, textAlign: "center", flexShrink: 0 }}>{ep.method}</span>
+                    <div>
+                      <code style={{ color: "#e0e0e0", fontSize: 12, fontFamily: "monospace" }}>{ep.path}</code>
+                      <p style={{ color: "#666", fontSize: 12, margin: "4px 0 0", lineHeight: 1.6 }}>{ep.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#555", lineHeight: 1.7 }}>
