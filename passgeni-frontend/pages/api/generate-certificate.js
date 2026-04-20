@@ -22,7 +22,7 @@ import {
 } from "../../lib/compliance.js";
 import { createCertificate, getMonthlyCount } from "../../lib/db/certs.js";
 import { resolveApiCaller } from "../../lib/apiAuth.js";
-import { createRateLimiter } from "../../lib/rateLimit.js";
+import { createRateLimiter, burstLimit } from "../../lib/rateLimit.js";
 
 // 30 cert generations per minute per user/key
 const checkRateLimit = createRateLimiter({ limit: 30, windowMs: 60_000 });
@@ -39,7 +39,17 @@ export default async function handler(req, res) {
 
   if (!checkRateLimit(req, res, caller)) return;
 
-  const { userId, email, plan }  = caller;
+  const { userId, email, plan } = caller;
+
+  // ── Burst protection: 5 immediate, then 1/second ──────────────────────────
+  const burst = burstLimit(`burst:cert:${userId}`, { burstSize: 5, cooldownMs: 1000 });
+  if (!burst.allowed) {
+    return res.status(429).json({
+      error: "Too many certificates generated too quickly. Please wait a moment.",
+      retryAfterMs: burst.waitMs,
+      fix: "Wait 1 second between certificate generation requests.",
+    });
+  }
 
   // ── Session token validation (generation_session_id primary, session_token legacy) ─
   const { generation_session_id, session_token } = req.body ?? {};

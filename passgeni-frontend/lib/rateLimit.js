@@ -9,7 +9,43 @@
 //   const { allowed, remaining, resetAt } = rateLimit(identifier, limit, windowMs)
 // =============================================================
 
-const _store = new Map(); // identifier → { count, windowStart }
+const _store = new Map();     // identifier → { count, windowStart }
+const _burstStore = new Map(); // identifier → { tokens, lastRefill }
+
+/**
+ * Burst limiter: allows burstSize requests immediately, then enforces cooldownMs between requests.
+ * Use for cert generation: 5 burst, then 1/second.
+ * @returns {{ allowed: boolean, waitMs?: number }}
+ */
+export function burstLimit(key, { burstSize = 5, cooldownMs = 1000 } = {}) {
+  const now = Date.now();
+  const entry = _burstStore.get(key) ?? { tokens: burstSize, lastRefill: now };
+
+  const elapsed = now - entry.lastRefill;
+  const refill = Math.floor(elapsed / cooldownMs);
+  if (refill > 0) {
+    entry.tokens = Math.min(burstSize, entry.tokens + refill);
+    entry.lastRefill = now;
+  }
+
+  if (entry.tokens <= 0) {
+    const waitMs = cooldownMs - (now - entry.lastRefill);
+    _burstStore.set(key, entry);
+    return { allowed: false, waitMs: Math.max(0, waitMs) };
+  }
+
+  entry.tokens--;
+  _burstStore.set(key, entry);
+  return { allowed: true };
+}
+
+// Clean up stale burst entries every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of _burstStore.entries()) {
+    if (now - entry.lastRefill > 5 * 60 * 1000) _burstStore.delete(key);
+  }
+}, 5 * 60 * 1000).unref?.();
 
 /**
  * Check and increment rate limit for an identifier.
