@@ -49,7 +49,8 @@ export async function resolveApiCaller(req, res) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   if (!token) {
     res.status(401).json({
-      error: "Authentication required. Sign in at passgeni.ai/auth/signin or provide a Bearer API key.",
+      error: "Sign in to generate your certificate. It takes 30 seconds — no password needed.",
+      fix: "Visit /auth/signin to sign in with your email.",
       code: "AUTH_REQUIRED",
     });
     return null;

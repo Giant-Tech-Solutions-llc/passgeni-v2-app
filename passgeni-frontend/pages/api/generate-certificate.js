@@ -106,7 +106,8 @@ export default async function handler(req, res) {
   const canonicalId = normalizeStandardId(compliance_standard);
   if (!canonicalId) {
     return res.status(400).json({
-      error: `Unknown compliance standard: ${compliance_standard}`,
+      error: `Unknown compliance standard: "${compliance_standard}". Supported: NIST, HIPAA, PCI-DSS, SOC 2, ISO 27001, FIPS.`,
+      fix: "Use one of the supported standard IDs.",
       supported: Object.keys(STANDARDS),
     });
   }
@@ -117,18 +118,20 @@ export default async function handler(req, res) {
     // Standard gate: NIST only on free tier
     if (canonicalId !== "NIST-800-63B") {
       return res.status(402).json({
-        error: `The ${standard.label} standard requires an Assurance plan. Upgrade for $19/month.`,
+        error: `The ${standard.label} standard requires an Assurance plan. Upgrade to certify ${standard.label} passwords.`,
+        fix: "Upgrade to the Assurance plan at passgeni.ai/pricing.",
         code: "UPGRADE_REQUIRED",
-        upgrade_url: "/pricing",
+        upgrade_url: `${process.env.NEXTAUTH_URL ?? "https://passgeni.ai"}/pricing`,
       });
     }
     // Monthly cert limit
     const monthlyCount = await getMonthlyCount(userId);
     if (monthlyCount >= FREE_MONTHLY_LIMIT) {
       return res.status(402).json({
-        error: `You've used all ${FREE_MONTHLY_LIMIT} free certificates this month. Upgrade to Assurance for unlimited certificates and all compliance standards.`,
+        error: `You've used all ${FREE_MONTHLY_LIMIT} free certificates this month. Upgrade to Assurance for unlimited certificates.`,
+        fix: "Upgrade to the Assurance plan at passgeni.ai/pricing.",
         code: "LIMIT_REACHED",
-        upgrade_url: "/pricing",
+        upgrade_url: `${process.env.NEXTAUTH_URL ?? "https://passgeni.ai"}/pricing`,
         used: monthlyCount,
         limit: FREE_MONTHLY_LIMIT,
       });
@@ -153,11 +156,13 @@ export default async function handler(req, res) {
   // ── Server-side compliance validation ────────────────────────────────────
   const { valid, gaps } = validateAgainstStandard(validationParams, canonicalId);
   if (!valid) {
+    // Build specific error message from the first gap
+    const firstGap = gaps[0] ?? `Password parameters do not meet ${standard.label} requirements.`;
     return res.status(422).json({
-      error: `Password parameters do not meet ${standard.label} requirements.`,
+      error: firstGap,
       compliance_standard: canonicalId,
       gaps,
-      fix: "Adjust generation parameters to meet the standard requirements",
+      fix: `Adjust your generation settings to meet ${standard.label} requirements (min ${standard.minLength} characters${standard.requireSpecial ? ", special characters required" : ""}).`,
       code: "COMPLIANCE_FAILURE",
     });
   }
