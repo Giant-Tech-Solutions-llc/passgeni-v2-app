@@ -78,6 +78,7 @@ export default function GeneratorWidget() {
   const [showPqPopup, setShowPqPopup] = useState(false);
   const [pqShareLoading, setPqShareLoading] = useState(null);
   const [pwLimitHit, setPwLimitHit] = useState(false);
+  const [complianceResult, setComplianceResult] = useState(null);
   const toastTimer = useRef(null);
   const inputRef = useRef(null);
   const pqPopupRef = useRef(null);
@@ -246,6 +247,7 @@ export default function GeneratorWidget() {
       setHistory((h) => [newPw, ...h.filter((x) => x !== newPw)].slice(0, 10));
       setGenerating(false);
       setIsNew(true);
+      runComplianceCheck(useLength, useOpts);
       // Track PQ usage for free users — lock immediately in this session
       if (useQuantum) {
         markPqUsed();
@@ -306,6 +308,25 @@ export default function GeneratorWidget() {
     setShowOtherInput(false);
     generate(seeds);
   };
+
+  async function runComplianceCheck(len, options) {
+    try {
+      const res = await fetch("/api/compliance-check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          length:      len,
+          has_upper:   options.upper,
+          has_lower:   true,
+          has_numbers: options.num,
+          has_special: options.sym,
+        }),
+      });
+      if (!res.ok) return;
+      const { results } = await res.json();
+      setComplianceResult(results);
+    } catch (_) {}
+  }
 
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:20 }}>
@@ -507,6 +528,26 @@ export default function GeneratorWidget() {
                 </div>
               )}
               <GeneratorTrustStrip />
+              {complianceResult && (
+                <div style={{ marginTop:16, padding:"14px 16px", background:"#08080a", border:"1px solid #141416", borderRadius:10 }}>
+                  <div style={{ fontFamily:"var(--font-mono)", fontSize:9, color:"#555", letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:10 }}>Standards met</div>
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                    {Object.entries(complianceResult).map(([id, r]) => (
+                      <span key={id} title={r.gaps.length ? r.gaps.join("\n") : `Meets ${r.label}`} style={{
+                        display:"inline-flex", alignItems:"center", gap:5,
+                        padding:"4px 10px", borderRadius:99, fontSize:10, fontFamily:"var(--font-mono)",
+                        border: r.valid ? "1px solid rgba(0,208,132,0.3)" : "1px solid rgba(255,255,255,0.06)",
+                        background: r.valid ? "rgba(0,208,132,0.08)" : "rgba(255,255,255,0.02)",
+                        color: r.valid ? "#00d084" : "#444",
+                        cursor: r.gaps.length ? "help" : "default",
+                      }}>
+                        <span style={{ width:5, height:5, borderRadius:"50%", background: r.valid ? "#00d084" : "#333", flexShrink:0, display:"inline-block" }} />
+                        {r.shortLabel}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
               <PasswordHistory history={history} onClear={()=>setHistory([])} />
             </>
           ) : (
