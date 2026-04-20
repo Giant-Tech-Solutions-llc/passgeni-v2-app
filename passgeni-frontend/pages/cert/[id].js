@@ -3,9 +3,11 @@
  * No auth required. Must look like a legal document.
  */
 
+import { useState } from "react";
 import Head from "next/head";
 import { getCertificate, logCertView } from "../../lib/db/certs.js";
-import { verifyCertJWT, STANDARDS } from "../../lib/certs.js";
+import { verifyCertJWT } from "../../lib/certs.js";
+import { STANDARDS } from "../../lib/compliance.js";
 import QRCode from "qrcode";
 import crypto from "crypto";
 
@@ -117,6 +119,7 @@ function StatusBadge({ status }) {
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 export default function CertPage({ cert, status, signatureValid, jwtFingerprint, jwtFingerprintFull, qrDataUrl, certUrl }) {
+  const [verifyOpen, setVerifyOpen] = useState(false);
   const stdInfo = STANDARD_FULL[cert.compliance_standard] ?? { label: cert.standard_label, color: "#c8ff00", body: "" };
   const fmt = (iso) => new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 
@@ -301,6 +304,30 @@ export default function CertPage({ cert, status, signatureValid, jwtFingerprint,
                 : `This certificate expired on ${fmt(cert.expires_at)}. The credential it certified may still be valid — the owner can re-certify to get a current certificate.`}
             </div>
           )}
+
+          {/* offline verification collapsible */}
+          <div style={{ marginTop: 20, border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, overflow: "hidden" }}>
+            <button
+              onClick={() => setVerifyOpen((v) => !v)}
+              style={{ width: "100%", background: "none", border: "none", padding: "14px 20px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", color: "#666", fontSize: 13, fontFamily: "inherit" }}
+            >
+              <span>How to verify this certificate offline</span>
+              <span style={{ fontSize: 18, lineHeight: 1 }}>{verifyOpen ? "−" : "+"}</span>
+            </button>
+            {verifyOpen && (
+              <div style={{ padding: "0 20px 20px", fontSize: 13, color: "#888", lineHeight: 1.75, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                <p style={{ marginTop: 14 }}>
+                  This certificate can be verified using PassGeni&apos;s public key at{" "}
+                  <span style={{ fontFamily: "Space Mono, monospace", color: "#c8ff00", fontSize: 11 }}>passgeni.ai/.well-known/jwks.json</span>.
+                  Decode the JWT and verify the ES256 signature. No login or API call required.
+                </p>
+                <p style={{ margin: 0 }}>
+                  The JWT fingerprint for this certificate is{" "}
+                  <span style={{ fontFamily: "Space Mono, monospace", fontSize: 11, color: "#aaa" }}>{jwtFingerprintFull}</span>.
+                </p>
+              </div>
+            )}
+          </div>
 
           {/* footer CTA */}
           <div style={{ textAlign: "center", marginTop: 52 }}>
