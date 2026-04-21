@@ -137,12 +137,14 @@ export default function BlogIndex() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const filtered = useMemo(() => {
-    return BLOG_POSTS.filter(p => {
-      const matchesCat = activeCategory === 'All' || p.category === activeCategory;
-      const q = searchQuery.toLowerCase();
-      const matchesSearch = !q || p.title.toLowerCase().includes(q) || p.excerpt.toLowerCase().includes(q);
-      return matchesCat && matchesSearch;
-    });
+    return BLOG_POSTS
+      .filter(p => {
+        const matchesCat = activeCategory === 'All' || p.category === activeCategory;
+        const q = searchQuery.toLowerCase();
+        const matchesSearch = !q || p.title.toLowerCase().includes(q) || p.excerpt.toLowerCase().includes(q);
+        return matchesCat && matchesSearch;
+      })
+      .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
   }, [activeCategory, searchQuery]);
 
   const totalPages = Math.ceil(filtered.length / POSTS_PER_PAGE);
