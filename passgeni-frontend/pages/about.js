@@ -71,6 +71,12 @@ const HOW_STEPS = [
     body: "Open DevTools. Go to the Network tab. Generate a password. Watch nothing happen. That is not a marketing claim. That is verifiable architecture you can confirm yourself right now.",
     accent: "Verify it yourself",
   },
+  {
+    step: "04",
+    title: "Need a certificate? Certified Mode activates.",
+    body: "When you request a compliance certificate, only your generation parameters — length, character classes, compliance standard — are sent to our server. Never the password itself. The server validates the parameters and signs a certificate. Two modes, one guarantee: your password never travels.",
+    accent: "Zero-knowledge by design",
+  },
 ];
 
 const VALUES = [
@@ -87,7 +93,7 @@ const VALUES = [
   {
     icon: "⚡",
     title: "Honest Limits — Upfront",
-    body: "The free tier is real. Fifteen passwords a day, no account required, no data collected. We make money from Pro and Team plans — not from monetizing your security choices.",
+    body: "The free tier is real. Unlimited password generation, no account required, no data collected. Compliance certificates are limited to 3 per month on the free plan. We make money from Assurance and Authority plans — not from monetizing your security choices.",
   },
 ];
 
@@ -427,7 +433,7 @@ export default function AboutPage() {
           >
             <div style={{ display: "flex", gap: "clamp(10px,1.5vw,14px)", justifyContent: "center", flexWrap: "wrap" }}>
               <motion.a href="/pricing" className="btn-ghost" {...btnGhost} style={{ fontSize: "clamp(13px,1.6vw,15px)", padding: "clamp(14px,1.8vw,16px) clamp(24px,3vw,36px)" }}>
-                See Team pricing
+                See plans →
               </motion.a>
             </div>
 
