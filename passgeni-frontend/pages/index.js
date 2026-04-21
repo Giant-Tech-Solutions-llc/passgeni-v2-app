@@ -183,8 +183,13 @@ function GeneratorDemo() {
           ✓ NIST SP 800-63B
         </span>
         {certState !== "done" && (
-          <span style={{ fontSize: 11, padding: "3px 9px", borderRadius: 99, background: "rgba(255,68,68,0.1)", color: "var(--danger)", border: "1px solid rgba(255,68,68,0.22)" }}>
-            ✗ No Certificate
+          <span style={{
+            fontSize: 11, padding: "4px 11px", borderRadius: 99,
+            background: "rgba(255,68,68,0.13)", color: "var(--danger)",
+            border: "1px solid rgba(255,68,68,0.35)",
+            fontWeight: 600, letterSpacing: "0.01em",
+          }}>
+            ❌ No compliance certificate attached
           </span>
         )}
         {certState === "done" && certResult && (
@@ -533,7 +538,7 @@ const PLANS = [
     items: ["Unlimited password generation", "All 6 security tools", "NIST SP 800-63B compliance", "Breach check (k-anonymity)", "3 certificates / month"],
     excluded: ["HIPAA / PCI-DSS / SOC 2 / ISO certs", "Certificate dashboard", "Audit log export"] },
   { name: "Assurance", price: "$19", period: "/ month (early access)", featured: true, cta: "Get Assurance", href: "/auth/signin?plan=assurance",
-    items: ["Everything in Foundation", "Unlimited certificates", "All 6 compliance standards", "Certificate dashboard + history", "PDF + JSON export", "Policy document generator"],
+    items: ["Everything in Foundation", "Unlimited certificates", "All 6 compliance standards", "Certificate dashboard + history", "JSON certificate export", "Policy document generator"],
     excluded: [] },
   { name: "Authority", price: "$59", period: "/ month (early access)", featured: false, cta: "Get Authority", href: "/auth/signin?plan=authority",
     items: ["Everything in Assurance", "Team seats (up to 10)", "Shared audit log", "Team policy enforcement", "API access", "Custom issuer name"],

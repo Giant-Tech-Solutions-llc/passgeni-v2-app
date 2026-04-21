@@ -1,5 +1,5 @@
 // =============================================================
-// PASSGENI — IN-MEMORY RATE LIMITER (W7)
+// PASSGENI — IN-MEMORY RATE LIMITER
 // =============================================================
 // Map-based per-key/IP sliding window. Suitable for single-instance
 // deploy (Railway/Vercel single region). For multi-region, replace
@@ -9,8 +9,20 @@
 //   const { allowed, remaining, resetAt } = rateLimit(identifier, limit, windowMs)
 // =============================================================
 
-const _store = new Map();     // identifier → { count, windowStart }
+const _store = new Map();      // identifier → { count, windowStart }
 const _burstStore = new Map(); // identifier → { tokens, lastRefill }
+
+// Evict stale sliding-window entries every 5 minutes.
+// Entries are only touched on each hit from the same key; IPs/users that
+// don't repeat stay in memory indefinitely without this sweep.
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of _store.entries()) {
+    // Default window is 60s; longest window in use is 1h (IP limit).
+    // Use 2h as a conservative eviction threshold.
+    if (now - entry.windowStart > 2 * 60 * 60 * 1000) _store.delete(key);
+  }
+}, 5 * 60 * 1000).unref?.();
 
 /**
  * Burst limiter: allows burstSize requests immediately, then enforces cooldownMs between requests.
@@ -83,7 +95,7 @@ export function createRateLimiter({ limit = 60, windowMs = 60_000, keyFn } = {})
   return function checkRateLimit(req, res, caller) {
     const identifier = keyFn
       ? keyFn(req, caller)
-      : caller?.userId ?? req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ?? "anonymous";
+      : caller?.userId ?? req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ?? req.socket?.remoteAddress ?? "anonymous";
 
     const { allowed, remaining, resetAt } = rateLimit(identifier, limit, windowMs);
 
@@ -92,10 +104,12 @@ export function createRateLimiter({ limit = 60, windowMs = 60_000, keyFn } = {})
     res.setHeader("X-RateLimit-Reset",     String(Math.ceil(resetAt / 1000)));
 
     if (!allowed) {
+      const retryAfterSecs = Math.ceil((resetAt - Date.now()) / 1000);
+      res.setHeader("Retry-After", String(retryAfterSecs));
       res.status(429).json({
         error: `Rate limit exceeded. Max ${limit} requests per ${Math.round(windowMs / 1000)}s window.`,
         code: "RATE_LIMITED",
-        retry_after: Math.ceil((resetAt - Date.now()) / 1000),
+        retry_after: retryAfterSecs,
       });
       return false;
     }

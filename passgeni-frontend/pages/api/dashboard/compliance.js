@@ -4,11 +4,15 @@
  * Uses requireAuth (same as summary.js) to avoid getToken issues.
  */
 
-import { requireAuth } from "../../../lib/auth.js";
-import { getToken }    from "next-auth/jwt";
-import { getDB }       from "../../../lib/db/client.js";
+import { requireAuth }   from "../../../lib/auth.js";
+import { getToken }      from "next-auth/jwt";
+import { getDB }         from "../../../lib/db/client.js";
+import { STANDARD_LABELS as CANONICAL_LABELS } from "../../../lib/compliance.js";
 
+// Merge canonical IDs with legacy short IDs for backward compatibility
+// (older certs stored with short IDs like "nist", "hipaa")
 const STANDARD_LABELS = {
+  ...CANONICAL_LABELS,
   nist:  "NIST SP 800-63B",
   hipaa: "HIPAA §164.312",
   pci:   "PCI-DSS v4.0",
@@ -78,13 +82,36 @@ export default async function handler(req, res) {
     const allCerts     = certsResult.data  ?? [];
     const monthlyCount = monthResult.count ?? 0;
 
-    // ── Compliance score ──────────────────────────────────────
+    // ── Compliance score (PRD §Week 4) ────────────────────────
+    // Score = (valid certs for primary standard) ÷ (total certs for primary standard) × 100
+    // Primary standard = the standard the user has the most certs in.
+    // Falls back to overall ratio when no certs exist.
     const totalCerts = allCerts.length;
     const validCerts = allCerts.filter(
       (c) => !c.is_revoked && new Date(c.expires_at) > now
     ).length;
-    const complianceScore = totalCerts === 0 ? 100 : Math.round((validCerts / totalCerts) * 100);
-    const scoreColor = complianceScore >= 85 ? "green" : complianceScore >= 60 ? "amber" : "red";
+
+    // Derive primary standard from cert history (most-used standard)
+    let primaryStandard = null;
+    if (allCerts.length > 0) {
+      const freq = {};
+      for (const c of allCerts) {
+        freq[c.compliance_standard] = (freq[c.compliance_standard] ?? 0) + 1;
+      }
+      primaryStandard = Object.entries(freq).sort((a, b) => b[1] - a[1])[0][0];
+    }
+
+    // Calculate score filtered to primary standard
+    let complianceScore, scoreColor;
+    if (primaryStandard) {
+      const stdCerts      = allCerts.filter((c) => c.compliance_standard === primaryStandard);
+      const stdTotal      = stdCerts.length;
+      const stdValid      = stdCerts.filter((c) => !c.is_revoked && new Date(c.expires_at) > now).length;
+      complianceScore     = stdTotal === 0 ? 100 : Math.round((stdValid / stdTotal) * 100);
+    } else {
+      complianceScore     = totalCerts === 0 ? 100 : Math.round((validCerts / totalCerts) * 100);
+    }
+    scoreColor = complianceScore >= 85 ? "green" : complianceScore >= 60 ? "amber" : "red";
 
     // ── Risks (JS-side filtering) ─────────────────────────────
     const risks = allCerts
@@ -151,6 +178,8 @@ export default async function handler(req, res) {
     return res.status(200).json({
       complianceScore,
       scoreColor,
+      primaryStandard,
+      primaryStandardLabel: primaryStandard ? (STANDARD_LABELS[primaryStandard] ?? primaryStandard) : null,
       totalCerts,
       validCerts,
       risks,

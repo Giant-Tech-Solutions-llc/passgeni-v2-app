@@ -23,16 +23,34 @@ import {
 import { createCertificate, getMonthlyCount } from "../../lib/db/certs.js";
 import { getDB } from "../../lib/db/client.js";
 import { resolveApiCaller } from "../../lib/apiAuth.js";
-import { createRateLimiter, burstLimit } from "../../lib/rateLimit.js";
+import { createRateLimiter, burstLimit, rateLimit } from "../../lib/rateLimit.js";
+import { getClientIp } from "../../lib/request.js";
 
 // 30 cert generations per minute per user/key
 const checkRateLimit = createRateLimiter({ limit: 30, windowMs: 60_000 });
+
+// IP rate limit: 10 cert attempts per hour (free-tier / unauthenticated scraping protection)
+const IP_LIMIT = 10;
+const IP_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 // Free tier: 3 certs/month, NIST-800-63B only
 const FREE_MONTHLY_LIMIT = 3;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
+
+  // ── IP rate limit (PRD §9.0C) — enforced before auth ─────────────────────
+  const ipCheck = rateLimit(`ip:cert:${getClientIp(req)}`, IP_LIMIT, IP_WINDOW_MS);
+  if (!ipCheck.allowed) {
+    const retryAfterSecs = Math.ceil((ipCheck.resetAt - Date.now()) / 1000);
+    res.setHeader("Retry-After", String(retryAfterSecs));
+    return res.status(429).json({
+      error: "Too many certificate requests from this IP. Max 10 per hour.",
+      code: "IP_RATE_LIMITED",
+      retry_after: retryAfterSecs,
+      fix: "Wait before making more certificate requests, or sign in to get a higher limit.",
+    });
+  }
 
   // ── Auth (session cookie or Bearer API key) ───────────────────────────────
   const caller = await resolveApiCaller(req, res);
@@ -45,9 +63,11 @@ export default async function handler(req, res) {
   // ── Burst protection: 5 immediate, then 1/second ──────────────────────────
   const burst = burstLimit(`burst:cert:${userId}`, { burstSize: 5, cooldownMs: 1000 });
   if (!burst.allowed) {
+    const retryAfterSecs = Math.ceil((burst.waitMs ?? 1000) / 1000);
+    res.setHeader("Retry-After", String(retryAfterSecs));
     return res.status(429).json({
       error: "Too many certificates generated too quickly. Please wait a moment.",
-      retryAfterMs: burst.waitMs,
+      retry_after: retryAfterSecs,
       fix: "Wait 1 second between certificate generation requests.",
     });
   }
@@ -64,10 +84,13 @@ export default async function handler(req, res) {
       .gte("created_at", since);
     const dailyLimit = 1000;
     if ((count ?? 0) >= dailyLimit) {
+      const retryAfterSecs = Math.ceil((new Date().setHours(24, 0, 0, 0) - Date.now()) / 1000);
+      res.setHeader("Retry-After", String(retryAfterSecs));
       return res.status(429).json({
         error: `Daily API limit of ${dailyLimit} certificates reached.`,
         fix: "Contact support to increase your daily limit, or wait until tomorrow.",
-        resets_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        retry_after: retryAfterSecs,
+        resets_at: new Date(new Date().setHours(24, 0, 0, 0)).toISOString(),
       });
     }
   }

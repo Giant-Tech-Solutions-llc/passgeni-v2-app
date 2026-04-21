@@ -10,9 +10,18 @@ import { useRouter }                                from "next/router";
 import PageLayout                                   from "../../components/layout/PageLayout.js";
 import UpgradeModal                                 from "../../components/ui/UpgradeModal.js";
 import { btnPrimary, btnGhost }                     from "../../lib/motion.js";
+import { useRemindDismissed }                       from "../../lib/useRemindDismissed.js";
 
 // ─── CONSTANTS ────────────────────────────────────────────────
 const STANDARD_LABELS = {
+  // Canonical IDs (from API)
+  "NIST-800-63B":  "NIST SP 800-63B",
+  "HIPAA":         "HIPAA §164.312",
+  "PCI-DSS":       "PCI-DSS v4.0",
+  "SOC2":          "SOC 2 CC6.1",
+  "ISO-27001":     "ISO 27001:2022",
+  "FIPS-140-3":    "FIPS 140-3",
+  // Legacy short IDs (backward compat)
   nist:  "NIST SP 800-63B",
   hipaa: "HIPAA §164.312",
   pci:   "PCI-DSS v4.0",
@@ -164,11 +173,16 @@ function QuickFixPanel({ risks }) {
         marginBottom: 16,
       }}
     >
-      <div style={{ padding: "14px 20px", borderBottom: "1px solid rgba(255,68,68,0.1)", display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{ fontSize: 15 }}>🚨</span>
-        <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 13, color: "#ff9999" }}>
-          {risks.length} certificate{risks.length !== 1 ? "s" : ""} need attention
-        </span>
+      <div style={{ padding: "14px 20px", borderBottom: "1px solid rgba(255,68,68,0.1)" }}>
+        <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#ff444488", letterSpacing: ".16em", textTransform: "uppercase", marginBottom: 6 }}>
+          Active Risks
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 15 }}>🚨</span>
+          <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 13, color: "#ff9999" }}>
+            {risks.length} certificate{risks.length !== 1 ? "s" : ""} need attention
+          </span>
+        </div>
       </div>
       <div>
         {risks.map((risk, i) => {
@@ -202,7 +216,7 @@ function QuickFixPanel({ risks }) {
                 </span>
               </div>
               <a
-                href="/dashboard/certs"
+                href={`/dashboard/certify?standard=${encodeURIComponent(risk.standard)}`}
                 style={{ fontSize: 12, fontWeight: 700, color: "#c8ff00", textDecoration: "none", border: "1px solid rgba(200,255,0,0.25)", padding: "5px 13px", borderRadius: 6, whiteSpace: "nowrap", flexShrink: 0 }}
               >
                 Re-certify →
@@ -212,6 +226,106 @@ function QuickFixPanel({ risks }) {
         })}
       </div>
     </motion.div>
+  );
+}
+
+// ─── FREE TIER CERT LIMIT BANNERS ────────────────────────────
+// Shown above the MonthlyUsageBar for free-tier users.
+// At 2/3: informational warning (no CTA). At 3/3: upgrade banner + CTA.
+function CertLimitBanners({ used, limit, onUpgrade }) {
+  if (!limit || limit <= 0 || used < limit - 1) return null;
+
+  const remaining = limit - used;
+
+  // At 2/3: informational only — no upgrade CTA
+  if (remaining === 1) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        style={{
+          padding: "12px 18px",
+          background: "rgba(250,204,21,0.06)",
+          border: "1px solid rgba(250,204,21,0.25)",
+          borderRadius: 10,
+          fontSize: 13,
+          color: "#facc15",
+          marginBottom: 12,
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+        }}
+      >
+        <span style={{ flexShrink: 0 }}>⚠</span>
+        <span>You have 1 free certificate remaining this month.</span>
+      </motion.div>
+    );
+  }
+
+  // At 3/3: full upgrade banner
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      style={{
+        background: "rgba(200,255,0,0.04)",
+        border: "1px solid rgba(200,255,0,0.25)",
+        borderRadius: 12,
+        overflow: "hidden",
+        marginBottom: 12,
+      }}
+    >
+      <div style={{ height: 1, background: "linear-gradient(90deg,transparent,rgba(200,255,0,.5),transparent)" }} />
+      <div style={{ padding: "16px 20px" }}>
+        <div style={{ fontSize: 13, color: "#ccc", lineHeight: 1.65, marginBottom: 16 }}>
+          You've used all {limit} free certificates this month. Upgrade to Assurance for unlimited certificates and all compliance standards.
+        </div>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <button
+            onClick={onUpgrade}
+            style={{
+              background: "#c8ff00",
+              color: "#000",
+              border: "none",
+              borderRadius: 8,
+              padding: "10px 20px",
+              fontWeight: 800,
+              fontSize: 13,
+              cursor: "pointer",
+              letterSpacing: "-0.01em",
+              flex: 1,
+              maxWidth: 280,
+            }}
+          >
+            Upgrade to Assurance — $19/month →
+          </button>
+          <RemindMeNextMonth />
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── "REMIND ME NEXT MONTH" BUTTON ───────────────────────────
+function RemindMeNextMonth() {
+  const [dismissed, dismiss] = useRemindDismissed();
+  if (dismissed) return null;
+  return (
+    <button
+      onClick={dismiss}
+      style={{
+        background: "transparent",
+        border: "1px solid rgba(255,255,255,0.1)",
+        borderRadius: 8,
+        padding: "10px 16px",
+        fontSize: 12,
+        color: "#555",
+        cursor: "pointer",
+        whiteSpace: "nowrap",
+      }}
+    >
+      Remind me next month
+    </button>
   );
 }
 
@@ -249,9 +363,6 @@ function MonthlyUsageBar({ used, limit, plan }) {
             <span style={{ fontFamily: "var(--font-body)", fontSize: 11, color: "#444" }}>
               {limit - used > 0 ? `${limit - used} remaining` : "Limit reached"}
             </span>
-            {pct >= 0.8 && (
-              <a href="/pricing" style={{ fontSize: 11, color: "#c8ff00", textDecoration: "none" }}>Upgrade for unlimited →</a>
-            )}
           </div>
         </>
       ) : (
@@ -642,6 +753,9 @@ export default function ComplianceDashboard() {
             <motion.a href="/dashboard/api-keys" className="btn-ghost" {...btnGhost} style={{ fontSize: 12, padding: "9px 16px" }}>
               API Keys
             </motion.a>
+            <motion.a href="/settings" className="btn-ghost" {...btnGhost} style={{ fontSize: 12, padding: "9px 16px" }}>
+              Settings
+            </motion.a>
             <motion.a href="/api-docs" className="btn-ghost" {...btnGhost} style={{ fontSize: 12, padding: "9px 16px" }}>
               API Docs
             </motion.a>
@@ -687,6 +801,11 @@ export default function ComplianceDashboard() {
               <div style={{ fontSize: 11, color: "#444", marginTop: 3 }}>
                 {data.validCerts} / {data.totalCerts} valid
               </div>
+              {data.primaryStandardLabel && (
+                <div style={{ fontSize: 10, color: "#333", marginTop: 4, fontFamily: "var(--font-mono)" }}>
+                  {data.primaryStandardLabel}
+                </div>
+              )}
             </div>
           </motion.div>
 
@@ -709,6 +828,15 @@ export default function ComplianceDashboard() {
             delay={0.18}
           />
         </div>
+
+        {/* ── Free tier cert limit banners ─────────────────── */}
+        {!isPaid && (
+          <CertLimitBanners
+            used={data.monthlyCount}
+            limit={data.monthlyLimit}
+            onUpgrade={() => setUpgradeModal({ reason: "LIMIT_REACHED", used: data.monthlyCount, limit: data.monthlyLimit })}
+          />
+        )}
 
         {/* ── Monthly usage bar ────────────────────────────── */}
         <div style={{ marginBottom: 20 }}>
@@ -757,9 +885,9 @@ export default function ComplianceDashboard() {
             <a href="/dashboard/certs" style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#c8ff00", textDecoration: "none" }}>Issue certificate →</a>
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {Object.entries(STANDARD_LABELS).map(([key, label]) => {
+            {[["NIST-800-63B","NIST SP 800-63B"],["HIPAA","HIPAA §164.312"],["PCI-DSS","PCI-DSS v4.0"],["SOC2","SOC 2 CC6.1"],["ISO-27001","ISO 27001:2022"],["FIPS-140-3","FIPS 140-3"]].map(([key, label]) => {
               const hasCert = (data.certs ?? []).some((c) => c.compliance_standard === key && !c.is_revoked && new Date(c.expires_at) > new Date());
-              const isLocked = !isPaid && key !== "nist";
+              const isLocked = !isPaid && key !== "NIST-800-63B";
               return (
                 <div key={key} style={{
                   fontFamily:  "var(--font-mono)",

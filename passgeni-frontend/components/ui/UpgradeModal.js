@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { useRemindDismissed } from "../../lib/useRemindDismissed.js";
 
 const PLANS = [
   {
@@ -11,7 +12,7 @@ const PLANS = [
       "Unlimited compliance certificates",
       "All 6 standards (HIPAA, PCI-DSS, SOC 2, ISO 27001, NIST, FIPS)",
       "Certificate sharing + QR codes",
-      "Priority support",
+      "JSON certificate export",
     ],
     href: "/auth/signin?callbackUrl=/checkout?plan=assurance&billing=monthly",
   },
@@ -43,6 +44,7 @@ const PLANS = [
 export default function UpgradeModal({ open, onClose, reason, used, limit }) {
   const { data: session } = useSession();
   const overlayRef = useRef(null);
+  const [remindDismissed, dismissRemind] = useRemindDismissed();
 
   useEffect(() => {
     if (!open) return;
@@ -57,11 +59,11 @@ export default function UpgradeModal({ open, onClose, reason, used, limit }) {
   const isTrialing = session?.user?.planStatus === "trialing";
 
   const headline = isLimit
-    ? `You've used ${used ?? "?"} of ${limit ?? 3} free certificates this month.`
+    ? `You've used all ${limit ?? 3} free certificates this month.`
     : "This compliance standard requires a paid plan.";
 
   const subtext = isLimit
-    ? "Upgrade to issue unlimited certificates across all compliance standards."
+    ? "Upgrade to Assurance for unlimited certificates and all compliance standards."
     : "HIPAA, PCI-DSS, SOC 2, ISO 27001, and FIPS 140-3 are available on Assurance and Authority.";
 
   return (
@@ -162,9 +164,19 @@ export default function UpgradeModal({ open, onClose, reason, used, limit }) {
         </div>
 
         {/* footer */}
-        <div style={{ padding: "14px 28px", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ padding: "14px 28px", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <span style={{ fontSize: 11, color: "#444" }}>14-day free trial · No card required</span>
-          <a href="/pricing" style={{ fontSize: 12, color: "#555", textDecoration: "none" }}>Compare all plans →</a>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            {isLimit && !remindDismissed && (
+              <button
+                onClick={() => { dismissRemind(); onClose(); }}
+                style={{ background: "transparent", border: "none", fontSize: 12, color: "#444", cursor: "pointer", padding: "4px 8px" }}
+              >
+                Remind me next month
+              </button>
+            )}
+            <a href="/pricing" style={{ fontSize: 12, color: "#555", textDecoration: "none" }}>Compare all plans →</a>
+          </div>
         </div>
       </div>
     </div>
