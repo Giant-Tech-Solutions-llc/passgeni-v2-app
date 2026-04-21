@@ -276,7 +276,7 @@ function CertificateCard() {
         ["SHA-256", "a3f9e2…c71b40"],
         ["Issued", fmt(now)],
         ["Expires", fmt(exp)],
-        ["Issuer", "PassGeni Authority"],
+        ["Issuer", "passgeni.ai"],
       ].map(([k, v]) => (
         <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
           <span style={{ color: "var(--muted)" }}>{k}</span>
@@ -308,14 +308,14 @@ const Hero = (
       </FadeIn>
       <FadeIn delay={0.22}>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 56 }}>
-          <a href="/auth/signin" className="btn-primary" style={{ fontSize: 15, padding: "13px 28px" }}>Get your first certificate →</a>
-          <a href="#how-it-works" className="btn-ghost" style={{ fontSize: 15, padding: "13px 24px" }}>See how it works</a>
+          <a href="#generator" className="btn-primary" style={{ fontSize: 15, padding: "13px 28px" }}>Try the generator →</a>
+          <a href="/auth/signin" className="btn-ghost" style={{ fontSize: 15, padding: "13px 24px" }}>Sign in for certificates →</a>
         </div>
       </FadeIn>
-      <FadeIn delay={0.28}><GeneratorDemo /></FadeIn>
+      <FadeIn delay={0.28}><div id="generator"><GeneratorDemo /></div></FadeIn>
       <FadeIn delay={0.35}>
         <div style={{ display: "flex", gap: 28, justifyContent: "center", flexWrap: "wrap", marginTop: 40, fontSize: 12, color: "var(--muted)" }}>
-          {["HIPAA compliant", "PCI-DSS v4.0", "SOC 2 ready", "ISO 27001", "DoD STIG"].map((b) => (
+          {["HIPAA", "PCI-DSS v4.0", "SOC 2", "NIST SP 800-63B"].map((b) => (
             <span key={b} style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <span style={{ color: "var(--accent)" }}>✦</span> {b}
             </span>
@@ -367,7 +367,7 @@ const Solution = (
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 24, maxWidth: 860, margin: "0 auto" }}>
         {[
           { n: "01", title: "Generate", body: "Select your compliance standard. PassGeni's CSPRNG produces a password satisfying every character-class and entropy requirement." },
-          { n: "02", title: "Validate", body: "Our engine checks entropy, character distribution, breach exposure via k-anonymity, and alignment with your chosen standard." },
+          { n: "02", title: "Validate", body: "Our engine checks entropy, character distribution, and alignment with your chosen compliance standard. Breach exposure checks use k-anonymity — your password is never sent." },
           { n: "03", title: "Certify", body: "Get a tamper-evident certificate with your password hash, standard, entropy score, timestamp, and an ES256 cryptographic signature." },
         ].map(({ n, title, body }, i) => (
           <FadeIn key={n} delay={i * 0.1}>
@@ -489,6 +489,9 @@ const Comparison = (
             </tbody>
           </table>
         </div>
+        <p style={{ textAlign: "center", marginTop: 20, fontSize: 11, color: "rgba(255,255,255,0.2)" }}>
+          ✦ Zero-knowledge means the password is generated client-side and never transmitted to PassGeni servers.
+        </p>
       </FadeIn>
     </div>
   </section>
