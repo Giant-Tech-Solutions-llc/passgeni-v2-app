@@ -10,6 +10,7 @@ import { PROFESSIONS }         from "../../content/professions.js";
 import { buildPassword, buildPassphrase } from "../../lib/generator.js";
 import { getStrength, getEntropy, getCrackTime, getDNAScore } from "../../lib/strength.js";
 import { CopyBtn, TogglePill, StrengthBar, TrustChip } from "../ui/index.js";
+import { IcCheck, IcX, IcBolt, IcLock, IcSparkle } from "../../lib/icons.js";
 
 // ─── PASSWORD DISPLAY ─────────────────────────────────────────
 function AnimatedEntropy({ value }) {
@@ -108,8 +109,8 @@ export function DNAScorePanel({ password }) {
         {dna.checks.map((c, i) => (
           <div key={i}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-              <span style={{ fontFamily: "var(--font-body)", fontSize: 12, color: c.pass ? "#ccc" : "#555" }}>
-                {c.pass ? "✓" : "✗"} {c.label}
+              <span style={{ fontFamily: "var(--font-body)", fontSize: 12, color: c.pass ? "#ccc" : "#555", display: "flex", alignItems: "center", gap: 5 }}>
+                {c.pass ? <IcCheck size={12} color="#4ade80" /> : <IcX size={12} color="#ff6b6b" />}{c.label}
               </span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: c.pass ? "#C8FF0088" : "#333" }}>
                 {c.pass ? `+${c.weight}` : "0"} pts
@@ -232,7 +233,7 @@ export function BulkGenerator({ profession, opts, length, customSeeds, quantumMo
       {/* Body */}
       <div style={{ padding: "20px 24px" }}>
         <motion.button className="btn-primary" {...btnPrimary} style={{ width: "100%", justifyContent: "center", marginBottom: blocked ? 0 : 16 }} onClick={generate}>
-          {generating ? `Generating ${count} passwords…` : <>Generate {count} passwords <span style={{ fontSize: 16 }}>⚡</span></>}
+          {generating ? `Generating ${count} passwords…` : <>Generate {count} passwords <IcBolt size={15} color="var(--accent)" /></>}
         </motion.button>
         {blocked && (
           <div style={{ marginTop: 12, marginBottom: 16, background: "#0a0a0c", border: "1px solid #1e1e1e", borderRadius: 10, padding: "14px 18px", animation: "fadeIn .2s ease" }}>
@@ -317,7 +318,7 @@ export function ComplianceBar({ compliance, onSelect, activePreset }) {
               style={isActive ? { borderColor: preset.color, color: preset.color, background: `${preset.color}11` } : locked ? { opacity: 0.45 } : {}}
               title={locked ? "Available on Team plan" : undefined}
             >
-              {locked ? "🔒 " : ""}{preset.label}
+              {locked ? <><IcLock size={11} color="currentColor" />{" "}</> : ""}{preset.label}
             </motion.button>
           );
         })}
@@ -338,14 +339,14 @@ export function ProfessionSelector({ profession, customSeeds, customLabel, showO
     <div style={{ marginBottom: 20 }}>
       <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#777", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 10, display: "flex", justifyContent: "space-between" }}>
         <span>profession seed</span>
-        {customLabel && !showOtherInput && <span style={{ color: "#C8FF0077", fontSize: 9 }}>✦ {customLabel}</span>}
+        {customLabel && !showOtherInput && <span style={{ color: "#C8FF0077", fontSize: 9, display: "inline-flex", alignItems: "center", gap: 3 }}><IcSparkle size={9} color="#C8FF0077" />{customLabel}</span>}
       </div>
       {!showOtherInput && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {PROFESSIONS.map((p) => (
             <TogglePill key={p.id} label={p.label} active={profession === p.id && !customSeeds} onClick={() => onSelectProfession(p.id)} />
           ))}
-          <TogglePill label={customSeeds ? `✦ ${customLabel}` : "+ Other"} active={!!customSeeds} onClick={onShowOther} dashed={!customSeeds} />
+          <TogglePill label={customSeeds ? <><IcSparkle size={9} color="var(--accent)" />{" "}{customLabel}</> : "+ Other"} active={!!customSeeds} onClick={onShowOther} dashed={!customSeeds} />
         </div>
       )}
       {showOtherInput && (
@@ -419,8 +420,8 @@ export function PassphraseTab({ profession, customSeeds, customLabel, showOtherI
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#888", letterSpacing: "0.1em", textTransform: "uppercase" }}>strength</span>
                 <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#555" }}>{ppEntropy}+ bits entropy</span>
-                  <span className={isUnbreakable ? "unbreakable-label" : ""} style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#C8FF00", fontWeight: 600 }}>
-                    {isUnbreakable ? "Unbreakable ✦" : "Strong"}
+                  <span className={isUnbreakable ? "unbreakable-label" : ""} style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#C8FF00", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    {isUnbreakable ? <>Unbreakable <IcSparkle size={10} color="var(--accent)" /></> : "Strong"}
                   </span>
                 </div>
               </div>

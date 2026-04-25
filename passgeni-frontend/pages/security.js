@@ -2,6 +2,7 @@ import Head from "next/head";
 import { useState } from "react";
 import Header from "../components/layout/Header.js";
 import Footer from "../components/layout/Footer.js";
+import { IcCheck, IcX, IcShield, IcLock, IcStar, IcBolt, IcKey, IcAlert } from "../lib/icons.js";
 
 const THREAT_MODEL = [
   {
@@ -94,6 +95,7 @@ export default function SecurityPage() {
               {
                 label: "Zero-Knowledge Mode",
                 accent: "#c8ff00",
+                Icon: IcShield,
                 items: [
                   "Password generated entirely in your browser",
                   "crypto.getRandomValues — FIPS 140-3 entropy source",
@@ -105,6 +107,7 @@ export default function SecurityPage() {
               {
                 label: "Certified Mode",
                 accent: "#60a5fa",
+                Icon: IcKey,
                 items: [
                   "You request a compliance certificate",
                   "Client sends generation params only — NOT the password",
@@ -115,13 +118,18 @@ export default function SecurityPage() {
               },
             ].map((col) => (
               <div key={col.label} style={{ background: "#0a0a0c", border: `1px solid ${col.accent}22`, borderRadius: 14, padding: "28px 24px" }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: col.accent, marginBottom: 20, fontFamily: "Space Mono, monospace", letterSpacing: "0.06em" }}>
-                  {col.label}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                  <col.Icon size={16} color={col.accent} />
+                  <div style={{ fontSize: 12, fontWeight: 700, color: col.accent, fontFamily: "Space Mono, monospace", letterSpacing: "0.06em" }}>
+                    {col.label}
+                  </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {col.items.map((item, i) => (
                     <div key={i} style={{ display: "flex", gap: 10, fontSize: 13, color: "#aaa", lineHeight: 1.55 }}>
-                      <span style={{ color: col.accent, flexShrink: 0, marginTop: 1 }}>✦</span>
+                      <span style={{ color: col.accent, flexShrink: 0, marginTop: 2 }}>
+                        <IcStar size={10} color={col.accent} />
+                      </span>
                       {item}
                     </div>
                   ))}
@@ -135,14 +143,20 @@ export default function SecurityPage() {
         <Section eyebrow="CERTIFICATION SCOPE" title="What PassGeni certifies — and what it doesn't">
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
             <div style={{ background: "rgba(0,208,132,0.04)", border: "1px solid rgba(0,208,132,0.2)", borderRadius: 14, padding: "28px 24px" }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#00d084", marginBottom: 16, fontFamily: "Space Mono, monospace", letterSpacing: "0.08em" }}>CERTIFIES</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                <IcCheck size={14} color="#00d084" />
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#00d084", fontFamily: "Space Mono, monospace", letterSpacing: "0.08em" }}>CERTIFIES</div>
+              </div>
               <p style={{ fontSize: 13, color: "#aaa", lineHeight: 1.7, margin: 0 }}>
                 A credential generated using PassGeni's engine with documented parameters — entropy source, character pool size, length, and compliance standard met.
                 The certificate is proof that <em style={{ color: "#ccc" }}>PassGeni's generation engine produced a credential with these properties</em> at a specific point in time.
               </p>
             </div>
             <div style={{ background: "rgba(255,68,68,0.04)", border: "1px solid rgba(255,68,68,0.2)", borderRadius: 14, padding: "28px 24px" }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#ff6b6b", marginBottom: 16, fontFamily: "Space Mono, monospace", letterSpacing: "0.08em" }}>DOES NOT CERTIFY</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                <IcX size={14} color="#ff6b6b" />
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#ff6b6b", fontFamily: "Space Mono, monospace", letterSpacing: "0.08em" }}>DOES NOT CERTIFY</div>
+              </div>
               <p style={{ fontSize: 13, color: "#aaa", lineHeight: 1.7, margin: 0 }}>
                 External passwords typed or pasted by users. PassGeni cannot verify what it didn't generate.
                 The generation session token mechanism enforces this — certificates require a server-signed token that can only be issued after PassGeni validates the generation parameters.
@@ -185,7 +199,7 @@ export default function SecurityPage() {
                     <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#facc15", flexShrink: 0, display: "inline-block" }} />
                     <span style={{ fontSize: 13, fontWeight: 600, color: "#ccc" }}>{row.threat}</span>
                   </div>
-                  <span style={{ color: "#c8ff00", fontSize: 16, flexShrink: 0 }}>{openThreat === i ? "−" : "+"}</span>
+                  <span style={{ color: "#c8ff00", fontSize: 18, flexShrink: 0, lineHeight: 1, fontWeight: 300 }}>{openThreat === i ? "−" : "+"}</span>
                 </div>
                 {openThreat === i && (
                   <div style={{ padding: "0 24px 18px 46px", fontSize: 13, color: "#888", lineHeight: 1.75 }}>
@@ -202,8 +216,10 @@ export default function SecurityPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {DATA_STORE.map((row) => (
               <div key={row.item} style={{ display: "flex", alignItems: "flex-start", gap: 14, padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                <span style={{ flexShrink: 0, marginTop: 2, fontSize: 13, color: row.stored ? "#00d084" : "#ff6b6b", fontFamily: "Space Mono, monospace" }}>
-                  {row.stored ? "✓" : "✕"}
+                <span style={{ flexShrink: 0, marginTop: 2 }}>
+                  {row.stored
+                    ? <IcCheck size={14} color="#00d084" />
+                    : <IcX size={14} color="#ff6b6b" />}
                 </span>
                 <span style={{ fontSize: 13, color: row.stored ? "#aaa" : "#666", lineHeight: 1.6 }}>
                   {row.stored ? "" : <span style={{ fontWeight: 600, color: "#ff6b6b" }}>NEVER: </span>}
@@ -223,7 +239,7 @@ export default function SecurityPage() {
               <p style={{ fontSize: 13, color: "#777", lineHeight: 1.7, marginBottom: 16 }}>
                 The compliance validation engine and certificate signing logic are open for review on GitHub.
               </p>
-              <a href="https://github.com/Giant-Tech-Solutions-llc/Passgeni-v2" target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: "#c8ff00", textDecoration: "none" }}>
+              <a href="https://github.com/Giant-Tech-Solutions-llc/Passgeni-v2" target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: "#c8ff00", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}>
                 View on GitHub →
               </a>
             </div>
@@ -233,7 +249,8 @@ export default function SecurityPage() {
               <p style={{ fontSize: 13, color: "#777", lineHeight: 1.7, marginBottom: 16 }}>
                 Please report security issues privately. We respond within 48 hours and credit researchers in our changelog.
               </p>
-              <a href="mailto:security@passgeni.ai" style={{ fontSize: 13, color: "#c8ff00", textDecoration: "none" }}>
+              <a href="mailto:security@passgeni.ai" style={{ fontSize: 13, color: "#c8ff00", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <IcAlert size={13} color="#c8ff00" />
                 security@passgeni.ai →
               </a>
             </div>

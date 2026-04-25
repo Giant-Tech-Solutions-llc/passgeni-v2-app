@@ -3,45 +3,46 @@ import { useState } from "react";
 import Header from "../components/layout/Header.js";
 import Footer from "../components/layout/Footer.js";
 import { STANDARDS } from "../lib/compliance.js";
+import { IcShield, IcUser, IcKey, IcCompass, IcSettings, IcLock } from "../lib/icons.js";
 
 const STANDARD_DETAIL = {
   "NIST-800-63B": {
-    icon: "🏛️",
+    icon: <IcShield size={22} color="var(--accent)" />,
     who: "US Federal agencies, defense contractors, any enterprise following US NIST guidance.",
     why: "NIST SP 800-63B shifted the industry away from complexity rules toward length as the primary security driver. Mandatory for federal systems; widely adopted as a best-practice baseline.",
     auditNote: "NIST does not mandate rotation or special characters — password length ≥ 8 with entropy checks is sufficient for certification.",
     learnMore: "/guides/nist-800-63b-password-guidelines",
   },
   HIPAA: {
-    icon: "🏥",
+    icon: <IcUser size={22} color="var(--accent)" />,
     who: "Healthcare providers, health insurers, medical SaaS, Business Associates under HIPAA.",
     why: "HIPAA §164.312(d) requires technical safeguards for ePHI authentication. Auditors expect documented evidence of strong credential generation.",
     auditNote: "Certificates issued for HIPAA include entropy, char pool, and generation params — all fields an OCR auditor may request.",
     learnMore: "/guides/hipaa-password-requirements",
   },
   "PCI-DSS-v4": {
-    icon: "💳",
+    icon: <IcKey size={22} color="var(--accent)" />,
     who: "Payment processors, merchants, card-not-present platforms, FinTech companies.",
     why: "PCI-DSS v4.0 Requirement 8.3 mandates minimum password complexity, entropy, and rotation documentation for systems that access cardholder data.",
     auditNote: "PassGeni certificates satisfy the documentation requirement for Req 8.3. Rotation schedules must still be enforced by your policies.",
     learnMore: "/guides/pci-dss-password-requirements",
   },
   SOC2: {
-    icon: "☁️",
+    icon: <IcCompass size={22} color="var(--accent)" />,
     who: "SaaS companies, cloud infrastructure providers, B2B platforms undergoing SOC 2 Type II audits.",
     why: "SOC 2 CC6.1 (Logical Access Controls) requires evidence of a documented, policy-driven credential management process.",
     auditNote: "Type II auditors want to see consistency. Certificates prove that employees use a systematic, auditable process — not ad-hoc generation.",
     learnMore: "/guides/soc2-password-requirements",
   },
   "ISO-27001": {
-    icon: "🌐",
+    icon: <IcSettings size={22} color="var(--accent)" />,
     who: "Enterprises seeking ISO/IEC 27001:2022 certification, government contractors, GovTech.",
     why: "Annex A.9 (Access Control) requires an information security access control policy and evidence that credentials meet defined standards.",
     auditNote: "ISO 27001 auditors assess whether the organisation has a documented, repeatable process. PassGeni certificates serve as per-credential evidence.",
     learnMore: "/guides/iso-27001-password-requirements",
   },
   "FIPS-140-3": {
-    icon: "🔐",
+    icon: <IcLock size={22} color="var(--accent)" />,
     who: "US government contractors, agencies, defence and intelligence systems requiring FIPS-validated cryptography.",
     why: "FIPS PUB 140-3 requires that cryptographic modules use approved entropy sources. Passwords generated with `crypto.getRandomValues` qualify.",
     auditNote: "FIPS 140-3 is the strictest standard: 20+ char minimum, all character classes, no dictionary words, documented entropy source.",
@@ -154,7 +155,7 @@ export default function CompliancePage() {
                 <div key={std.id} style={{ background: "#0a0a0c", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "28px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                     <div>
-                      <div style={{ fontSize: 20, marginBottom: 8 }}>{detail?.icon}</div>
+                      <div style={{ marginBottom: 8 }}>{detail?.icon}</div>
                       <h2 style={{ fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", margin: 0 }}>{std.label}</h2>
                       <div style={{ fontSize: 11, color: "#555", marginTop: 4, fontFamily: "Space Mono, monospace" }}>{std.id}</div>
                     </div>

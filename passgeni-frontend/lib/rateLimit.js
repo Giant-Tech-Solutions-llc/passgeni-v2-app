@@ -1,9 +1,10 @@
 // =============================================================
 // PASSGENI — IN-MEMORY RATE LIMITER
 // =============================================================
-// Map-based per-key/IP sliding window. Suitable for single-instance
-// deploy (Railway/Vercel single region). For multi-region, replace
-// backing store with Redis.
+// NOTE: This in-memory limiter is used for per-request burst control (burstLimit)
+// and low-security per-instance limits. For IP-based security limits in production,
+// use rateLimitDb (lib/rateLimitDb.js) which is Supabase-backed and works across
+// Vercel instances. Replace with Upstash Redis for high-throughput (>100 rps).
 //
 // Usage:
 //   const { allowed, remaining, resetAt } = rateLimit(identifier, limit, windowMs)

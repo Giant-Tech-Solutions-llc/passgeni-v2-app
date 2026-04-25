@@ -11,6 +11,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { btnPrimary, btnGhost } from "../../lib/motion.js";
 import ToolPage from "../../components/tools/ToolPage.js";
+import { IcCheck, IcCopy } from "../../lib/icons.js";
 
 const FRAMEWORKS = [
   { id: "hipaa",  label: "HIPAA",        minLen: 12, complexity: true,  rotation: 90,  mfa: true },
@@ -312,11 +313,11 @@ export default function PolicyGeneratorPage() {
               Your password policy
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <motion.button onClick={copy}     className="btn-ghost" {...btnGhost} style={{ fontSize: 13, padding: "10px 18px" }}>
-                {copied ? "✓ Copied" : "Copy text"}
+              <motion.button onClick={copy}     className="btn-ghost" {...btnGhost} style={{ fontSize: 13, padding: "10px 18px", display: "flex", alignItems: "center", gap: 6 }}>
+                {copied ? <><IcCheck size={13} color="#4ade80" /> Copied</> : <><IcCopy size={13} color="currentColor" /> Copy text</>}
               </motion.button>
               <motion.button onClick={download} className="btn-primary" {...btnPrimary} style={{ fontSize: 13, padding: "10px 18px", animation: "none" }}>
-                ↓ Download .txt
+                Download .txt
               </motion.button>
             </div>
           </div>

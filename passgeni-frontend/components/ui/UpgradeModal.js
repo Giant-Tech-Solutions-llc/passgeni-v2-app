@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRemindDismissed } from "../../lib/useRemindDismissed.js";
+import { IcCheck } from "../../lib/icons.js";
 
 const PLANS = [
   {
@@ -136,7 +137,7 @@ export default function UpgradeModal({ open, onClose, reason, used, limit }) {
                 <div style={{ fontSize: 28, fontWeight: 800, color: "#fff", letterSpacing: "-.03em", marginBottom: 16 }}>{plan.price}</div>
                 {plan.features.map((f, i) => (
                   <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 7 }}>
-                    <span style={{ color: "#c8ff00", fontSize: 11, flexShrink: 0, marginTop: 2 }}>✓</span>
+                    <span style={{ color: "var(--accent)", flexShrink: 0, marginTop: 2, display: "flex" }}><IcCheck size={12} color="var(--accent)" /></span>
                     <span style={{ fontSize: 12, color: "#aaa", lineHeight: 1.45 }}>{f}</span>
                   </div>
                 ))}

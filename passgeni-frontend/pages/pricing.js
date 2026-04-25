@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Header from "../components/layout/Header.js";
 import Footer from "../components/layout/Footer.js";
 import { btnPrimary, btnGhost, heroEntrance, sectionHeadReveal, bcCard } from "../lib/motion.js";
+import { IcCheck, IcStar } from "../lib/icons.js";
 
 const PLANS = [
   {
@@ -37,7 +38,7 @@ const PLANS = [
     cta: "Start 14-day free trial",
     ctaMonthly: "/auth/signin?callbackUrl=%2Fcheckout%3Fplan%3Dassurance%26billing%3Dmonthly",
     ctaAnnual: "/auth/signin?callbackUrl=%2Fcheckout%3Fplan%3Dassurance%26billing%3Dannual",
-    badge: "⭐ Most Popular",
+    badge: "Most Popular",
     featured: true,
     trialNote: "14 days free — no card required",
     features: [
@@ -127,8 +128,8 @@ const PRICING_FAQS = [
 ];
 
 function Check({ value }) {
-  if (value === true) return <span style={{ color: "#C8FF00", fontSize: 15 }}>✓</span>;
-  if (value === false) return <span style={{ color: "#333", fontSize: 14 }}>—</span>;
+  if (value === true) return <IcCheck size={13} color="#C8FF00" />;
+  if (value === false) return <span style={{ color: "#2a2a2a", fontSize: 14, fontWeight: 700 }}>—</span>;
   return <span style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "#aaa" }}>{value}</span>;
 }
 
@@ -236,7 +237,7 @@ export default function PricingPage() {
                     <div style={{ borderTop: "1px solid rgba(200,255,0,0.08)", paddingTop: 16, flex: 1 }}>
                       {plan.features.map((f, fi) => (
                         <div key={fi} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 9 }}>
-                          <span style={{ color: "var(--accent)", fontSize: 12, marginTop: 3, flexShrink: 0 }}>✓</span>
+                          <IcCheck size={11} color="var(--accent)" />
                           <span style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-base)", color: "var(--text)", lineHeight: 1.5 }}>{f}</span>
                         </div>
                       ))}

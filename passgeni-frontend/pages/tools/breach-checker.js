@@ -11,6 +11,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { btnPrimary } from "../../lib/motion.js";
 import ToolPage from "../../components/tools/ToolPage.js";
+import { IcAlert, IcCheck, IcEye, IcEyeOff } from "../../lib/icons.js";
 
 // ─── SHA-1 HASH (client-side) ────────────────────────────────
 async function sha1(str) {
@@ -59,7 +60,7 @@ function BreachResult({ result, password }) {
     return (
       <div style={{ background: "#1a0505", border: "1px solid #ff444433", borderRadius: 12, padding: "24px 28px", animation: "fadeIn 0.3s ease" }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
-          <div style={{ fontSize: 28, flexShrink: 0 }}>🚨</div>
+          <div style={{ flexShrink: 0, marginTop: 2 }}><IcAlert size={28} color="#ff4444" /></div>
           <div>
             <div style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 20, color: "#ff4444", marginBottom: 8 }}>
               Compromised — Found in {result.count.toLocaleString()} breaches
@@ -81,7 +82,7 @@ function BreachResult({ result, password }) {
   return (
     <div style={{ background: "#050f05", border: "1px solid #C8FF0033", borderRadius: 12, padding: "24px 28px", animation: "fadeIn 0.3s ease" }}>
       <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
-        <div style={{ fontSize: 28, flexShrink: 0 }}>✅</div>
+        <div style={{ flexShrink: 0, marginTop: 2, display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: "50%", background: "rgba(200,255,0,0.1)" }}><IcCheck size={22} color="#C8FF00" /></div>
         <div>
           <div style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 20, color: "#C8FF00", marginBottom: 8 }}>
             Not found in any known breach
@@ -186,7 +187,7 @@ export default function BreachCheckerPage() {
               style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#555", transition: "color 0.15s" }}
               aria-label={showPw ? "Hide password" : "Show password"}
             >
-              {showPw ? "🙈" : "👁"}
+              {showPw ? <IcEyeOff size={16} color="#555" /> : <IcEye size={16} color="#555" />}
             </button>
           </div>
           <motion.button

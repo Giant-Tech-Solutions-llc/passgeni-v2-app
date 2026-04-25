@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { btnPrimary, btnGhost } from "../lib/motion.js";
 import PageLayout from "../components/layout/PageLayout.js";
+import { IcBolt, IcCheck, IcLock, IcSettings, IcKey, IcUser, IcAlert } from "../lib/icons.js";
 
 const BASE = "https://passgeni.ai/api";
 
@@ -42,8 +43,8 @@ function CodeBlock({ code, label, json = false, maxH }) {
           </div>
           {label && <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#555", letterSpacing: ".08em" }}>{label}</span>}
         </div>
-        <button onClick={copy} style={{ background: copied ? "rgba(200,255,0,.1)" : "none", border: `1px solid ${copied ? "rgba(200,255,0,.25)" : "rgba(255,255,255,.08)"}`, borderRadius: 6, padding: "4px 12px", fontFamily: "var(--font-mono)", fontSize: 10, color: copied ? "#C8FF00" : "#555", cursor: "pointer", transition: "all .15s" }}>
-          {copied ? "✓ copied" : "copy"}
+        <button onClick={copy} style={{ background: copied ? "rgba(200,255,0,.1)" : "none", border: `1px solid ${copied ? "rgba(200,255,0,.25)" : "rgba(255,255,255,.08)"}`, borderRadius: 6, padding: "4px 12px", fontFamily: "var(--font-mono)", fontSize: 10, color: copied ? "#C8FF00" : "#555", cursor: "pointer", transition: "all .15s", display: "inline-flex", alignItems: "center", gap: 4 }}>
+          {copied ? <><IcCheck size={10} color="#C8FF00" /> copied</> : "copy"}
         </button>
       </div>
       <div style={{ overflowY: maxH ? "auto" : "visible", maxHeight: maxH, padding: "18px 20px", fontFamily: "var(--font-mono)", fontSize: 12.5, lineHeight: 1.9, color: "#9ca3af", overflowX: "auto", whiteSpace: "pre" }}>
@@ -182,7 +183,7 @@ export async function rotateAllCredentials(userIds) {
 // ─── Integration cards ────────────────────────────────────────
 const INTEGRATIONS = [
   {
-    icon: "⚙️",
+    icon: "settings",
     title: "GitHub Actions / CI-CD",
     desc: "Auto-generate deploy secrets, DB passwords, and env vars on every release pipeline run. Never commit a credential again.",
     badge: "DevOps",
@@ -198,7 +199,7 @@ const INTEGRATIONS = [
     gh secret set DB_PASSWORD --body "$PW"`,
   },
   {
-    icon: "⚡",
+    icon: "bolt",
     title: "Zapier / Make / n8n",
     desc: "No-code automation. Trigger a PassGeni API call on any event — new user, form submission, Salesforce record — and pipe the password anywhere.",
     badge: "No-Code",
@@ -217,7 +218,7 @@ const { passwords } = await response.json();
 return { password: passwords[0] };`,
   },
   {
-    icon: "🏥",
+    icon: "user",
     title: "Healthcare Onboarding",
     desc: "Generate HIPAA §164.312(d)-compliant credentials for new staff. One API call returns a temporary password that meets your IT policy on day one.",
     badge: "HIPAA",
@@ -237,7 +238,7 @@ def onboard_staff(name, role, email):
     set_force_change_on_login(email)`,
   },
   {
-    icon: "💳",
+    icon: "key",
     title: "PCI-DSS Compliance Automation",
     desc: "Enforce PCI-DSS v4.0 Requirement 8 across every credential your system manages. The API rejects non-compliant requests and returns the exact standard cite.",
     badge: "PCI-DSS",
@@ -254,7 +255,7 @@ for (const [i, id] of accountIds.entries()) {
 }`,
   },
   {
-    icon: "🔧",
+    icon: "settings",
     title: "WordPress / PHP Apps",
     desc: "Add a 'Generate strong password' button to any PHP form. Three lines of code. No plugin needed. Works on any WordPress, Laravel, or plain PHP project.",
     badge: "PHP",
@@ -271,7 +272,7 @@ function pg_set_secure_password($user_id) {
 }`,
   },
   {
-    icon: "🤖",
+    icon: "bolt",
     title: "Slack Bots & Internal Tools",
     desc: "Let your team request a compliant password via Slack slash command. The bot calls PassGeni, DMs the result, and logs the action — all in under a second.",
     badge: "Slack",
@@ -445,7 +446,14 @@ function IntegrationCard({ item, isOpen, onToggle }) {
         onClick={onToggle}
         style={{ width: "100%", background: "none", border: "none", padding: "20px 22px", cursor: "pointer", textAlign: "left", display: "flex", alignItems: "flex-start", gap: 14 }}
       >
-        <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: `${item.color}10`, border: `1px solid ${item.color}25`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>{item.icon}</div>
+        <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: `${item.color}10`, border: `1px solid ${item.color}25`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {item.icon === "bolt" && <IcBolt size={20} color={item.color} />}
+          {item.icon === "settings" && <IcSettings size={20} color={item.color} />}
+          {item.icon === "user" && <IcUser size={20} color={item.color} />}
+          {item.icon === "key" && <IcKey size={20} color={item.color} />}
+          {item.icon === "lock" && <IcLock size={20} color={item.color} />}
+          {item.icon === "alert" && <IcAlert size={20} color={item.color} />}
+        </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 5 }}>
             <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 15, color: "#e0e0e0" }}>{item.title}</span>
@@ -666,17 +674,17 @@ export default function APIDocsPage() {
             <SH id="how-it-works" eyebrow="Architecture" title="What actually happens when you call the API?" />
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12, marginBottom: 28 }}>
               {[
-                { icon: "📤", step: "You send JSON",      body: "A POST request with optional parameters. No SDK, no special headers beyond Content-Type." },
-                { icon: "🔐", step: "Server generates",   body: "Node.js crypto.randomInt() — the same FIPS 140-3 primitive used in TLS — builds your password on our server." },
-                { icon: "📋", step: "Standards applied",   body: "If you pass compliance:'hipaa', we enforce HIPAA §164.312(d) minimum requirements before returning." },
-                { icon: "📬", step: "You get passwords",  body: "A JSON array of passwords plus entropy bits, crack time, and an audit object with the character pool used." },
+                { iconEl: <IcKey size={22} color="#c8ff00" />,      step: "You send JSON",      body: "A POST request with optional parameters. No SDK, no special headers beyond Content-Type." },
+                { iconEl: <IcLock size={22} color="#c8ff00" />,     step: "Server generates",   body: "Node.js crypto.randomInt() — the same FIPS 140-3 primitive used in TLS — builds your password on our server." },
+                { iconEl: <IcCheck size={22} color="#c8ff00" />,    step: "Standards applied",  body: "If you pass compliance:'hipaa', we enforce HIPAA §164.312(d) minimum requirements before returning." },
+                { iconEl: <IcBolt size={22} color="#c8ff00" />,     step: "You get passwords",  body: "A JSON array of passwords plus entropy bits, crack time, and an audit object with the character pool used." },
               ].map((s, i) => (
                 <motion.div key={s.step}
                   initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }} transition={{ delay: i * 0.07 }}
                   className="bc" style={{ position: "relative", overflow: "hidden" }}>
                   <div className="bc-line" />
-                  <span style={{ fontSize: 24, display: "block", marginBottom: 10 }}>{s.icon}</span>
+                  <span style={{ display: "block", marginBottom: 10 }}>{s.iconEl}</span>
                   <div style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 14, color: "#e0e0e0", marginBottom: 6 }}>{s.step}</div>
                   <p style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "var(--muted)", lineHeight: 1.7, margin: 0 }}>{s.body}</p>
                 </motion.div>
@@ -684,9 +692,9 @@ export default function APIDocsPage() {
             </div>
 
             <div style={{ background: "rgba(255,170,0,.05)", border: "1px solid rgba(255,170,0,.15)", borderRadius: 10, padding: "14px 18px", marginBottom: 8 }}>
-              <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#ffaa44", margin: 0, lineHeight: 1.7 }}>
-                ⚠️ API generation is server-side — your password transits our server over HTTPS. For zero-knowledge, client-side generation use the{" "}
-                <a href="/" style={{ color: "#ffaa44", textDecoration: "underline" }}>web generator</a>.
+              <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#ffaa44", margin: 0, lineHeight: 1.7, display: "flex", alignItems: "flex-start", gap: 8 }}>
+                <span style={{ flexShrink: 0, marginTop: 2, display: "flex" }}><IcAlert size={15} color="#ffaa44" /></span><span>API generation is server-side — your password transits our server over HTTPS. For zero-knowledge, client-side generation use the{" "}
+                <a href="/" style={{ color: "#ffaa44", textDecoration: "underline" }}>web generator</a>.</span>
               </p>
             </div>
 
@@ -734,10 +742,10 @@ export default function APIDocsPage() {
 { "count": 1 }`} label="Authentication — body field" />
 
             <div style={{ background: "rgba(255,68,68,.05)", border: "1px solid rgba(255,68,68,.18)", borderRadius: 10, padding: "14px 18px", marginBottom: 8 }}>
-              <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#ff8866", margin: 0, lineHeight: 1.75 }}>
-                🔒 Never put your API key in front-end code, browser JS, or a public GitHub repo.
+              <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#ff8866", margin: 0, lineHeight: 1.75, display: "flex", alignItems: "flex-start", gap: 8 }}>
+                <span style={{ flexShrink: 0, marginTop: 2, display: "flex" }}><IcLock size={15} color="#ff8866" /></span><span>Never put your API key in front-end code, browser JS, or a public GitHub repo.
                 Use an environment variable (<code style={{ background: "rgba(255,68,68,.1)", padding: "2px 5px", borderRadius: 3 }}>process.env.PASSGENI_API_KEY</code>). Rotate from your{" "}
-                <a href="/dashboard" style={{ color: "#ff8866", textDecoration: "underline" }}>dashboard</a> if compromised.
+                <a href="/dashboard" style={{ color: "#ff8866", textDecoration: "underline" }}>dashboard</a> if compromised.</span>
               </p>
             </div>
 
@@ -949,7 +957,7 @@ X-RateLimit-Reset:     1735689600000  // Unix ms — midnight UTC`} label="Rate 
                     <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 20 }}>
                       {plan.items.map((f, i) => (
                         <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                          <span style={{ color: plan.featured ? "#C8FF00" : "#444", fontSize: 11, flexShrink: 0, marginTop: 2 }}>✓</span>
+                          <IcCheck size={12} color={plan.featured ? "#C8FF00" : "#444"} />
                           <span style={{ fontFamily: "var(--font-body)", fontSize: 13, color: plan.featured ? "#ccc" : "#666" }}>{f}</span>
                         </div>
                       ))}
@@ -977,7 +985,7 @@ X-RateLimit-Reset:     1735689600000  // Unix ms — midnight UTC`} label="Rate 
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
                 {[
                   { method: "POST",   path: "/api/generate-certificate", desc: "Issue an ES256-signed compliance certificate for a generated password." },
-                  { method: "GET",    path: "/api/audit",                desc: "List your certificates with pagination — ?limit=20&offset=0." },
+                  { method: "GET",    path: "/api/audit",                desc: "List your certificates with filtering and pagination. Query params: limit, offset, standard (e.g. HIPAA, NIST-800-63B), date_from (ISO), date_to (ISO), status (valid|revoked|expired)." },
                   { method: "POST",   path: "/api/revoke/[id]",          desc: "Revoke a certificate by ID. Only the owner can revoke." },
                   { method: "GET",    path: "/api/keys",                  desc: "List your active API keys (session cookie required)." },
                   { method: "POST",   path: "/api/keys",                  desc: "Create an API key — returns the raw key once only (session cookie required)." },

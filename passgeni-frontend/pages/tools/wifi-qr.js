@@ -11,6 +11,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { btnPrimary } from "../../lib/motion.js";
 import ToolPage from "../../components/tools/ToolPage.js";
+import { IcEye, IcEyeOff } from "../../lib/icons.js";
 
 // ─── QR CODE LIBRARY LOADER ───────────────────────────────────
 // Loads qrcode.js from CDN — no npm install needed
@@ -195,8 +196,8 @@ export default function WifiQRPage() {
                   onChange={(e) => { setPassword(e.target.value); setQrString(""); }}
                   style={{ width: "100%", background: "#060608", border: "1px solid #1a1a1a", borderRadius: 8, padding: "12px 48px 12px 16px", fontFamily: "var(--font-mono)", fontSize: 14, color: "#fff", outline: "none", boxSizing: "border-box" }}
                 />
-                <button onClick={() => setShowPw((v) => !v)} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: 18, color: "#555" }}>
-                  {showPw ? "🙈" : "👁"}
+                <button onClick={() => setShowPw((v) => !v)} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#555", lineHeight: 0, padding: 0 }}>
+                  {showPw ? <IcEyeOff size={18} color="#555" /> : <IcEye size={18} color="#555" />}
                 </button>
               </div>
             </>

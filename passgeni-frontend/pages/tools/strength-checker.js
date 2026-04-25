@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { btnPrimary } from "../../lib/motion.js";
 import ToolPage from "../../components/tools/ToolPage.js";
 import { getStrength, getEntropy, getCrackTime, getDNAScore } from "../../lib/strength.js";
+import { IcCheck, IcX, IcEye, IcEyeOff } from "../../lib/icons.js";
 
 function StrengthMeter({ password }) {
   const strength  = getStrength(password);
@@ -49,15 +50,19 @@ function StrengthMeter({ password }) {
         {/* Stats row */}
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
           {[
-            { label: "Length",       value: `${password.length} chars`      },
-            { label: "Entropy",      value: `${entropy} bits`               },
-            { label: "Uppercase",    value: /[A-Z]/.test(password) ? "✓ Yes" : "✗ No" },
-            { label: "Numbers",      value: /[0-9]/.test(password) ? "✓ Yes" : "✗ No" },
-            { label: "Symbols",      value: /[^A-Za-z0-9]/.test(password) ? "✓ Yes" : "✗ No" },
-          ].map(({ label, value }) => (
+            { label: "Length",    value: `${password.length} chars`, pass: null },
+            { label: "Entropy",   value: `${entropy} bits`,          pass: null },
+            { label: "Uppercase", value: /[A-Z]/.test(password) ? "Yes" : "No", pass: /[A-Z]/.test(password) },
+            { label: "Numbers",   value: /[0-9]/.test(password) ? "Yes" : "No", pass: /[0-9]/.test(password) },
+            { label: "Symbols",   value: /[^A-Za-z0-9]/.test(password) ? "Yes" : "No", pass: /[^A-Za-z0-9]/.test(password) },
+          ].map(({ label, value, pass }) => (
             <div key={label}>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#666", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>{label}</div>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: value.startsWith("✓") ? "#C8FF00" : value.startsWith("✗") ? "#ff4444" : "#ccc" }}>{value}</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: pass === true ? "#C8FF00" : pass === false ? "#ff4444" : "#ccc", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                {pass === true && <IcCheck size={11} color="#C8FF00" />}
+                {pass === false && <IcX size={11} color="#ff4444" />}
+                {value}
+              </div>
             </div>
           ))}
         </div>
@@ -73,8 +78,8 @@ function StrengthMeter({ password }) {
             {dna.checks.map((c, i) => (
               <div key={i}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontFamily: "var(--font-body)", fontSize: 13, color: c.pass ? "#ccc" : "#555" }}>
-                    <span style={{ color: c.pass ? "#C8FF00" : "#ff4444", marginRight: 8 }}>{c.pass ? "✓" : "✗"}</span>
+                  <span style={{ fontFamily: "var(--font-body)", fontSize: 13, color: c.pass ? "#ccc" : "#555", display: "inline-flex", alignItems: "center", gap: 8 }}>
+                    {c.pass ? <IcCheck size={13} color="#C8FF00" /> : <IcX size={13} color="#ff4444" />}
                     {c.label}
                   </span>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: c.pass ? "#C8FF0088" : "#333" }}>
@@ -126,7 +131,7 @@ function StrengthMeter({ password }) {
       {/* ── Perfect score ── */}
       {dna && dna.total >= 85 && (
         <div style={{ background: "#050f05", border: "1px solid #C8FF0033", borderRadius: 12, padding: "20px 28px", display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ fontSize: 28 }}>✅</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: "50%", background: "rgba(200,255,0,0.12)", flexShrink: 0 }}><IcCheck size={22} color="#C8FF00" /></div>
           <div>
             <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 16, color: "#C8FF00", marginBottom: 4 }}>This password passes all quality checks.</div>
             <div style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#888" }}>Make sure it's unique and stored in a password manager.</div>
@@ -182,7 +187,7 @@ export default function StrengthCheckerPage() {
             onClick={() => setShowPw((v) => !v)}
             style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: 18, color: "#555" }}
             aria-label={showPw ? "Hide" : "Show"}
-          >{showPw ? "🙈" : "👁"}</button>
+          >{showPw ? <IcEyeOff size={18} color="#555" /> : <IcEye size={18} color="#555" />}</button>
         </div>
         {password && (
           <div style={{ display: "flex", gap: 4, marginTop: 10 }}>

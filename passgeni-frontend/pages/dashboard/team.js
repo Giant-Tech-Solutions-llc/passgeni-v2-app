@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSession }  from "next-auth/react";
 import { useRouter }   from "next/router";
 import PageLayout      from "../../components/layout/PageLayout.js";
+import { IcBolt, IcEye } from "../../lib/icons.js";
 
 export function getServerSideProps() {
   return { props: {} };
@@ -410,8 +411,8 @@ export default function TeamPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
               {(data?.recentActivity ?? []).map((ev, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)", fontSize: 12 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(200,255,0,0.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 13 }}>
-                    {ev.type === "generated" ? "⚡" : "👁"}
+                  <div style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(200,255,0,0.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    {ev.type === "generated" ? <IcBolt size={14} color="#C8FF00" /> : <IcEye size={14} color="#888" />}
                   </div>
                   <div style={{ flex: 1 }}>
                     <span style={{ color: "#e0e0e0" }}>{ev.type === "generated" ? "Generated" : "Viewed"} </span>

@@ -20,10 +20,17 @@ const nextConfig = {
         source: "/dashboard/:path*",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
-      {
-        source: "/_next/static/(.*)",
-        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
-      },
+      // In production Next.js hashes filenames, so immutable caching is safe.
+      // In development the hashes don't change between rebuilds, causing browsers
+      // to serve stale JS chunks and trigger hydration mismatches — skip it there.
+      ...(process.env.NODE_ENV === "production"
+        ? [
+            {
+              source: "/_next/static/(.*)",
+              headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+            },
+          ]
+        : []),
     ];
   },
   async rewrites() {

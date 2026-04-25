@@ -6,11 +6,12 @@
 import { motion } from "framer-motion";
 import { fadeUp, heroEntrance, bcCard, fadeIn } from "../../lib/motion.js";
 import PageLayout from "../../components/layout/PageLayout.js";
+import { IcSearch, IcBarChart, IcClipboard, IcLock, IcWifi, IcBolt, IcStar } from "../../lib/icons.js";
 
 const TOOLS = [
   {
     href:     "/tools/breach-checker",
-    icon:     "🔍",
+    icon:     <IcSearch size={28} color="#ff4444" />,
     title:    "Password Breach Checker",
     desc:     "Check if your password has appeared in known data breaches. Uses k-anonymity — your password never leaves your browser. Checks against 900M+ compromised credentials.",
     badge:    "k-anonymity",
@@ -18,7 +19,7 @@ const TOOLS = [
   },
   {
     href:     "/tools/strength-checker",
-    icon:     "💪",
+    icon:     <IcBolt size={28} color="#C8FF00" />,
     title:    "Password Strength Checker",
     desc:     "Instant analysis: entropy in bits, estimated crack time, 7-point DNA audit score, and specific improvement suggestions. 100% client-side.",
     badge:    "Entropy analysis",
@@ -26,7 +27,7 @@ const TOOLS = [
   },
   {
     href:     "/tools/audit",
-    icon:     "📊",
+    icon:     <IcBarChart size={28} color="#ffaa00" />,
     title:    "Password Audit Tool",
     desc:     "Audit up to 10 passwords simultaneously. Breach check, entropy score, DNA grading, and pattern detection — all in one view. Nothing stored or transmitted.",
     badge:    "Batch audit",
@@ -34,7 +35,7 @@ const TOOLS = [
   },
   {
     href:     "/tools/policy-generator",
-    icon:     "📋",
+    icon:     <IcClipboard size={28} color="#ce93d8" />,
     title:    "Password Policy Generator",
     desc:     "Generate a complete, audit-ready password policy for your organisation. Aligned with HIPAA, SOC 2, ISO 27001, PCI-DSS v4.0, and NIST 800-63B. Free download.",
     badge:    "Compliance",
@@ -42,7 +43,7 @@ const TOOLS = [
   },
   {
     href:     "/tools/secure-share",
-    icon:     "🔐",
+    icon:     <IcLock size={28} color="#4fc3f7" />,
     title:    "Secure Password Sharing",
     desc:     "Share passwords safely with AES-256-GCM encrypted links. The decryption key is embedded in the URL fragment — never sent to any server. Zero knowledge sharing.",
     badge:    "AES-256-GCM",
@@ -50,7 +51,7 @@ const TOOLS = [
   },
   {
     href:     "/tools/wifi-qr",
-    icon:     "📶",
+    icon:     <IcWifi size={28} color="#80cbc4" />,
     title:    "WiFi QR Code Generator",
     desc:     "Generate a QR code for your WiFi network. Anyone scans to connect instantly — no typing required. Your WiFi password never leaves your browser.",
     badge:    "Client-side only",
@@ -122,7 +123,7 @@ export default function ToolsIndexPage() {
               </div>
 
               {/* Icon */}
-              <div style={{ fontSize: 32, marginBottom: 20 }}>{tool.icon}</div>
+              <div style={{ marginBottom: 20 }}>{tool.icon}</div>
 
               {/* Content */}
               <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 18, color: "#fff", marginBottom: 12, lineHeight: 1.3 }}>{tool.title}</h2>
@@ -164,7 +165,7 @@ export default function ToolsIndexPage() {
             ].map((t, i) => (
               <motion.div key={t.name} {...bcCard(i)} style={{ background: "#0c0c0e", border: "1px solid #141416", borderRadius: 12, padding: "22px 24px" }}>
                 <div style={{ display: "flex", gap: 2, marginBottom: 10 }}>
-                  {[1,2,3,4,5].map(i => <span key={i} style={{ color: "#C8FF00", fontSize: 11 }}>★</span>)}
+                  {[1,2,3,4,5].map(i => <IcStar key={i} size={11} color="#C8FF00" />)}
                 </div>
                 <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#999", lineHeight: 1.75, marginBottom: 14 }}>"{t.text}"</p>
                 <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 12, color: "#fff" }}>{t.name}</div>

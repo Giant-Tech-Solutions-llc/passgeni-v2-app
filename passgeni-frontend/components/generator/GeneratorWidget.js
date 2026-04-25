@@ -9,6 +9,7 @@ import { PROFESSIONS } from "../../content/professions.js";
 import { buildPassword, buildPassphrase, deriveSeeds, generateAuditRecord } from "../../lib/generator.js";
 import { getStrength, getEntropy, getCrackTime, getDNAScore } from "../../lib/strength.js";
 import { CopyBtn, TogglePill, StrengthBar, TrustChip } from "../ui/index.js";
+import { IcLock, IcBolt, IcAtom } from "../../lib/icons.js";
 import PasswordDisplay from "./PasswordDisplay.js";
 import DNAScorePanel from "./DNAScore.js";
 import PasswordHistory from "./PasswordHistory.js";
@@ -351,7 +352,7 @@ export default function GeneratorWidget() {
                 {/* Post-Quantum toggle — lock after 1 free use per day */}
                 <div style={{ position:"relative" }}>
                   <TogglePill
-                    label={pqLocked ? "🔒 Post-Quantum" : (quantumMode ? "⚡ Quantum ON" : "Post-Quantum Mode")}
+                    label={pqLocked ? <><IcLock size={11} color="currentColor" />{" Post-Quantum"}</> : (quantumMode ? <><IcBolt size={12} color="var(--accent)" />{" Quantum ON"}</> : "Post-Quantum Mode")}
                     active={quantumMode && !pqLocked}
                     onClick={()=>{
                       if (pqLocked) { setShowPqPopup(p=>!p); return; }
@@ -379,7 +380,7 @@ export default function GeneratorWidget() {
                           border:"1px solid rgba(200,255,0,0.2)",
                           display:"flex",alignItems:"center",justifyContent:"center",
                           fontSize:15,
-                        }}>⚛️</div>
+                        }}><IcAtom size={16} color="#C8FF00" /></div>
                         <button
                           onClick={()=>setShowPqPopup(false)}
                           style={{ background:"none",border:"none",color:"#555",fontSize:18,cursor:"pointer",lineHeight:1,padding:"2px 4px",transition:"color .15s" }}

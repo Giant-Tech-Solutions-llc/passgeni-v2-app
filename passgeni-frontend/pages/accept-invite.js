@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import { jwtVerify } from "jose";
+import { IcCheck } from "../lib/icons.js";
 
 export async function getServerSideProps({ query }) {
   const { token } = query;
@@ -72,7 +73,7 @@ export default function AcceptInvitePage({ inviteEmail, token }) {
       alignItems:      "center",
       justifyContent:  "center",
       padding:         24,
-      fontFamily:      "'DM Sans', Arial, sans-serif",
+      fontFamily:      "var(--font-body)",
     }}>
       <div style={{
         background:   "#0a0a0c",
@@ -141,7 +142,7 @@ export default function AcceptInvitePage({ inviteEmail, token }) {
 
           {state === "success" && (
             <>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>✓</div>
+              <div style={{ marginBottom: 12 }}><IcCheck size={32} color="#C8FF00" /></div>
               <h2 style={{ fontSize: 18, fontWeight: 800, color: "#C8FF00", marginBottom: 8 }}>You're in!</h2>
               <p style={{ fontSize: 13, color: "#666" }}>Redirecting to your team dashboard…</p>
             </>

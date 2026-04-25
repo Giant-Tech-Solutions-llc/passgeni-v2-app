@@ -11,6 +11,7 @@ import { motion } from "framer-motion";
 import { btnPrimary, btnGhost } from "../../lib/motion.js";
 import ToolPage from "../../components/tools/ToolPage.js";
 import { getStrength, getEntropy, getCrackTime, getDNAScore } from "../../lib/strength.js";
+import { IcCheck, IcX, IcAlert, IcStar, IcEye, IcEyeOff } from "../../lib/icons.js";
 
 const MAX_PASSWORDS = 10;
 
@@ -86,7 +87,7 @@ function AuditRow({ entry, index }) {
         {/* Breach indicator */}
         {breach && (
           <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: breach.error ? "#555" : breach.breached ? "#ff4444" : "#C8FF00", flexShrink: 0 }}>
-            {breach.error ? "breach ?" : breach.breached ? `🚨 ${breach.count.toLocaleString()} breaches` : "✓ not breached"}
+            {breach.error ? "breach ?" : breach.breached ? <><IcAlert size={12} color="#ff4444" /> {breach.count.toLocaleString()} breaches</> : <><IcCheck size={12} color="#C8FF00" /> not breached</>}
           </span>
         )}
 
@@ -125,7 +126,7 @@ function AuditRow({ entry, index }) {
             <div>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#888", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Failed checks</div>
               {dna.checks.filter((c) => !c.pass).map((c, i) => (
-                <div key={i} style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "#ff6644", marginBottom: 4 }}>✗ {c.label}</div>
+                <div key={i} style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "#ff6644", marginBottom: 4, display: "flex", alignItems: "center", gap: 5 }}><IcX size={12} color="#ff4444" /> {c.label}</div>
               ))}
             </div>
           )}
