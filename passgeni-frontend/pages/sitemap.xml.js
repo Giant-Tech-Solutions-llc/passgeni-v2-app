@@ -24,7 +24,7 @@ const STATIC_PAGES = [
   { url: "/tools/audit",             priority: "0.8",  changefreq: "monthly" },
   { url: "/tools/policy-generator",  priority: "0.85", changefreq: "monthly" },
   { url: "/tools/secure-share",      priority: "0.8",  changefreq: "monthly" },
-  { url: "/tools/wifi-qr",           priority: "0.8",  changefreq: "monthly" },
+  { url: "/tools/compliance-fixer",  priority: "0.9",  changefreq: "monthly" },
   { url: "/refund",                  priority: "0.5",  changefreq: "monthly" },
   { url: "/privacy",                 priority: "0.5",  changefreq: "monthly" },
   { url: "/terms",                   priority: "0.5",  changefreq: "monthly" },

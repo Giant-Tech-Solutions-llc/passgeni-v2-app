@@ -147,7 +147,7 @@ export function waitlistDay3(email) {
             { name: "Password Audit",     desc: "Batch check up to 10 passwords simultaneously for entropy, breach status, and pattern detection.",              path: "/tools/audit"            },
             { name: "Policy Generator",   desc: "Generate a downloadable password policy document for HIPAA, PCI-DSS, SOC 2, ISO 27001, NIST, or DoD.",         path: "/tools/policy-generator" },
             { name: "Secure Share",       desc: "AES-256-GCM encrypted sharing. Key in URL fragment — never sent to any server, including ours.",                path: "/tools/secure-share"     },
-            { name: "WiFi QR Generator",  desc: "Generate a scannable QR code from WiFi credentials. Entirely client-side.",                                     path: "/tools/wifi-qr"          },
+            { name: "Compliance Fixer",    desc: "Detect compliance gaps in any credential. Generate a certified replacement meeting SOC2/HIPAA/PCI-DSS/NIST.",  path: "/tools/compliance-fixer" },
           ].map((tool) => `
             <div>
               <a href="${BRAND.url}${tool.path}" style="font-weight:700;font-size:14px;color:#fff;text-decoration:none;">${tool.name} →</a>

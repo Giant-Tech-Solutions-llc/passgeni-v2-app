@@ -5,7 +5,7 @@ import{useSession}from"next-auth/react";
 import{NAV}from"../../content/copy.js";
 import PassGeniLogo from"./Logo.js";
 import{btnPrimary,btnGhost}from"../../lib/motion.js";
-import { IcSearch, IcLink, IcBarChart, IcShield, IcClipboard, IcWifi, IcBolt, IcCompass } from "../../lib/icons.js";
+import { IcSearch, IcLink, IcBarChart, IcShield, IcClipboard, IcBolt, IcCompass } from "../../lib/icons.js";
 
 // ─── Menu Data ────────────────────────────────────────────────
 const TOOLS_MENU={
@@ -18,11 +18,9 @@ const TOOLS_MENU={
       {icon:<IcBarChart size={18} color="var(--accent)" />,label:"Password Strength Checker",desc:"Entropy bits, crack time estimate, DNA grade A–F",href:"/tools/strength-checker"},
       {icon:<IcShield size={18} color="var(--accent)" />,label:"Password Audit Tool",desc:"Audit multiple passwords at once for your whole team",href:"/tools/audit",business:true},
     ]},
-    {label:"Business",items:[
+    {label:"Compliance",items:[
+      {icon:<IcShield size={18} color="var(--accent)" />,label:"Credential Compliance Fixer",desc:"Fix non-compliant credentials — detect gaps, generate certified replacement",href:"/tools/compliance-fixer",business:true},
       {icon:<IcClipboard size={18} color="var(--accent)" />,label:"Password Policy Generator",desc:"Generate a written, HIPAA/PCI/SOC2-aligned password policy",href:"/tools/policy-generator",business:true},
-    ]},
-    {label:"Utility",items:[
-      {icon:<IcWifi size={18} color="var(--accent)" />,label:"WiFi QR Generator",desc:"One-click QR code for your network — guests scan, done",href:"/tools/wifi-qr",business:true},
     ]},
   ],
   featured:{
