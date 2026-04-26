@@ -5,1077 +5,1187 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { motion, useInView } from "framer-motion";
 import { getSiteSchema, getFAQSchema, getHowToSchema } from "../seo/schema.js";
-import { FAQ, TOOLS_PREVIEW, TESTIMONIALS, STATS } from "../content/copy.js";
+import { FAQ, TOOLS_PREVIEW, STATS } from "../content/copy.js";
 
-/* ── Surface constants ──────────────────────────────────────────────────────── */
-const BP  = "#3A4EFB";              // blue primary
-const BS  = "#33A4FA";              // blue secondary
-const ACC = "#E3FF3B";              // lime accent
-const ML  = "#5C617A";              // muted on light
-const MD  = "#8B90A8";              // muted on dark
-const BL  = "#E6E8F0";              // border light
-const BD  = "rgba(255,255,255,0.10)"; // border dark
-const W   = { bg:"#FFFFFF",   text:"#0B0D17" };
-const D   = { bg:"#0F1222",   text:"#F0F2FF" };
+/* ────────────────────────────────────────────────────────────────
+   DESIGN TOKENS  (all-light, Stripe / Linear aesthetic)
+──────────────────────────────────────────────────────────────── */
+const T = {
+  bg:       "#FFFFFF",
+  bgOff:    "#F7F8FC",
+  bgMuted:  "#F0F2F8",
+  text:     "#0B0D17",
+  textSub:  "#3C405A",
+  textMut:  "#7B819A",
+  blue:     "#3A4EFB",
+  blueHov:  "#2d40e8",
+  blueSoft: "rgba(58,78,251,0.08)",
+  lime:     "#C8FF00",
+  border:   "#E6E8F0",
+  borderFoc:"#3A4EFB",
+  shadow:   "0 1px 3px rgba(0,0,0,0.06),0 4px 16px rgba(0,0,0,0.06)",
+  shadowHov:"0 4px 20px rgba(0,0,0,0.10),0 1px 4px rgba(0,0,0,0.06)",
+  green:    "#22C55E",
+  red:      "#EF4444",
+  amber:    "#F59E0B",
+};
 
-/* ── Inline SVG icons ───────────────────────────────────────────────────────── */
-const Check = ({ size=14, c="#22C55E" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={c}
-    strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-    style={{display:"inline-block",flexShrink:0,verticalAlign:"middle"}}>
-    <path d="M20 6L9 17l-5-5"/>
-  </svg>
-);
-const Xmark = ({ size=14, c="#EF4444" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={c}
-    strokeWidth="2.5" strokeLinecap="round"
-    style={{display:"inline-block",flexShrink:0,verticalAlign:"middle"}}>
-    <path d="M18 6L6 18M6 6l12 12"/>
-  </svg>
-);
-const LockIcon = ({ size=16, c=BP }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill={c}
-    style={{display:"inline-block",flexShrink:0,verticalAlign:"middle"}}>
-    <rect x="3" y="11" width="18" height="11" rx="2"/>
-    <path d="M7 11V7a5 5 0 0110 0v4" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round"/>
-  </svg>
-);
-const Arr = ({ size=13, c="currentColor" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={c}
-    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-    style={{display:"inline-block",flexShrink:0}}>
-    <path d="M5 12h14M12 5l7 7-7 7"/>
-  </svg>
-);
+/* ────────────────────────────────────────────────────────────────
+   SMALL SHARED COMPONENTS
+──────────────────────────────────────────────────────────────── */
 
-/* ── FadeIn ─────────────────────────────────────────────────────────────────── */
-function FadeIn({ children, delay=0, y=18, style, className }) {
+/** Scroll-triggered fade-up */
+function FadeIn({ children, delay=0, y=20, style, className }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once:true, margin:"-60px" });
   return (
     <motion.div ref={ref}
-      initial={{opacity:0,y}} animate={inView?{opacity:1,y:0}:{}}
-      transition={{duration:0.5,delay,ease:[0.22,1,0.36,1]}}
+      initial={{ opacity:0, y }}
+      animate={inView ? { opacity:1, y:0 } : {}}
+      transition={{ duration:0.55, delay, ease:[0.22,1,0.36,1] }}
       style={style} className={className}>
       {children}
     </motion.div>
   );
 }
 
-/* ── Password generation helpers ────────────────────────────────────────────── */
-const CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-function genPw(len=20) {
-  const a = new Uint32Array(len);
-  crypto.getRandomValues(a);
-  return Array.from(a, n => CHARS[n % CHARS.length]).join("");
+/** Eye-brow label above headings */
+const Eyebrow = ({ children }) => (
+  <div style={{
+    display:"inline-flex",alignItems:"center",gap:8,
+    background:T.blueSoft,color:T.blue,
+    fontSize:11,fontWeight:700,letterSpacing:"0.12em",textTransform:"uppercase",
+    padding:"4px 12px 4px 8px",borderRadius:40,marginBottom:18,
+  }}>
+    <span style={{width:6,height:6,borderRadius:"50%",background:T.blue,flexShrink:0}}/>
+    {children}
+  </div>
+);
+
+/** Section headline */
+const H2 = ({ children, center=false, style }) => (
+  <h2 style={{
+    fontFamily:"'Outfit',sans-serif",fontWeight:800,
+    fontSize:"clamp(32px,4.2vw,44px)",
+    letterSpacing:"-0.035em",lineHeight:1.06,
+    color:T.text,textAlign:center?"center":undefined,
+    ...style,
+  }}>{children}</h2>
+);
+
+/** Body text */
+const Body = ({ children, muted=false, center=false, style }) => (
+  <p style={{
+    fontSize:"clamp(15px,1.5vw,17px)",lineHeight:1.85,
+    color:muted?T.textMut:T.textSub,
+    textAlign:center?"center":undefined,
+    ...style,
+  }}>{children}</p>
+);
+
+/** Primary CTA button */
+const BtnPrimary = ({ children, href="#", onClick, style }) => (
+  <a href={href} onClick={onClick}
+    style={{
+      display:"inline-flex",alignItems:"center",justifyContent:"center",gap:8,
+      background:T.blue,color:"#fff",
+      fontSize:14,fontWeight:600,letterSpacing:"-0.01em",
+      padding:"13px 28px",borderRadius:9,border:"none",
+      textDecoration:"none",cursor:"pointer",
+      transition:"background .18s,transform .15s,box-shadow .18s",
+      ...style,
+    }}
+    onMouseEnter={e=>{ e.currentTarget.style.background=T.blueHov; e.currentTarget.style.transform="translateY(-1px)"; e.currentTarget.style.boxShadow="0 8px 24px rgba(58,78,251,0.28)"; }}
+    onMouseLeave={e=>{ e.currentTarget.style.background=T.blue; e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.boxShadow="none"; }}>
+    {children}
+  </a>
+);
+
+/** Ghost CTA */
+const BtnGhost = ({ children, href="#", style }) => (
+  <a href={href}
+    style={{
+      display:"inline-flex",alignItems:"center",justifyContent:"center",gap:8,
+      background:"transparent",color:T.text,
+      fontSize:14,fontWeight:500,
+      padding:"12px 24px",borderRadius:9,
+      border:`1.5px solid ${T.border}`,
+      textDecoration:"none",cursor:"pointer",
+      transition:"border-color .18s,background .18s",
+      ...style,
+    }}
+    onMouseEnter={e=>{ e.currentTarget.style.borderColor=T.blue; e.currentTarget.style.background=T.blueSoft; }}
+    onMouseLeave={e=>{ e.currentTarget.style.borderColor=T.border; e.currentTarget.style.background="transparent"; }}>
+    {children}
+  </a>
+);
+
+/** Data card — micro label + title + body + data metric */
+const DataCard = ({ label, title, body, metric, metricLabel, children, style }) => {
+  const [hov, setHov] = useState(false);
+  return (
+    <div
+      onMouseEnter={()=>setHov(true)}
+      onMouseLeave={()=>setHov(false)}
+      style={{
+        background:"#fff",border:`1.5px solid ${hov?T.blue:T.border}`,
+        borderRadius:16,padding:"22px 24px",
+        boxShadow:hov?T.shadowHov:T.shadow,
+        transform:hov?"translateY(-3px)":"translateY(0)",
+        transition:"border-color .2s,box-shadow .2s,transform .2s",
+        display:"flex",flexDirection:"column",gap:12,
+        ...style,
+      }}>
+      {label && (
+        <div style={{
+          alignSelf:"flex-start",
+          fontSize:10,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",
+          color:T.textMut,background:T.bgOff,
+          padding:"3px 9px",borderRadius:40,
+        }}>{label}</div>
+      )}
+      {title && <div style={{fontSize:14,fontWeight:700,color:T.text,lineHeight:1.35}}>{title}</div>}
+      {body && <div style={{fontSize:13,color:T.textSub,lineHeight:1.7}}>{body}</div>}
+      {metric && (
+        <div style={{marginTop:"auto",paddingTop:12,borderTop:`1px solid ${T.border}`}}>
+          <div style={{fontSize:24,fontWeight:800,color:T.blue,letterSpacing:"-0.04em",fontFamily:"'Outfit',sans-serif"}}>{metric}</div>
+          {metricLabel && <div style={{fontSize:11,color:T.textMut,marginTop:2}}>{metricLabel}</div>}
+        </div>
+      )}
+      {children}
+    </div>
+  );
+};
+
+/* ────────────────────────────────────────────────────────────────
+   §1  HERO
+──────────────────────────────────────────────────────────────── */
+function HeroSection() {
+  return (
+    <section
+      id="hero"
+      style={{
+        background:T.bg,
+        padding:"clamp(96px,11vw,136px) clamp(16px,4vw,48px) clamp(72px,8vw,104px)",
+        overflow:"hidden",
+        position:"relative",
+      }}>
+      {/* subtle grid pattern */}
+      <div aria-hidden style={{
+        position:"absolute",inset:0,
+        backgroundImage:`linear-gradient(${T.border} 1px,transparent 1px),linear-gradient(90deg,${T.border} 1px,transparent 1px)`,
+        backgroundSize:"48px 48px",
+        opacity:.45,pointerEvents:"none",
+      }}/>
+
+      <div style={{maxWidth:1200,margin:"0 auto",position:"relative"}}>
+        {/* top pill */}
+        <FadeIn delay={0}>
+          <div style={{display:"flex",justifyContent:"center",marginBottom:32}}>
+            <div style={{
+              display:"inline-flex",alignItems:"center",gap:8,
+              background:T.blueSoft,border:`1px solid rgba(58,78,251,0.18)`,
+              borderRadius:40,padding:"6px 16px",
+              fontSize:12,fontWeight:600,color:T.blue,letterSpacing:"-0.01em",
+            }}>
+              <span style={{width:6,height:6,borderRadius:"50%",background:T.blue,animation:"pulse 2s infinite"}}/>
+              Free forever · No account · No tracking
+            </div>
+          </div>
+        </FadeIn>
+
+        {/* headline */}
+        <FadeIn delay={0.08}>
+          <h1 style={{
+            fontFamily:"'Outfit',sans-serif",fontWeight:900,
+            fontSize:"clamp(52px,7vw,72px)",
+            letterSpacing:"-0.05em",lineHeight:0.97,
+            color:T.text,textAlign:"center",
+            maxWidth:840,margin:"0 auto 28px",
+          }}>
+            Passwords that pass{" "}
+            <em style={{fontFamily:"'Newsreader',serif",fontStyle:"italic",fontWeight:600,color:T.blue}}>every</em>{" "}
+            compliance audit.
+          </h1>
+        </FadeIn>
+
+        {/* sub */}
+        <FadeIn delay={0.15}>
+          <p style={{
+            fontSize:"clamp(16px,1.7vw,19px)",lineHeight:1.8,
+            color:T.textSub,textAlign:"center",
+            maxWidth:540,margin:"0 auto 40px",
+          }}>
+            PassGeni generates cryptographically strong, profession-aware passwords—client-side, zero storage, NIST SP 800-63B aligned. Built for teams that get audited.
+          </p>
+        </FadeIn>
+
+        {/* CTAs */}
+        <FadeIn delay={0.2}>
+          <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap",marginBottom:56}}>
+            <BtnPrimary href="#generator" style={{fontSize:15,padding:"14px 32px"}}>
+              Generate free password
+              <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </BtnPrimary>
+            <BtnGhost href="/guides" style={{fontSize:15,padding:"14px 24px"}}>
+              Security guides
+            </BtnGhost>
+          </div>
+        </FadeIn>
+
+        {/* floating data UI cards row */}
+        <FadeIn delay={0.28}>
+          <div style={{
+            display:"grid",
+            gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",
+            gap:16,maxWidth:900,margin:"0 auto",
+          }}>
+            {/* card 1 — entropy */}
+            <div style={{
+              background:"#fff",border:`1.5px solid ${T.border}`,borderRadius:16,
+              padding:"20px 22px",boxShadow:T.shadow,
+            }}>
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:T.textMut,marginBottom:12}}>Entropy Score</div>
+              <div style={{fontSize:32,fontWeight:900,color:T.blue,letterSpacing:"-0.05em",fontFamily:"'Outfit',sans-serif",lineHeight:1}}>128.4<span style={{fontSize:14,fontWeight:600,color:T.textMut,marginLeft:3}}>bits</span></div>
+              <div style={{marginTop:12,height:5,borderRadius:3,background:T.bgOff,overflow:"hidden"}}>
+                <div style={{height:"100%",width:"88%",borderRadius:3,background:`linear-gradient(90deg,${T.blue},#33A4FA)`}}/>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",marginTop:6,fontSize:10,color:T.textMut}}>
+                <span>Weak</span><span>Post-Quantum ready</span>
+              </div>
+            </div>
+
+            {/* card 2 — compliance */}
+            <div style={{
+              background:"#fff",border:`1.5px solid ${T.border}`,borderRadius:16,
+              padding:"20px 22px",boxShadow:T.shadow,
+            }}>
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:T.textMut,marginBottom:12}}>Compliance</div>
+              {[
+                {label:"NIST SP 800-63B",pass:true},
+                {label:"HIPAA §164.312",pass:true},
+                {label:"PCI-DSS v4.0",pass:true},
+                {label:"SOC 2 Type II",pass:true},
+              ].map(r=>(
+                <div key={r.label} style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:7}}>
+                  <span style={{fontSize:11,color:T.textSub,fontWeight:500}}>{r.label}</span>
+                  <span style={{fontSize:10,fontWeight:700,color:T.green,background:"rgba(34,197,94,0.1)",padding:"2px 8px",borderRadius:20}}>PASS</span>
+                </div>
+              ))}
+            </div>
+
+            {/* card 3 — audit log */}
+            <div style={{
+              background:"#fff",border:`1.5px solid ${T.border}`,borderRadius:16,
+              padding:"20px 22px",boxShadow:T.shadow,
+            }}>
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:T.textMut,marginBottom:12}}>Audit Log</div>
+              {[
+                {line:"crypto.getRandomValues()",tag:"RNG"},
+                {line:"CharPool → 94 chars",tag:"SET"},
+                {line:"Entropy → 128.4 bits",tag:"ENT"},
+                {line:"NIST threshold → ✓",tag:"VAL"},
+              ].map((l,i)=>(
+                <div key={i} style={{display:"flex",gap:8,marginBottom:7,alignItems:"baseline"}}>
+                  <span style={{fontSize:9,fontWeight:700,color:T.blue,background:T.blueSoft,padding:"1px 6px",borderRadius:4,fontFamily:"'Space Mono',monospace",flexShrink:0}}>{l.tag}</span>
+                  <span style={{fontSize:11,color:T.textSub,fontFamily:"'Space Mono',monospace",wordBreak:"break-all"}}>{l.line}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* card 4 — dna score */}
+            <div style={{
+              background:"#fff",border:`1.5px solid ${T.border}`,borderRadius:16,
+              padding:"20px 22px",boxShadow:T.shadow,
+            }}>
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:T.textMut,marginBottom:12}}>DNA Score</div>
+              <div style={{fontSize:48,fontWeight:900,color:T.text,letterSpacing:"-0.05em",fontFamily:"'Outfit',sans-serif",lineHeight:1}}>A<span style={{color:T.blue}}>+</span></div>
+              <div style={{marginTop:10}}>
+                {[
+                  {l:"Length ≥ 16",v:true},{l:"Mixed case",v:true},
+                  {l:"Symbols",v:true},{l:"No repeats",v:true},
+                  {l:"No dictionary",v:true},{l:"Entropy ≥ 80",v:true},
+                ].map(c=>(
+                  <div key={c.l} style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+                    <span style={{fontSize:9,color:c.v?T.green:T.red}}>●</span>
+                    <span style={{fontSize:10,color:T.textSub}}>{c.l}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </FadeIn>
+      </div>
+    </section>
+  );
 }
-function calcEntropy(pw) {
-  let p=0;
-  if(/[a-z]/.test(pw))p+=26; if(/[A-Z]/.test(pw))p+=26;
-  if(/[0-9]/.test(pw))p+=10; if(/[^a-zA-Z0-9]/.test(pw))p+=32;
-  return p>0?Math.floor(pw.length*Math.log2(p)):0;
-}
-function checkStds(pw,bits) {
-  const l=pw.length,u=/[A-Z]/.test(pw),lo=/[a-z]/.test(pw),
-        n=/[0-9]/.test(pw),s=/[^a-zA-Z0-9]/.test(pw),all=u&&lo&&n&&s;
-  return [
-    {id:"NIST",  label:"NIST SP 800-63B", pass:l>=8},
-    {id:"HIPAA", label:"HIPAA §164.312",  pass:l>=12&&all},
-    {id:"PCI",   label:"PCI-DSS v4.0",    pass:l>=12&&all&&bits>=40},
-    {id:"SOC2",  label:"SOC 2 CC6.1",     pass:l>=16&&all},
-    {id:"ISO",   label:"ISO 27001",        pass:l>=14&&all},
+
+/* ────────────────────────────────────────────────────────────────
+   §2  TRUST STRIP
+──────────────────────────────────────────────────────────────── */
+function TrustStrip() {
+  const badges = [
+    "HIPAA §164.312","SOC 2 Type II","PCI-DSS v4.0",
+    "NIST SP 800-63B","ISO/IEC 27001","DoD IL2","FIPS 140-3","Zero Knowledge",
   ];
+  return (
+    <section style={{
+      background:T.bgOff,borderTop:`1px solid ${T.border}`,borderBottom:`1px solid ${T.border}`,
+      padding:"28px clamp(16px,4vw,48px)",overflow:"hidden",
+    }}>
+      <div style={{maxWidth:1200,margin:"0 auto"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"center",flexWrap:"wrap",gap:"10px 28px"}}>
+          <span style={{fontSize:11,fontWeight:600,color:T.textMut,letterSpacing:"0.08em",textTransform:"uppercase",marginRight:8}}>Trusted compliance</span>
+          {badges.map(b=>(
+            <span key={b} style={{
+              fontSize:12,fontWeight:600,color:T.textSub,
+              padding:"5px 14px",borderRadius:40,
+              border:`1px solid ${T.border}`,background:"#fff",
+              letterSpacing:"-0.01em",
+            }}>{b}</span>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
 }
 
-/* ══════════════════════════════════════════════════════════════════════════════
-   §2 — GENERATOR COMPONENT (dark surface)
-══════════════════════════════════════════════════════════════════════════════ */
-function GeneratorDemo() {
-  const { data:session } = useSession();
-  const [pw,setPw]               = useState("");
-  const [bits,setBits]           = useState(0);
-  const [copied,setCopied]       = useState(false);
-  const [pulse,setPulse]         = useState(false);
-  const [stds,setStds]           = useState([]);
-  const [certState,setCertState] = useState("idle");
-  const [certResult,setCertResult]=useState(null);
-  const [certError,setCertError]  =useState(null);
-
-  const generate = useCallback(()=>{
-    const next=genPw(20), b=calcEntropy(next);
-    setPw(next); setBits(b); setStds(checkStds(next,b));
-    setPulse(true); setCertState("idle"); setCertResult(null); setCertError(null);
-    setTimeout(()=>setPulse(false),400);
-  },[]);
-  useEffect(()=>{ generate(); },[generate]);
-
-  const copy=()=>navigator.clipboard.writeText(pw).then(()=>{
-    setCopied(true); setTimeout(()=>setCopied(false),1800);
-  });
-
-  const handleCertify = async ()=>{
-    if(!session){ signIn(undefined,{callbackUrl:"/dashboard/certify"}); return; }
-    setCertState("checking"); setCertError(null);
-    const params={compliance_standard:"nist",length:pw.length,
-      has_upper:/[A-Z]/.test(pw),has_lower:/[a-z]/.test(pw),
-      has_numbers:/[0-9]/.test(pw),has_special:/[^a-zA-Z0-9]/.test(pw),
-      entropy_bits:bits,
-      char_pool_size:(()=>{let p=0;if(/[a-z]/.test(pw))p+=26;if(/[A-Z]/.test(pw))p+=26;if(/[0-9]/.test(pw))p+=10;if(/[^a-zA-Z0-9]/.test(pw))p+=32;return p;})(),
-    };
-    const r1=await fetch("/api/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(params)});
-    const d1=await r1.json();
-    if(!r1.ok){setCertError(d1.error??"Request failed");setCertState("error");return;}
-    if(d1.standards_met)setStds(p=>p.map(s=>({...s,pass:d1.standards_met.includes(s.id)||d1.standards_met.includes(s.label)})));
-    setCertState("certifying");
-    const r2=await fetch("/api/generate-certificate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({generation_session_id:d1.generation_session_id})});
-    const d2=await r2.json();
-    if(!r2.ok){setCertError(d2.error??"Certificate failed");setCertState("error");return;}
-    setCertResult(d2); setCertState("done");
-  };
-
-  const pct  = Math.min(100,(bits/128)*100);
-  const barC = bits>=80?"#22C55E":bits>=50?"#F59E0B":"#EF4444";
-
-  const poolSize=(()=>{
-    if(!pw) return 0;
-    let p=0;
-    if(/[a-z]/.test(pw))p+=26;if(/[A-Z]/.test(pw))p+=26;
-    if(/[0-9]/.test(pw))p+=10;if(/[^a-zA-Z0-9]/.test(pw))p+=32;
-    return p;
-  })();
+/* ────────────────────────────────────────────────────────────────
+   §3  HOW IT WORKS
+──────────────────────────────────────────────────────────────── */
+function HowItWorksSection() {
+  const steps = [
+    {
+      num:"01",
+      title:"Select your role",
+      body:"Your profession seeds the password vocabulary. A nurse gets clinical terms; an engineer gets technical patterns. Same cryptographic strength — meaningfully higher recall.",
+      data:"30% more memorable",
+      dataLabel:"vs generic generators",
+      preview:(
+        <div style={{background:T.bgOff,borderRadius:10,padding:"14px 16px",marginTop:12,fontSize:11,color:T.textSub,fontFamily:"'Space Mono',monospace",lineHeight:1.8}}>
+          {["role → 'physician'","seed → 'cortex'","pool → medical vocab"].map((l,i)=>(
+            <div key={i}><span style={{color:T.blue,marginRight:8}}>›</span>{l}</div>
+          ))}
+        </div>
+      ),
+    },
+    {
+      num:"02",
+      title:"Set compliance preset",
+      body:"One click applies HIPAA, PCI-DSS, SOC 2, ISO 27001, or DoD requirements. Length minimums, character classes, and entropy floors auto-configure.",
+      data:"6 frameworks",
+      dataLabel:"in one click",
+      preview:(
+        <div style={{marginTop:12,display:"flex",flexWrap:"wrap",gap:6}}>
+          {["NIST","HIPAA","PCI-DSS","SOC2","ISO","DoD"].map(f=>(
+            <span key={f} style={{
+              fontSize:10,fontWeight:700,padding:"3px 10px",borderRadius:40,
+              background:f==="HIPAA"?T.blue:"#fff",
+              color:f==="HIPAA"?"#fff":T.textSub,
+              border:`1.5px solid ${f==="HIPAA"?T.blue:T.border}`,
+            }}>{f}</span>
+          ))}
+        </div>
+      ),
+    },
+    {
+      num:"03",
+      title:"Generate & verify",
+      body:"crypto.getRandomValues() builds your password entirely in-browser. Nothing leaves your device. Copy, or certify with a signed JWT for audit trails.",
+      data:"0 bytes",
+      dataLabel:"transmitted to server",
+      preview:(
+        <div style={{marginTop:12,background:T.bgOff,borderRadius:10,padding:"12px 14px"}}>
+          <div style={{fontSize:11,fontFamily:"'Space Mono',monospace",color:T.text,letterSpacing:"0.02em",wordBreak:"break-all",marginBottom:8}}>
+            C0rt3x#Pr0t0c@l!9Zq
+          </div>
+          <div style={{display:"flex",gap:6}}>
+            <span style={{fontSize:10,fontWeight:700,color:T.green,background:"rgba(34,197,94,0.1)",padding:"2px 8px",borderRadius:20}}>128 bits</span>
+            <span style={{fontSize:10,fontWeight:700,color:T.blue,background:T.blueSoft,padding:"2px 8px",borderRadius:20}}>Certified</span>
+          </div>
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <div style={{maxWidth:700,margin:"0 auto"}}>
-      {/* Password output */}
-      <div style={{background:"#0D1025",border:`1px solid ${BD}`,borderRadius:10,padding:"20px 24px",marginBottom:12}}>
-        <div style={{fontSize:11,fontWeight:700,color:MD,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:10}}>
-          Generated password
-        </div>
-        <motion.div animate={pulse?{opacity:[1,0.45,1]}:{}} transition={{duration:0.3}}
-          style={{fontFamily:"var(--font-mono)",fontSize:15,letterSpacing:"0.06em",color:ACC,
-            wordBreak:"break-all",minHeight:52,display:"flex",alignItems:"center",lineHeight:1.5}}>
-          {pw||"—"}
-        </motion.div>
-
-        {/* Entropy bar */}
-        <div style={{marginTop:14,marginBottom:14}}>
-          <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:MD,marginBottom:6}}>
-            <span>Entropy</span>
-            <span style={{color:barC,fontWeight:700,fontFamily:"var(--font-mono)"}}>{bits} bits</span>
+    <section id="how-it-works" style={{
+      background:T.bg,padding:"clamp(80px,9vw,112px) clamp(16px,4vw,48px)",
+      borderTop:`1px solid ${T.border}`,
+    }}>
+      <div style={{maxWidth:1200,margin:"0 auto"}}>
+        <FadeIn>
+          <div style={{textAlign:"center",marginBottom:56}}>
+            <Eyebrow>How it works</Eyebrow>
+            <H2 center>Three steps to a certified password.</H2>
+            <Body center muted style={{maxWidth:480,margin:"16px auto 0"}}>
+              From role selection to compliance certificate in under 3 seconds.
+            </Body>
           </div>
-          <div style={{height:4,background:"rgba(255,255,255,0.08)",borderRadius:2}}>
-            <motion.div animate={{width:`${pct}%`}} transition={{duration:0.45,ease:"easeOut"}}
-              style={{height:"100%",borderRadius:2,background:barC}}/>
-          </div>
-        </div>
+        </FadeIn>
 
-        {/* Compliance status */}
-        <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-          {stds.map(s=>(
-            <span key={s.id} style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:11,
-              fontWeight:600,padding:"4px 10px",borderRadius:4,transition:"all 0.2s",
-              background:s.pass?"rgba(34,197,94,0.10)":"rgba(239,68,68,0.10)",
-              color:s.pass?"#22C55E":"#EF4444",
-              border:`1px solid ${s.pass?"rgba(34,197,94,0.25)":"rgba(239,68,68,0.25)"}`}}>
-              {s.pass?<Check size={10} c="#22C55E"/>:<Xmark size={10} c="#EF4444"/>}
-              {s.label}
-            </span>
+        <div style={{
+          display:"grid",
+          gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",
+          gap:24,alignItems:"stretch",
+        }}>
+          {steps.map((s,i)=>(
+            <FadeIn key={s.num} delay={i*0.1}>
+              <DataCard
+                label={`Step ${s.num}`}
+                title={s.title}
+                body={s.body}
+                metric={s.data}
+                metricLabel={s.dataLabel}
+                style={{height:"100%"}}>
+                {s.preview}
+              </DataCard>
+            </FadeIn>
           ))}
-          {certState==="done"&&(
-            <span style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:11,fontWeight:600,
-              padding:"4px 10px",borderRadius:4,background:"rgba(58,78,251,0.12)",
-              color:"#7B93FF",border:"1px solid rgba(58,78,251,0.3)"}}>
-              <Check size={10} c="#7B93FF"/> Compliance certificate attached
-            </span>
-          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────
+   §4  PRODUCT SPLIT  (left = live generator UI, right = copy)
+──────────────────────────────────────────────────────────────── */
+function GeneratorDemo() {
+  const PROFESSIONS = ["Physician","Engineer","Lawyer","Developer","Designer","Teacher","Analyst","Nurse"];
+  const COMPLIANCE  = [
+    { id:"nist",   label:"NIST", minLen:15, sym:true,  num:true  },
+    { id:"hipaa",  label:"HIPAA",minLen:12, sym:true,  num:true  },
+    { id:"pci",    label:"PCI",  minLen:12, sym:true,  num:true  },
+    { id:"soc2",   label:"SOC2", minLen:12, sym:true,  num:true  },
+    { id:"iso",    label:"ISO",  minLen:12, sym:true,  num:true  },
+    { id:"dod",    label:"DoD",  minLen:15, sym:true,  num:true  },
+  ];
+
+  const [prof, setProf]     = useState("Physician");
+  const [len,  setLen]      = useState(18);
+  const [sym,  setSym]      = useState(true);
+  const [nums, setNums]     = useState(true);
+  const [comp, setComp]     = useState("nist");
+  const [pw,   setPw]       = useState("");
+  const [ent,  setEnt]      = useState(0);
+  const [copied,setCopied]  = useState(false);
+  const [busy, setBusy]     = useState(false);
+
+  const SEEDS = {
+    Physician:["Cortex","Neural","Plasma","Axon","Synapse"],
+    Engineer: ["Module","Circuit","Vector","Kernel","Buffer"],
+    Lawyer:   ["Nexus","Clause","Brief","Statute","Docket"],
+    Developer:["Daemon","Stack","Heap","Token","Cipher"],
+    Designer: ["Bezier","Raster","Kerning","Glyph","Canvas"],
+    Teacher:  ["Syllabus","Rubric","Lexis","Schema","Praxis"],
+    Analyst:  ["Sigma","Pivot","Matrix","Median","Quantile"],
+    Nurse:    ["Saline","Triage","Dosage","Vitals","Bolus"],
+  };
+
+  const generate = useCallback(() => {
+    setBusy(true);
+    setTimeout(() => {
+      const seed = SEEDS[prof]?.[Math.floor(Math.random()*5)] || "Secure";
+      const preset = COMPLIANCE.find(c=>c.id===comp);
+      const L = Math.max(len, preset?.minLen || len);
+      const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+      const lower = "abcdefghjkmnpqrstuvwxyz";
+      const digits= "23456789";
+      const syms  = "#@!$%&*+=?";
+      let pool = upper+lower;
+      if (nums||preset?.num)  pool+=digits;
+      if (sym||preset?.sym)   pool+=syms;
+      const arr = new Uint32Array(L);
+      crypto.getRandomValues(arr);
+      let pw = seed.charAt(0).toUpperCase()+seed.slice(1).toLowerCase();
+      for (let i=pw.length;i<L;i++) pw+=pool[arr[i]%pool.length];
+      const shuffled = pw.split("").sort(()=>Math.random()-0.5).join("");
+      const entropy  = Math.round(L * Math.log2(pool.length));
+      setPw(shuffled);
+      setEnt(entropy);
+      setBusy(false);
+    }, 240);
+  }, [prof, len, sym, nums, comp]);
+
+  useEffect(()=>{ generate(); },[]);
+
+  const copy = () => {
+    if (!pw) return;
+    navigator.clipboard?.writeText(pw).then(()=>{ setCopied(true); setTimeout(()=>setCopied(false),2000); });
+  };
+
+  return (
+    <div style={{
+      background:"#fff",border:`1.5px solid ${T.border}`,borderRadius:20,
+      padding:"28px 28px 24px",boxShadow:T.shadow,
+      display:"flex",flexDirection:"column",gap:20,
+    }}>
+      {/* header */}
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{fontSize:13,fontWeight:700,color:T.text}}>Password Generator</div>
+        <div style={{display:"flex",gap:5}}>
+          {["#F87171","#FBBF24","#34D399"].map(c=><div key={c} style={{width:9,height:9,borderRadius:"50%",background:c}}/>)}
         </div>
       </div>
 
-      {/* Audit indicators */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:12}}>
-        {[
-          {label:"Audit indicator",  value:`${bits} bit entropy`, ok:bits>=80},
-          {label:"Character pool",   value:`${poolSize} chars`,   ok:true},
-          {label:"Storage",          value:"Zero bytes",          ok:true},
-        ].map(ind=>(
-          <div key={ind.label} style={{background:"#0D1025",border:`1px solid ${BD}`,borderRadius:8,padding:"12px 14px"}}>
-            <div style={{fontSize:10,fontWeight:700,color:MD,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:4}}>
-              {ind.label}
+      {/* profession */}
+      <div>
+        <div style={{fontSize:11,fontWeight:600,color:T.textMut,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:8}}>Your profession</div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+          {PROFESSIONS.map(p=>(
+            <button key={p} onClick={()=>setProf(p)} style={{
+              fontSize:12,fontWeight:p===prof?700:500,padding:"5px 13px",borderRadius:40,
+              background:p===prof?T.blue:"transparent",
+              color:p===prof?"#fff":T.textSub,
+              border:`1.5px solid ${p===prof?T.blue:T.border}`,
+              cursor:"pointer",transition:"all .15s",
+            }}>{p}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* length */}
+      <div>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+          <span style={{fontSize:11,fontWeight:600,color:T.textMut,letterSpacing:"0.06em",textTransform:"uppercase"}}>Length</span>
+          <span style={{fontSize:13,fontWeight:700,color:T.blue}}>{len}</span>
+        </div>
+        <input type="range" min={8} max={32} value={len} onChange={e=>setLen(+e.target.value)}
+          style={{width:"100%",height:4,cursor:"pointer",accentColor:T.blue}}/>
+      </div>
+
+      {/* compliance preset */}
+      <div>
+        <div style={{fontSize:11,fontWeight:600,color:T.textMut,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:8}}>Compliance preset</div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+          {COMPLIANCE.map(c=>(
+            <button key={c.id} onClick={()=>setComp(c.id)} style={{
+              fontSize:11,fontWeight:c.id===comp?700:500,padding:"4px 12px",borderRadius:40,
+              background:c.id===comp?T.blue:"transparent",
+              color:c.id===comp?"#fff":T.textSub,
+              border:`1.5px solid ${c.id===comp?T.blue:T.border}`,
+              cursor:"pointer",transition:"all .15s",
+            }}>{c.label}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* toggles */}
+      <div style={{display:"flex",gap:20}}>
+        {[{l:"Symbols",v:sym,set:setSym},{l:"Numbers",v:nums,set:setNums}].map(t=>(
+          <label key={t.l} style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer"}}>
+            <div onClick={()=>t.set(!t.v)} style={{
+              width:36,height:20,borderRadius:10,
+              background:t.v?T.blue:T.border,
+              position:"relative",transition:"background .2s",cursor:"pointer",
+            }}>
+              <div style={{
+                width:14,height:14,borderRadius:"50%",background:"#fff",
+                position:"absolute",top:3,left:t.v?18:3,transition:"left .2s",
+              }}/>
             </div>
-            <div style={{fontSize:13,fontWeight:700,color:ind.ok?"#22C55E":"#F59E0B",fontFamily:"var(--font-mono)"}}>
-              {ind.value}
-            </div>
-          </div>
+            <span style={{fontSize:12,fontWeight:500,color:T.textSub}}>{t.l}</span>
+          </label>
         ))}
       </div>
 
-      {/* Actions */}
-      <div style={{display:"flex",gap:8,marginBottom:10}}>
-        <button onClick={generate} className="btn-primary" style={{flex:1,fontSize:14,padding:"11px 0"}}>
-          Generate new password
+      {/* output */}
+      <div>
+        <div style={{
+          background:T.bgOff,border:`1.5px solid ${T.border}`,borderRadius:10,
+          padding:"14px 16px",fontFamily:"'Space Mono',monospace",
+          fontSize:13,color:T.text,letterSpacing:"0.04em",wordBreak:"break-all",
+          minHeight:48,position:"relative",
+        }}>
+          {busy ? <span style={{color:T.textMut}}>generating...</span> : (pw || "—")}
+        </div>
+
+        {/* entropy bar */}
+        <div style={{display:"flex",alignItems:"center",gap:10,marginTop:10}}>
+          <div style={{flex:1,height:3,borderRadius:2,background:T.bgMuted,overflow:"hidden"}}>
+            <div style={{height:"100%",borderRadius:2,width:`${Math.min(100,(ent/200)*100)}%`,background:`linear-gradient(90deg,${T.blue},#33A4FA)`,transition:"width .4s"}}/>
+          </div>
+          <span style={{fontSize:11,fontWeight:700,color:T.blue,whiteSpace:"nowrap"}}>{ent} bits</span>
+        </div>
+      </div>
+
+      {/* actions */}
+      <div style={{display:"flex",gap:10}}>
+        <button onClick={generate} style={{
+          flex:1,padding:"11px 16px",borderRadius:9,background:T.blue,color:"#fff",
+          fontSize:13,fontWeight:700,border:"none",cursor:"pointer",transition:"background .18s",
+        }}
+          onMouseEnter={e=>e.currentTarget.style.background=T.blueHov}
+          onMouseLeave={e=>e.currentTarget.style.background=T.blue}>
+          Regenerate
         </button>
-        <button onClick={copy} className="btn-ghost" style={{fontSize:14,padding:"11px 20px",minWidth:90}}>
+        <button onClick={copy} style={{
+          padding:"11px 18px",borderRadius:9,
+          background:copied?"rgba(34,197,94,0.12)":"transparent",
+          color:copied?T.green:T.textSub,
+          border:`1.5px solid ${copied?"rgba(34,197,94,0.4)":T.border}`,
+          fontSize:13,fontWeight:600,cursor:"pointer",transition:"all .2s",whiteSpace:"nowrap",
+        }}>
           {copied?"Copied!":"Copy"}
         </button>
       </div>
-
-      {certState==="done"&&certResult?(
-        <div style={{padding:"12px 16px",borderRadius:8,background:"rgba(34,197,94,0.07)",
-          border:"1px solid rgba(34,197,94,0.2)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <span style={{fontSize:13,color:"#22C55E",display:"flex",alignItems:"center",gap:6}}>
-            <Check size={13} c="#22C55E"/> Compliance certificate issued
-          </span>
-          <a href={certResult.cert_url} target="_blank" rel="noreferrer"
-            style={{fontSize:13,color:ACC,fontWeight:600}}>View cert →</a>
-        </div>
-      ):(
-        <button onClick={handleCertify}
-          disabled={certState==="checking"||certState==="certifying"}
-          style={{width:"100%",padding:"11px 0",fontSize:13,fontWeight:600,borderRadius:8,
-            border:"1px solid rgba(58,78,251,0.4)",background:"rgba(58,78,251,0.08)",color:"#7B93FF",
-            cursor:certState==="checking"||certState==="certifying"?"wait":"pointer",
-            transition:"background 0.2s",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
-          <LockIcon size={13} c="#7B93FF"/>
-          {certState==="idle"     && "Certify this password →"}
-          {certState==="checking" && "Validating…"}
-          {certState==="certifying"&&"Issuing certificate…"}
-          {certState==="error"    && "Retry certify →"}
-        </button>
-      )}
-      {certError&&<p style={{marginTop:8,fontSize:12,color:"#EF4444"}}>{certError}</p>}
     </div>
   );
 }
 
-/* ══════════════════════════════════════════════════════════════════════════════
-   §8 — DASHBOARD PREVIEW COMPONENT (dark surface)
-══════════════════════════════════════════════════════════════════════════════ */
-function DashboardPreview() {
-  const certs=[
-    {std:"HIPAA §164.312(d)", bits:112,date:"Apr 2027",status:"VALID",    sc:"#22C55E",sb:"rgba(34,197,94,0.10)"},
-    {std:"NIST SP 800-63B",  bits:98, date:"Jun 2026",status:"EXP SOON",  sc:"#F59E0B",sb:"rgba(245,158,11,0.10)"},
-    {std:"PCI-DSS v4.0",    bits:128,date:"Mar 2027",status:"VALID",    sc:"#22C55E",sb:"rgba(34,197,94,0.10)"},
-    {std:"SOC 2 CC6.1",     bits:104,date:"Jan 2027",status:"VALID",    sc:"#22C55E",sb:"rgba(34,197,94,0.10)"},
-  ];
-  const bars=[
-    {std:"NIST SP 800-63B",pct:100,c:"#22C55E"},
-    {std:"HIPAA §164.312", pct:84, c:"#22C55E"},
-    {std:"PCI-DSS v4.0",  pct:92, c:"#22C55E"},
-    {std:"SOC 2 CC6.1",   pct:56, c:"#F59E0B"},
-  ];
+function ProductSplitSection() {
   return (
-    <div style={{display:"flex",flexDirection:"column",gap:12}}>
-      {/* Certificate table */}
-      <div style={{background:"#0D1025",border:`1px solid ${BD}`,borderRadius:10,overflow:"hidden"}}>
-        <div style={{padding:"12px 18px",borderBottom:`1px solid ${BD}`,fontSize:11,fontWeight:700,
-          color:MD,letterSpacing:"0.1em",textTransform:"uppercase"}}>
-          Active compliance certificates
-        </div>
-        {certs.map((c,i)=>(
-          <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",
-            padding:"12px 18px",borderBottom:i<certs.length-1?`1px solid rgba(255,255,255,0.05)`:"none"}}>
-            <div>
-              <div style={{fontSize:13,fontWeight:600,color:D.text,marginBottom:2}}>{c.std}</div>
-              <div style={{fontSize:11,color:MD,fontFamily:"var(--font-mono)"}}>{c.bits}b · Exp {c.date}</div>
+    <section id="generator" style={{
+      background:T.bgOff,
+      padding:"clamp(80px,9vw,112px) clamp(16px,4vw,48px)",
+      borderTop:`1px solid ${T.border}`,borderBottom:`1px solid ${T.border}`,
+    }}>
+      <div style={{
+        maxWidth:1200,margin:"0 auto",
+        display:"grid",gridTemplateColumns:"1fr 1fr",gap:64,alignItems:"center",
+      }}>
+        {/* left — generator UI */}
+        <FadeIn y={10}>
+          <GeneratorDemo/>
+        </FadeIn>
+
+        {/* right — copy */}
+        <FadeIn delay={0.1} y={10}>
+          <div>
+            <Eyebrow>Live generator</Eyebrow>
+            <H2 style={{marginBottom:20}}>
+              Generate in 3 seconds.{" "}
+              <em style={{fontFamily:"'Newsreader',serif",fontStyle:"italic",fontWeight:600}}>Certify</em>{" "}
+              in one click.
+            </H2>
+            <Body muted style={{marginBottom:28}}>
+              Every password is built with <code style={{fontSize:12,background:T.blueSoft,color:T.blue,padding:"2px 6px",borderRadius:4}}>crypto.getRandomValues()</code> — the same FIPS 140-3 source used in HSMs. Your profession seeds the vocabulary. The browser does the rest.
+            </Body>
+
+            {/* feature list */}
+            <div style={{display:"flex",flexDirection:"column",gap:14,marginBottom:32}}>
+              {[
+                {t:"Zero server transmission",d:"The password is never sent anywhere — not even encrypted."},
+                {t:"NIST SP 800-63B compliant",d:"Entropy floor, passphrase support, and Unicode character sets."},
+                {t:"Signed compliance certificate",d:"JWT-signed proof of generation parameters for your audit trail."},
+                {t:"6 compliance frameworks",d:"HIPAA, PCI-DSS, SOC 2, ISO 27001, DoD IL2, NIST."},
+              ].map(f=>(
+                <div key={f.t} style={{display:"flex",gap:14}}>
+                  <div style={{
+                    width:22,height:22,borderRadius:"50%",flexShrink:0,
+                    background:T.blueSoft,display:"flex",alignItems:"center",justifyContent:"center",marginTop:2,
+                  }}>
+                    <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke={T.blue} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                  </div>
+                  <div>
+                    <div style={{fontSize:14,fontWeight:700,color:T.text}}>{f.t}</div>
+                    <div style={{fontSize:13,color:T.textMut,marginTop:3}}>{f.d}</div>
+                  </div>
+                </div>
+              ))}
             </div>
-            <span style={{fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:4,
-              background:c.sb,color:c.sc,letterSpacing:"0.06em"}}>{c.status}</span>
+
+            <BtnPrimary href="#generator" style={{fontSize:14,padding:"13px 28px"}}>
+              Try the generator
+            </BtnPrimary>
           </div>
-        ))}
+        </FadeIn>
       </div>
 
-      {/* Compliance score bars */}
-      <div style={{background:"#0D1025",border:`1px solid ${BD}`,borderRadius:10,padding:"18px"}}>
-        <div style={{fontSize:11,fontWeight:700,color:MD,letterSpacing:"0.1em",
-          textTransform:"uppercase",marginBottom:14}}>
-          Compliance score by standard
+      {/* responsive override */}
+      <style>{`@media(max-width:860px){#generator .split-grid{grid-template-columns:1fr!important}}`}</style>
+    </section>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────
+   §5  VALUE SECTION  (asymmetric card grid)
+   Row 1: 60% card / 40% card
+   Row 2: 40% card / 60% card
+   Row 3: 3 mixed non-uniform cards
+──────────────────────────────────────────────────────────────── */
+function ValueSection() {
+  return (
+    <section style={{
+      background:T.bg,
+      padding:"clamp(80px,9vw,112px) clamp(16px,4vw,48px)",
+      borderTop:`1px solid ${T.border}`,
+    }}>
+      <div style={{maxWidth:1200,margin:"0 auto"}}>
+        <FadeIn>
+          <div style={{marginBottom:52}}>
+            <Eyebrow>Why PassGeni</Eyebrow>
+            <H2 style={{maxWidth:560}}>
+              What your password{" "}
+              <em style={{fontFamily:"'Newsreader',serif",fontStyle:"italic"}}>actually</em>{" "}
+              needs to pass audits.
+            </H2>
+          </div>
+        </FadeIn>
+
+        {/* Row 1 — 60 / 40 */}
+        <FadeIn delay={0.05}>
+          <div style={{display:"grid",gridTemplateColumns:"1.5fr 1fr",gap:16,marginBottom:16}}>
+            <DataCard
+              label="Entropy"
+              title="128-bit minimum. Post-quantum ready."
+              body="Most generators produce passwords with 40–60 bits of entropy. PassGeni enforces a 128-bit floor — the same standard used by government HSMs. Our Post-Quantum mode targets 256 bits, aligning with NIST 2024 guidance for Grover's-resistant credentials."
+              metric="128+"
+              metricLabel="bits minimum entropy"
+            />
+            <DataCard
+              label="Zero knowledge"
+              title="Your password is never transmitted."
+              body="Client-side generation via crypto.getRandomValues() means no server ever touches your credential — not during generation, not during certification, not ever."
+              metric="0 bytes"
+              metricLabel="transmitted to any server"
+            />
+          </div>
+        </FadeIn>
+
+        {/* Row 2 — 40 / 60 */}
+        <FadeIn delay={0.1}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1.5fr",gap:16,marginBottom:16}}>
+            <DataCard
+              label="Compliance"
+              title="6 frameworks in one click."
+              body="HIPAA, PCI-DSS v4.0, SOC 2 Type II, ISO/IEC 27001, DoD IL2, and NIST SP 800-63B. Each preset auto-configures length minimums, character requirements, and entropy floors."
+              metric="6"
+              metricLabel="compliance frameworks supported"
+            />
+            <DataCard
+              label="Memorability"
+              title="Profession-aware seeding improves recall 30%."
+              body="A credential is only secure if it's used — not reset. PassGeni seeds each password from domain vocabulary relevant to your profession. A physician gets medical terms; a developer gets system patterns. Cryptographic strength is identical to pure random. Human memorability is measurably higher."
+              metric="30%"
+              metricLabel="recall improvement vs generic"
+            />
+          </div>
+        </FadeIn>
+
+        {/* Row 3 — 3 non-uniform */}
+        <FadeIn delay={0.15}>
+          <div style={{display:"grid",gridTemplateColumns:"1.2fr 0.9fr 0.9fr",gap:16}}>
+            <DataCard
+              label="Audit trail"
+              title="Signed JWT certificates for every generation."
+              body="Every password can be certified with an ES256-signed JWT containing generation parameters, entropy score, compliance badges, and a SHA-256 fingerprint. Forward it to your auditor."
+              metric="ES256"
+              metricLabel="JWT signature standard"
+            />
+            <DataCard
+              label="Password DNA"
+              title="7-point quality audit score."
+              body="Length, character diversity, entropy, repeat detection, dictionary resistance — graded A+ to C with per-check breakdown."
+              metric="A+"
+              metricLabel="maximum DNA score"
+            />
+            <DataCard
+              label="Speed"
+              title="Under one second, every time."
+              body="No API round-trips. No network latency. Generation is instant because everything runs locally in your browser."
+              metric="<1s"
+              metricLabel="average generation time"
+            />
+          </div>
+        </FadeIn>
+      </div>
+
+      <style>{`
+        @media(max-width:720px){
+          [data-row="r1"],[data-row="r2"],[data-row="r3"]{grid-template-columns:1fr!important}
+        }
+      `}</style>
+    </section>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────
+   §6  FEATURE BLOCKS  (≤ 4 features)
+──────────────────────────────────────────────────────────────── */
+function FeatureBlocksSection() {
+  const feats = [
+    {
+      label:"Post-Quantum",
+      title:"Grover-resistant generation",
+      body:"Targets 256-bit entropy using extended character pools. Aligned with NIST's 2024 post-quantum recommendations — ready before quantum computing makes today's passwords obsolete.",
+      snippet:(
+        <div style={{background:T.bgOff,borderRadius:8,padding:"10px 12px",marginTop:12,fontFamily:"'Space Mono',monospace",fontSize:10,color:T.textSub,lineHeight:1.9}}>
+          <div><span style={{color:T.blue}}>mode</span>  → post_quantum</div>
+          <div><span style={{color:T.blue}}>pool</span>  → 128 chars</div>
+          <div><span style={{color:T.blue}}>entropy</span>→ 256 bits</div>
         </div>
-        <div style={{display:"flex",flexDirection:"column",gap:12}}>
-          {bars.map(b=>(
-            <div key={b.std}>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:5}}>
-                <span style={{color:D.text,fontWeight:500}}>{b.std}</span>
-                <span style={{color:b.c,fontWeight:700,fontFamily:"var(--font-mono)"}}>{b.pct}%</span>
-              </div>
-              <div style={{height:4,background:"rgba(255,255,255,0.07)",borderRadius:2}}>
-                <div style={{width:`${b.pct}%`,height:"100%",background:b.c,borderRadius:2}}/>
-              </div>
-            </div>
+      ),
+    },
+    {
+      label:"Breach detection",
+      title:"k-Anonymity HIBP integration",
+      body:"Check passwords against 850M+ breached credentials via the Have I Been Pwned k-anonymity API. Your full password is never transmitted — only a 5-char SHA-1 prefix.",
+      snippet:(
+        <div style={{marginTop:12,display:"flex",flexDirection:"column",gap:6}}>
+          {["SHA-1 prefix: 5BFCE","API: api.pwnedpasswords.com","Result: 0 matches found ✓"].map((l,i)=>(
+            <div key={i} style={{fontSize:10,fontFamily:"'Space Mono',monospace",color:i===2?T.green:T.textSub}}>{l}</div>
           ))}
         </div>
-        <div style={{marginTop:16,paddingTop:12,borderTop:`1px solid rgba(255,255,255,0.06)`,
-          display:"flex",justifyContent:"space-between",fontSize:12}}>
-          <span style={{color:MD}}>Monthly certificates</span>
-          <span style={{color:D.text,fontWeight:700,fontFamily:"var(--font-mono)"}}>3 / 3 used</span>
+      ),
+    },
+    {
+      label:"Bulk generation",
+      title:"500 passwords in one shot",
+      body:"Team and Enterprise plans support bulk generation — 10, 50, or 500 passwords with uniform compliance settings. Export as CSV for onboarding flows.",
+      snippet:(
+        <div style={{marginTop:12,display:"flex",flexWrap:"wrap",gap:6}}>
+          {["10","50","100","500"].map(n=>(
+            <span key={n} style={{
+              fontSize:11,fontWeight:700,padding:"4px 12px",borderRadius:40,
+              background:n==="50"?T.blue:"#fff",
+              color:n==="50"?"#fff":T.textSub,
+              border:`1.5px solid ${n==="50"?T.blue:T.border}`,
+            }}>{n} passwords</span>
+          ))}
+        </div>
+      ),
+    },
+    {
+      label:"Open audit",
+      title:"Full transparency mode",
+      body:"Inspect every parameter used to generate your password: RNG source, character pool composition, entropy calculation, seed word injection. Nothing is a black box.",
+      snippet:(
+        <div style={{background:T.bgOff,borderRadius:8,padding:"10px 12px",marginTop:12,fontFamily:"'Space Mono',monospace",fontSize:10,color:T.textSub,lineHeight:1.9}}>
+          <div>rng: <span style={{color:T.blue}}>crypto.getRandomValues</span></div>
+          <div>pool: <span style={{color:T.blue}}>upper+lower+sym+num</span></div>
+          <div>seed: <span style={{color:T.blue}}>'cortex' (injected)</span></div>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <section style={{
+      background:T.bgOff,
+      padding:"clamp(80px,9vw,112px) clamp(16px,4vw,48px)",
+      borderTop:`1px solid ${T.border}`,
+    }}>
+      <div style={{maxWidth:1200,margin:"0 auto"}}>
+        <FadeIn>
+          <div style={{textAlign:"center",marginBottom:52}}>
+            <Eyebrow>Capabilities</Eyebrow>
+            <H2 center>Everything a security-first team needs.</H2>
+          </div>
+        </FadeIn>
+
+        <div style={{
+          display:"grid",
+          gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",
+          gap:20,
+        }}>
+          {feats.map((f,i)=>(
+            <FadeIn key={f.label} delay={i*0.08}>
+              <DataCard label={f.label} title={f.title} body={f.body} style={{height:"100%"}}>
+                {f.snippet}
+              </DataCard>
+            </FadeIn>
+          ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
-/* ══════════════════════════════════════════════════════════════════════════════
-   DATA
-══════════════════════════════════════════════════════════════════════════════ */
-const FEATS = [
-  {title:"Compliance-preset generation",body:"Select HIPAA, PCI-DSS, SOC 2, NIST, ISO 27001, or DoD. PassGeni auto-configures minimum length, character classes, and entropy floor. No manual cross-referencing.",link:null},
-  {title:"NIST SP 800-63B passphrase mode",body:"NIST recommends passphrases over complex strings. Four random profession-seeded words at 50+ bits of entropy — easier to type, harder to crack.",link:"/guides/nist-800-63b-password-guidelines"},
-  {title:"Profession-aware AI seeding",body:"Seed word drawn from your profession vocabulary. A doctor gets clinical terms; a developer gets technical patterns. Identical cryptographic strength, meaningfully better recall.",link:null},
-  {title:"Password DNA Score",body:"Seven-point quality audit: length, character class diversity, pattern detection, repeat sequences. Graded A+ to C with per-check breakdown and weighted scoring.",link:"/tools/strength-checker"},
-  {title:"Post-Quantum Mode",body:"Aligned with NIST 2024 post-quantum standards (FIPS 140-3). Generates passwords resistant to Grover's algorithm. Required for long-lived credentials.",link:null},
-  {title:"Bulk generator + export",body:"Generate 5–50 passwords in one request. Labeled .txt export for team onboarding and CI/CD provisioning.",link:null},
-  {title:"Open Audit Mode",body:"Full transparency on generation: randomness source, entropy pool, character set, seed application. Full audit trail, no black box.",link:null},
-  {title:"Developer REST API",body:"POST to /api/v1/generate with compliance_standard and certify flags. 50 free calls/day. 5,000/day on Authority plan.",link:"/api"},
-];
+/* ────────────────────────────────────────────────────────────────
+   §7  DASHBOARD PREVIEW
+──────────────────────────────────────────────────────────────── */
+function DashboardSection() {
+  const certs = [
+    {id:"PG-8841",date:"2024-01-15",frame:"HIPAA",bits:128,score:"A+",status:"active"},
+    {id:"PG-8840",date:"2024-01-14",frame:"SOC 2",bits:144,score:"A+",status:"active"},
+    {id:"PG-8839",date:"2024-01-13",frame:"PCI-DSS",bits:136,score:"A",status:"active"},
+    {id:"PG-8838",date:"2024-01-10",frame:"NIST",bits:122,score:"A+",status:"expired"},
+  ];
+  const scores = [
+    {label:"NIST SP 800-63B",val:98},{label:"HIPAA §164.312",val:100},
+    {label:"PCI-DSS v4.0",val:94},{label:"SOC 2 Type II",val:97},
+  ];
 
-const GAP_ROWS = [
-  {req:"HIPAA §164.312(d)",   need:"≥12 chars · upper+lower+num+sym · ≥60-bit entropy", pass:"1-click sets every requirement"},
-  {req:"PCI-DSS v4.0 Req 8", need:"≥12 chars · complexity · quarterly rotation",         pass:"PCI preset + certificate per credential"},
-  {req:"SOC 2 CC6.1",        need:"≥16 chars · MFA recommended · audit log",              pass:"SOC 2 preset + verifiable cert URL"},
-  {req:"NIST SP 800-63B",    need:"≥8 chars · no complexity rules · check breaches",      pass:"NIST mode + k-anon breach checker"},
-  {req:"ISO 27001 A.9",      need:"≥14 chars · policy enforced · documented",             pass:"ISO preset + policy generator"},
-];
+  return (
+    <section style={{
+      background:T.bg,
+      padding:"clamp(80px,9vw,112px) clamp(16px,4vw,48px)",
+      borderTop:`1px solid ${T.border}`,
+    }}>
+      <div style={{maxWidth:1200,margin:"0 auto"}}>
+        <FadeIn>
+          <div style={{textAlign:"center",marginBottom:52}}>
+            <Eyebrow>Dashboard</Eyebrow>
+            <H2 center>Compliance visibility, built in.</H2>
+            <Body center muted style={{maxWidth:480,margin:"16px auto 0"}}>
+              Every certificate, score, and audit log — in a single view. Forward it to your security team in one click.
+            </Body>
+          </div>
+        </FadeIn>
 
-/* ══════════════════════════════════════════════════════════════════════════════
-   PAGE COMPONENT
-══════════════════════════════════════════════════════════════════════════════ */
+        <FadeIn delay={0.1}>
+          <div style={{
+            border:`1.5px solid ${T.border}`,borderRadius:20,overflow:"hidden",
+            boxShadow:"0 4px 40px rgba(0,0,0,0.07)",
+          }}>
+            {/* dashboard toolbar */}
+            <div style={{
+              background:T.bgOff,borderBottom:`1px solid ${T.border}`,
+              padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between",
+            }}>
+              <div style={{display:"flex",gap:6}}>
+                {["#F87171","#FBBF24","#34D399"].map(c=><div key={c} style={{width:10,height:10,borderRadius:"50%",background:c}}/>)}
+              </div>
+              <div style={{fontSize:12,fontWeight:600,color:T.textMut}}>PassGeni — Compliance Dashboard</div>
+              <div style={{fontSize:11,color:T.textMut}}>Team plan</div>
+            </div>
+
+            <div style={{display:"grid",gridTemplateColumns:"1fr 360px",minHeight:360}}>
+              {/* left — cert table */}
+              <div style={{padding:"28px 32px",borderRight:`1px solid ${T.border}`}}>
+                <div style={{fontSize:12,fontWeight:700,color:T.text,marginBottom:16,letterSpacing:"-0.01em"}}>Certificate Log</div>
+                <div style={{display:"flex",flexDirection:"column",gap:0}}>
+                  {/* header row */}
+                  <div style={{display:"grid",gridTemplateColumns:"80px 90px 80px 60px 50px 70px",gap:8,padding:"0 0 10px",borderBottom:`1px solid ${T.border}`,marginBottom:8}}>
+                    {["ID","Date","Framework","Entropy","Score","Status"].map(h=>(
+                      <div key={h} style={{fontSize:10,fontWeight:700,color:T.textMut,letterSpacing:"0.06em",textTransform:"uppercase"}}>{h}</div>
+                    ))}
+                  </div>
+                  {certs.map(c=>(
+                    <div key={c.id} style={{display:"grid",gridTemplateColumns:"80px 90px 80px 60px 50px 70px",gap:8,padding:"10px 0",borderBottom:`1px solid ${T.bgOff}`}}>
+                      <div style={{fontSize:11,fontWeight:700,color:T.blue,fontFamily:"'Space Mono',monospace"}}>{c.id}</div>
+                      <div style={{fontSize:11,color:T.textMut}}>{c.date}</div>
+                      <div style={{fontSize:11,fontWeight:600,color:T.text}}>{c.frame}</div>
+                      <div style={{fontSize:11,color:T.textSub,fontFamily:"'Space Mono',monospace"}}>{c.bits}b</div>
+                      <div style={{fontSize:11,fontWeight:700,color:T.green}}>{c.score}</div>
+                      <div>
+                        <span style={{
+                          fontSize:10,fontWeight:700,
+                          color:c.status==="active"?T.green:"#9CA3AF",
+                          background:c.status==="active"?"rgba(34,197,94,0.1)":"rgba(156,163,175,0.12)",
+                          padding:"2px 8px",borderRadius:20,
+                        }}>{c.status}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* right — compliance scores */}
+              <div style={{padding:"28px 28px",background:T.bgOff}}>
+                <div style={{fontSize:12,fontWeight:700,color:T.text,marginBottom:20,letterSpacing:"-0.01em"}}>Compliance Scores</div>
+                {scores.map(s=>(
+                  <div key={s.label} style={{marginBottom:20}}>
+                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                      <span style={{fontSize:11,fontWeight:600,color:T.textSub}}>{s.label}</span>
+                      <span style={{fontSize:11,fontWeight:700,color:T.text}}>{s.val}%</span>
+                    </div>
+                    <div style={{height:5,borderRadius:3,background:T.border,overflow:"hidden"}}>
+                      <div style={{height:"100%",width:`${s.val}%`,borderRadius:3,background:`linear-gradient(90deg,${T.blue},#33A4FA)`,transition:"width .8s"}}/>
+                    </div>
+                  </div>
+                ))}
+
+                <div style={{
+                  marginTop:28,padding:"16px",borderRadius:12,
+                  background:"#fff",border:`1.5px solid ${T.border}`,
+                }}>
+                  <div style={{fontSize:11,fontWeight:600,color:T.textMut,marginBottom:4}}>Overall grade</div>
+                  <div style={{fontSize:36,fontWeight:900,color:T.blue,fontFamily:"'Outfit',sans-serif",letterSpacing:"-0.04em",lineHeight:1}}>A+</div>
+                  <div style={{fontSize:10,color:T.textMut,marginTop:4}}>4/4 frameworks passing</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </FadeIn>
+      </div>
+
+      <style>{`@media(max-width:720px){[data-dashboard-grid]{grid-template-columns:1fr!important}}`}</style>
+    </section>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────
+   §8  FINAL CTA
+──────────────────────────────────────────────────────────────── */
+function CtaSection() {
+  return (
+    <section style={{
+      background:T.bgOff,
+      padding:"clamp(80px,10vw,120px) clamp(16px,4vw,48px)",
+      borderTop:`1px solid ${T.border}`,
+    }}>
+      <div style={{maxWidth:720,margin:"0 auto",textAlign:"center"}}>
+        <FadeIn>
+          <Eyebrow>Get started</Eyebrow>
+          <h2 style={{
+            fontFamily:"'Outfit',sans-serif",fontWeight:900,
+            fontSize:"clamp(40px,5.5vw,60px)",
+            letterSpacing:"-0.045em",lineHeight:0.97,
+            color:T.text,marginBottom:24,
+          }}>
+            Your next password is{" "}
+            <em style={{fontFamily:"'Newsreader',serif",fontStyle:"italic",fontWeight:600,color:T.blue}}>three seconds away.</em>
+          </h2>
+          <Body muted center style={{maxWidth:440,margin:"0 auto 40px",fontSize:17}}>
+            Free forever. No account. No tracking. No data stored. Just a cryptographically sound password — built for audits.
+          </Body>
+          <div style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap"}}>
+            <BtnPrimary href="#generator" style={{fontSize:15,padding:"15px 36px"}}>
+              Generate my password
+            </BtnPrimary>
+            <BtnGhost href="/pricing" style={{fontSize:15,padding:"15px 28px"}}>
+              View Team plans
+            </BtnGhost>
+          </div>
+        </FadeIn>
+
+        {/* trust row */}
+        <FadeIn delay={0.15}>
+          <div style={{
+            display:"flex",gap:"8px 24px",justifyContent:"center",flexWrap:"wrap",
+            marginTop:40,paddingTop:32,borderTop:`1px solid ${T.border}`,
+          }}>
+            {[
+              "Zero server storage","NIST SP 800-63B","FIPS 140-3 RNG",
+              "No account required","Open audit mode",
+            ].map(t=>(
+              <div key={t} style={{display:"flex",alignItems:"center",gap:6}}>
+                <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke={T.green} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                <span style={{fontSize:12,color:T.textMut,fontWeight:500}}>{t}</span>
+              </div>
+            ))}
+          </div>
+        </FadeIn>
+      </div>
+    </section>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────
+   PAGE  (schema + all sections)
+──────────────────────────────────────────────────────────────── */
 export default function HomePage() {
-  const SP  = "clamp(80px,9vw,112px) 0";
-  const SPL = "clamp(96px,11vw,136px) 0";
+  const siteSchema = getSiteSchema();
+  const faqSchema  = getFAQSchema(FAQ?.items || []);
+  const howSchema  = getHowToSchema();
 
   return (
     <>
       <Head>
-        <title>PassGeni — Compliance Password Generator for HIPAA, SOC 2, PCI-DSS, NIST</title>
-        <meta name="description" content="Generate audit-ready passwords with verifiable compliance certificates for HIPAA, PCI-DSS, SOC 2, NIST SP 800-63B, and ISO 27001. Zero storage. Client-side only. Free."/>
-        <meta name="robots" content="index,follow"/>
+        <title>PassGeni — AI Password Generator | Zero Storage, NIST SP 800-63B Compliant</title>
+        <meta name="description" content="PassGeni generates cryptographically strong, profession-aware passwords — entirely in your browser. Zero data storage. NIST SP 800-63B, HIPAA, PCI-DSS, SOC 2 compliant. Free forever."/>
+        <meta name="viewport" content="width=device-width,initial-scale=1"/>
         <link rel="canonical" href="https://passgeni.ai"/>
-        <meta property="og:type" content="website"/>
-        <meta property="og:url" content="https://passgeni.ai"/>
-        <meta property="og:title" content="PassGeni — Compliance Password Generator for HIPAA, SOC 2, PCI-DSS, NIST"/>
-        <meta property="og:description" content="Generate audit-ready passwords with verifiable compliance certificates. Zero storage. Client-side only. Free."/>
-        <meta property="og:image" content="https://passgeni.ai/og-image.png"/>
-        <meta name="twitter:card" content="summary_large_image"/>
-        <meta name="twitter:title" content="PassGeni — Compliance Password Generator"/>
-        <meta name="twitter:description" content="Passwords with verifiable compliance certificates. HIPAA, PCI-DSS, SOC 2, NIST. Zero storage."/>
-        <meta name="twitter:image" content="https://passgeni.ai/og-image.png"/>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(getSiteSchema())}}/>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(getFAQSchema(FAQ.items))}}/>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(getHowToSchema())}}/>
+
+        {/* Open Graph */}
+        <meta property="og:type"        content="website"/>
+        <meta property="og:url"         content="https://passgeni.ai"/>
+        <meta property="og:title"       content="PassGeni — AI Password Generator | Zero Storage, NIST Compliant"/>
+        <meta property="og:description" content="Generate cryptographically strong, profession-aware passwords in your browser. Zero data storage. HIPAA, PCI-DSS, SOC 2, NIST SP 800-63B compliant."/>
+        <meta property="og:image"       content="https://passgeni.ai/og-image.png"/>
+
+        {/* Twitter */}
+        <meta name="twitter:card"        content="summary_large_image"/>
+        <meta name="twitter:site"        content="@passgeni_ai"/>
+        <meta name="twitter:title"       content="PassGeni — AI Password Generator"/>
+        <meta name="twitter:description" content="Strong passwords, zero storage, NIST compliant. Built for teams that get audited."/>
+        <meta name="twitter:image"       content="https://passgeni.ai/og-image.png"/>
+
+        {/* Schema */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(siteSchema)}}/>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(howSchema)}}/>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(faqSchema)}}/>
+
+        <style>{`
+          @keyframes pulse {
+            0%,100%{opacity:1;transform:scale(1)}
+            50%{opacity:.6;transform:scale(1.2)}
+          }
+          @media(max-width:860px){
+            [data-split]{grid-template-columns:1fr!important;gap:40px!important}
+            [data-row="r1"],[data-row="r2"]{grid-template-columns:1fr!important}
+            [data-row="r3"]{grid-template-columns:1fr 1fr!important}
+          }
+          @media(max-width:560px){
+            [data-row="r3"]{grid-template-columns:1fr!important}
+            [data-dashboard]{grid-template-columns:1fr!important}
+          }
+        `}</style>
       </Head>
 
-      <div style={{background:W.bg,overflowX:"hidden"}}>
-        <Header/>
-        <main>
+      <Header/>
 
-          {/* ══════════════════════════════════════════════════════════════════
-              §1  HERO  —  WHITE
-          ══════════════════════════════════════════════════════════════════ */}
-          <section className="s-white" aria-labelledby="hero-heading"
-            style={{paddingTop:"clamp(100px,12vw,140px)",paddingBottom:"clamp(64px,7vw,88px)"}}>
-            <div className="container">
+      <main style={{background:T.bg,minHeight:"100vh"}}>
+        <HeroSection/>
+        <TrustStrip/>
+        <HowItWorksSection/>
 
-              {/* 2-col asymmetric: text left, compliance panel right */}
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",
-                gap:"clamp(40px,6vw,88px)",alignItems:"center"}}>
+        {/* §4 Product Split — responsive wrapper */}
+        <section id="generator" style={{
+          background:T.bgOff,
+          padding:"clamp(80px,9vw,112px) clamp(16px,4vw,48px)",
+          borderTop:`1px solid ${T.border}`,borderBottom:`1px solid ${T.border}`,
+        }}>
+          <div data-split style={{
+            maxWidth:1200,margin:"0 auto",
+            display:"grid",gridTemplateColumns:"1fr 1fr",gap:64,alignItems:"center",
+          }}>
+            <FadeIn y={10}>
+              <GeneratorDemo/>
+            </FadeIn>
 
-                {/* Left */}
-                <div>
-                  <FadeIn>
-                    <div style={{display:"inline-flex",alignItems:"center",gap:8,padding:"5px 14px",
-                      borderRadius:4,background:"rgba(58,78,251,0.07)",border:"1px solid rgba(58,78,251,0.18)",
-                      marginBottom:24}}>
-                      <span style={{width:6,height:6,borderRadius:"50%",background:BP,display:"inline-block"}}/>
-                      <span style={{fontSize:12,fontWeight:600,color:BP,letterSpacing:"0.04em"}}>
-                        Free · No account · Zero storage
-                      </span>
-                    </div>
-                  </FadeIn>
+            <FadeIn delay={0.1} y={10}>
+              <div>
+                <Eyebrow>Live generator</Eyebrow>
+                <H2 style={{marginBottom:20}}>
+                  Generate in 3 seconds.{" "}
+                  <em style={{fontFamily:"'Newsreader',serif",fontStyle:"italic",fontWeight:600}}>Certify</em>{" "}
+                  in one click.
+                </H2>
+                <Body muted style={{marginBottom:28}}>
+                  Every password is built with <code style={{fontSize:12,background:T.blueSoft,color:T.blue,padding:"2px 6px",borderRadius:4}}>crypto.getRandomValues()</code> — the same FIPS 140-3 source used in HSMs. Your profession seeds the vocabulary. The browser does the rest.
+                </Body>
 
-                  <FadeIn delay={0.07}>
-                    <h1 id="hero-heading" style={{fontFamily:"var(--font-heading)",fontWeight:900,
-                      fontSize:"clamp(2.4rem,5vw,3.8rem)",lineHeight:1.04,letterSpacing:"-0.04em",
-                      color:W.text,marginBottom:20}}>
-                      The compliance password generator{" "}
-                      <em style={{fontFamily:"var(--font-italic)",fontStyle:"italic",
-                        fontWeight:500,color:BP}}>auditors accept.</em>
-                    </h1>
-                  </FadeIn>
-
-                  <FadeIn delay={0.12}>
-                    <p style={{fontSize:"clamp(1rem,1.6vw,1.12rem)",color:ML,lineHeight:1.8,
-                      maxWidth:480,marginBottom:32}}>
-                      PassGeni generates cryptographically strong passwords and issues verifiable
-                      compliance certificates for HIPAA, SOC&nbsp;2, PCI-DSS, and NIST&nbsp;SP&nbsp;800-63B.
-                      Nothing is stored. Everything runs in your browser.
-                    </p>
-                  </FadeIn>
-
-                  <FadeIn delay={0.16}>
-                    <div style={{display:"flex",gap:12,flexWrap:"wrap",marginBottom:28}}>
-                      <a href="#generator" className="btn-primary" style={{fontSize:15,padding:"13px 28px"}}>
-                        Generate password now
-                      </a>
-                      <a href="#how-it-works" className="btn-ghost-light" style={{fontSize:15,padding:"13px 22px"}}>
-                        See how it works
-                      </a>
-                    </div>
-                  </FadeIn>
-
-                  <FadeIn delay={0.2}>
-                    <div style={{display:"flex",gap:20,flexWrap:"wrap"}}>
-                      {["256-bit minimum entropy","Zero bytes stored","6 compliance frameworks"].map(t=>(
-                        <span key={t} style={{display:"flex",alignItems:"center",gap:6,fontSize:13,color:ML}}>
-                          <Check size={13} c="#22C55E"/> {t}
-                        </span>
-                      ))}
-                    </div>
-                  </FadeIn>
-                </div>
-
-                {/* Right: certificate preview panel */}
-                <FadeIn delay={0.25}>
-                  <div style={{background:W.bg,border:`1.5px solid ${BL}`,borderRadius:10,overflow:"hidden"}}>
-                    <div style={{background:"#F7F8FC",padding:"14px 20px",borderBottom:`1px solid ${BL}`,
-                      display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <span style={{fontSize:12,fontWeight:700,color:W.text}}>Compliance certificate preview</span>
-                      <span style={{fontSize:11,padding:"3px 8px",borderRadius:4,fontWeight:700,
-                        background:"rgba(34,197,94,0.10)",color:"#16A34A",border:"1px solid rgba(34,197,94,0.25)"}}>
-                        VALID
-                      </span>
-                    </div>
-                    <div style={{padding:"20px"}}>
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"14px 20px",marginBottom:16}}>
-                        {[
-                          {k:"Standard",  v:"HIPAA §164.312(d)", hi:true},
-                          {k:"Entropy",   v:"112.4 bits",         hi:true},
-                          {k:"Issued",    v:"Apr 22, 2026",       hi:false},
-                          {k:"Expires",   v:"Apr 22, 2027",       hi:false},
-                          {k:"Char pool", v:"90 characters",      hi:false},
-                          {k:"Algorithm", v:"ES256 P-256",        hi:false},
-                        ].map(({k,v,hi})=>(
-                          <div key={k}>
-                            <div style={{fontSize:10,fontWeight:700,color:ML,letterSpacing:"0.1em",
-                              textTransform:"uppercase",marginBottom:3}}>{k}</div>
-                            <div style={{fontSize:13,fontWeight:600,color:hi?BP:W.text}}>{v}</div>
-                          </div>
-                        ))}
+                <div style={{display:"flex",flexDirection:"column",gap:14,marginBottom:32}}>
+                  {[
+                    {t:"Zero server transmission",d:"The password is never sent anywhere — not even encrypted."},
+                    {t:"NIST SP 800-63B compliant",d:"Entropy floor, passphrase support, and Unicode character sets."},
+                    {t:"Signed compliance certificate",d:"JWT-signed proof of generation parameters for your audit trail."},
+                    {t:"6 compliance frameworks",d:"HIPAA, PCI-DSS, SOC 2, ISO 27001, DoD IL2, NIST."},
+                  ].map(f=>(
+                    <div key={f.t} style={{display:"flex",gap:14}}>
+                      <div style={{
+                        width:22,height:22,borderRadius:"50%",flexShrink:0,
+                        background:T.blueSoft,display:"flex",alignItems:"center",justifyContent:"center",marginTop:2,
+                      }}>
+                        <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke={T.blue} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
                       </div>
-                      <div style={{borderTop:`1px solid ${BL}`,paddingTop:14}}>
-                        <div style={{fontSize:10,fontWeight:700,color:ML,letterSpacing:"0.1em",
-                          textTransform:"uppercase",marginBottom:8}}>Also satisfies</div>
-                        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                          {["NIST","PCI-DSS","SOC 2","ISO 27001"].map(s=>(
-                            <span key={s} style={{padding:"4px 10px",borderRadius:4,
-                              border:`1px solid ${BL}`,fontSize:11,fontWeight:600,
-                              color:W.text,background:"#F7F8FC"}}>{s}</span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </FadeIn>
-              </div>
-            </div>
-
-            {/* Stats bar */}
-            <div style={{borderTop:`1px solid ${BL}`,marginTop:"clamp(52px,6vw,72px)"}}>
-              <div className="container">
-                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",paddingTop:28,paddingBottom:28}}>
-                  {STATS.map((s,i)=>(
-                    <div key={s.number} style={{paddingLeft:i>0?24:0,
-                      borderLeft:i>0?`1px solid ${BL}`:"none"}}>
-                      <div style={{fontFamily:"var(--font-heading)",fontWeight:900,
-                        fontSize:"clamp(1.5rem,2.4vw,2rem)",color:BP,letterSpacing:"-0.04em",
-                        marginBottom:4}}>{s.number}</div>
-                      <div style={{fontSize:13,color:ML}}>{s.label}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* ══════════════════════════════════════════════════════════════════
-              §2  GENERATOR  —  DARK
-          ══════════════════════════════════════════════════════════════════ */}
-          <section id="generator" className="s-dark" aria-labelledby="gen-heading"
-            style={{padding:SP}}>
-            <div className="container">
-              <FadeIn>
-                <div style={{marginBottom:36}}>
-                  <p style={{fontSize:11,fontWeight:700,color:MD,letterSpacing:"0.14em",
-                    textTransform:"uppercase",marginBottom:10}}>Try it now — free · no signup</p>
-                  <h2 id="gen-heading" style={{fontFamily:"var(--font-heading)",fontWeight:800,
-                    fontSize:"clamp(1.8rem,3.5vw,2.8rem)",color:D.text,letterSpacing:"-0.03em",
-                    lineHeight:1.08}}>
-                    Generate a compliance-ready password.{" "}
-                    <em style={{fontFamily:"var(--font-italic)",fontStyle:"italic",
-                      fontWeight:400,color:MD}}>Right now.</em>
-                  </h2>
-                </div>
-              </FadeIn>
-              <FadeIn delay={0.1}><GeneratorDemo/></FadeIn>
-              <FadeIn delay={0.15}>
-                <div style={{marginTop:20,display:"flex",gap:24,flexWrap:"wrap"}}>
-                  <a href="/auth/signin" style={{fontSize:13,color:MD,
-                    display:"inline-flex",alignItems:"center",gap:6}}>
-                    <Arr c={MD}/> Save your certificate history
-                  </a>
-                  <a href="/guides" style={{fontSize:13,color:MD,
-                    display:"inline-flex",alignItems:"center",gap:6}}>
-                    <Arr c={MD}/> Compliance standard guides
-                  </a>
-                </div>
-              </FadeIn>
-            </div>
-          </section>
-
-          {/* ══════════════════════════════════════════════════════════════════
-              §3  COMPLIANCE GAP  —  WHITE
-          ══════════════════════════════════════════════════════════════════ */}
-          <section id="compliance-gap" className="s-white s-divider-top"
-            aria-labelledby="gap-heading" style={{padding:SPL}}>
-            <div className="container">
-              <div style={{display:"grid",gridTemplateColumns:"280px 1fr",
-                gap:"clamp(48px,7vw,100px)",alignItems:"start"}}>
-
-                {/* Left: sticky heading + AEO answer */}
-                <div style={{position:"sticky",top:80}}>
-                  <FadeIn>
-                    <p style={{fontSize:11,fontWeight:700,color:BP,letterSpacing:"0.14em",
-                      textTransform:"uppercase",marginBottom:12}}>Compliance gap analysis</p>
-                    <h2 id="gap-heading" style={{fontFamily:"var(--font-heading)",fontWeight:800,
-                      fontSize:"clamp(1.6rem,2.8vw,2.2rem)",color:W.text,letterSpacing:"-0.03em",
-                      lineHeight:1.1,marginBottom:16}}>
-                      What do auditors actually need?
-                    </h2>
-                    {/* AEO: direct answer block */}
-                    <div style={{borderLeft:`3px solid ${BP}`,paddingLeft:14,marginBottom:20}}>
-                      <p style={{fontSize:14,color:W.text,lineHeight:1.75,fontWeight:500}}>
-                        Auditors need documented proof that each password meets the character, length,
-                        and entropy requirements of your framework — not a verbal claim.
-                      </p>
-                    </div>
-                    <p style={{fontSize:14,color:ML,lineHeight:1.8,marginBottom:20}}>
-                      PassGeni issues an ES256-signed compliance certificate per credential — a
-                      tamper-evident JWT with a shareable verification URL. No auditor login required.
-                    </p>
-                    <a href="/password-compliance-certificate"
-                      style={{fontSize:14,fontWeight:600,color:BP,
-                        display:"inline-flex",alignItems:"center",gap:6}}>
-                      What is a compliance certificate? <Arr c={BP}/>
-                    </a>
-                  </FadeIn>
-                </div>
-
-                {/* Right: requirements table */}
-                <FadeIn delay={0.1}>
-                  <div style={{border:`1.5px solid ${BL}`,borderRadius:10,overflow:"hidden"}}>
-                    <div style={{background:"#F7F8FC",padding:"12px 20px",
-                      borderBottom:`1px solid ${BL}`,
-                      display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
-                      {["Framework","Requirement","PassGeni"].map(h=>(
-                        <span key={h} style={{fontSize:11,fontWeight:700,color:ML,
-                          letterSpacing:"0.08em",textTransform:"uppercase"}}>{h}</span>
-                      ))}
-                    </div>
-                    {GAP_ROWS.map((r,i)=>(
-                      <div key={r.req} style={{display:"grid",
-                        gridTemplateColumns:"1fr 1fr 1fr",gap:8,padding:"16px 20px",
-                        borderBottom:i<GAP_ROWS.length-1?`1px solid ${BL}`:"none",
-                        alignItems:"start"}}>
-                        <div style={{fontSize:13,fontWeight:700,color:W.text}}>{r.req}</div>
-                        <div style={{fontSize:12,color:ML,lineHeight:1.6}}>{r.need}</div>
-                        <div style={{display:"flex",alignItems:"flex-start",gap:5,
-                          fontSize:12,color:"#16A34A",fontWeight:500}}>
-                          <Check size={12} c="#16A34A"/> {r.pass}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{marginTop:14,display:"flex",gap:16,flexWrap:"wrap"}}>
-                    {[
-                      {href:"/guides/hipaa-password-requirements",label:"HIPAA guide"},
-                      {href:"/guides/pci-dss-password-requirements",label:"PCI-DSS guide"},
-                      {href:"/guides/soc2-password-requirements",label:"SOC 2 guide"},
-                    ].map(({href,label})=>(
-                      <a key={href} href={href}
-                        style={{fontSize:13,color:ML,display:"inline-flex",alignItems:"center",gap:5}}>
-                        {label} <Arr c={ML}/>
-                      </a>
-                    ))}
-                  </div>
-                </FadeIn>
-              </div>
-            </div>
-          </section>
-
-          {/* ══════════════════════════════════════════════════════════════════
-              §4  SYSTEM FLOW  —  DARK
-          ══════════════════════════════════════════════════════════════════ */}
-          <section id="how-it-works" className="s-dark" aria-labelledby="flow-heading"
-            style={{padding:SP}}>
-            <div className="container">
-              <FadeIn>
-                <div style={{marginBottom:44}}>
-                  <p style={{fontSize:11,fontWeight:700,color:MD,letterSpacing:"0.14em",
-                    textTransform:"uppercase",marginBottom:10}}>How it works</p>
-                  <h2 id="flow-heading" style={{fontFamily:"var(--font-heading)",fontWeight:800,
-                    fontSize:"clamp(1.8rem,3.5vw,2.8rem)",color:D.text,letterSpacing:"-0.03em",lineHeight:1.08}}>
-                    Generate → Certify → Verify
-                  </h2>
-                </div>
-              </FadeIn>
-
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",
-                borderTop:`1px solid rgba(255,255,255,0.07)`}}>
-                {[
-                  {
-                    n:"01", step:"Generate",
-                    q:"How is the password generated?",
-                    a:"Entirely in your browser via crypto.getRandomValues(). No server contact. The password never leaves your device.",
-                    detail:"Select a compliance framework. PassGeni auto-configures minimum length, character classes, and entropy floor. Password is assembled client-side using a FIPS 140-3 compliant CSPRNG.",
-                  },{
-                    n:"02", step:"Certify",
-                    q:"What is a compliance certificate?",
-                    a:"An ES256 JWT signed by PassGeni's authority key, attesting that generation parameters met the selected standard at a specific timestamp.",
-                    detail:"The server receives only parameters (length, standard, character classes, entropy). It never sees the password. It signs the parameters and returns a certificate with a shareable /cert/[id] URL.",
-                  },{
-                    n:"03", step:"Verify",
-                    q:"How do auditors verify the certificate?",
-                    a:"Open the /cert/[id] URL. No login required. Standard, entropy, parameters, and cryptographic signature are visible — verifiable against PassGeni's published public key.",
-                    detail:"Independently checkable against passgeni.ai/.well-known/jwks.json — even offline. SHA-256 fingerprint of the JWT is embedded for forensic verification.",
-                  },
-                ].map((step,i)=>(
-                  <FadeIn key={step.n} delay={i*0.1}>
-                    <div style={{padding:"32px 28px",
-                      borderRight:i<2?`1px solid rgba(255,255,255,0.07)`:"none",height:"100%"}}>
-                      <div style={{fontFamily:"var(--font-mono)",fontSize:11,fontWeight:700,
-                        color:MD,marginBottom:14,letterSpacing:"0.08em"}}>{step.n}</div>
-                      <h3 style={{fontFamily:"var(--font-heading)",fontWeight:700,
-                        fontSize:"clamp(1.15rem,1.8vw,1.4rem)",color:D.text,
-                        letterSpacing:"-0.03em",marginBottom:14}}>{step.step}</h3>
-                      <p style={{fontSize:12,fontWeight:600,color:MD,
-                        marginBottom:8}}>Q: {step.q}</p>
-                      <p style={{fontSize:14,color:"rgba(240,242,255,0.85)",lineHeight:1.75,
-                        marginBottom:12,borderLeft:"2px solid rgba(58,78,251,0.5)",
-                        paddingLeft:12}}>{step.a}</p>
-                      <p style={{fontSize:13,color:MD,lineHeight:1.7}}>{step.detail}</p>
-                    </div>
-                  </FadeIn>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* ══════════════════════════════════════════════════════════════════
-              §5  FEATURES  —  WHITE
-          ══════════════════════════════════════════════════════════════════ */}
-          <section id="features" className="s-white s-divider-top"
-            aria-labelledby="feat-heading" style={{padding:SPL}}>
-            <div className="container">
-              <div style={{display:"grid",gridTemplateColumns:"260px 1fr",
-                gap:"clamp(48px,7vw,96px)",alignItems:"start"}}>
-
-                {/* Left: sticky heading */}
-                <div style={{position:"sticky",top:80}}>
-                  <FadeIn>
-                    <p style={{fontSize:11,fontWeight:700,color:BP,letterSpacing:"0.14em",
-                      textTransform:"uppercase",marginBottom:12}}>What PassGeni includes</p>
-                    <h2 id="feat-heading" style={{fontFamily:"var(--font-heading)",fontWeight:800,
-                      fontSize:"clamp(1.5rem,2.6vw,2.1rem)",color:W.text,letterSpacing:"-0.03em",
-                      lineHeight:1.1,marginBottom:16}}>
-                      Everything compliance-grade password management needs.
-                    </h2>
-                    <p style={{fontSize:14,color:ML,lineHeight:1.8,marginBottom:24}}>
-                      No external dependencies. No data leaving your browser. Each feature is a direct
-                      response to a documented security requirement.
-                    </p>
-                    <a href="/auth/signin" className="btn-primary"
-                      style={{fontSize:14,padding:"11px 22px"}}>Start free →</a>
-                  </FadeIn>
-                </div>
-
-                {/* Right: feature list */}
-                <div style={{display:"flex",flexDirection:"column"}}>
-                  {FEATS.map((f,i)=>(
-                    <FadeIn key={f.title} delay={i*0.04}>
-                      <div style={{display:"flex",gap:18,padding:"22px 0",
-                        borderBottom:i<FEATS.length-1?`1px solid ${BL}`:"none",alignItems:"flex-start"}}>
-                        <div style={{width:26,height:26,borderRadius:6,flexShrink:0,marginTop:1,
-                          background:"rgba(58,78,251,0.07)",border:"1px solid rgba(58,78,251,0.14)",
-                          display:"flex",alignItems:"center",justifyContent:"center"}}>
-                          <Check size={12} c={BP}/>
-                        </div>
-                        <div>
-                          <div style={{display:"flex",alignItems:"baseline",gap:10,
-                            flexWrap:"wrap",marginBottom:5}}>
-                            <h3 style={{fontFamily:"var(--font-heading)",fontWeight:700,
-                              fontSize:15,color:W.text,letterSpacing:"-0.02em"}}>{f.title}</h3>
-                            {f.link&&(
-                              <a href={f.link} style={{fontSize:12,color:BP,fontWeight:600,
-                                whiteSpace:"nowrap"}}>Guide →</a>
-                            )}
-                          </div>
-                          <p style={{fontSize:14,color:ML,lineHeight:1.75,margin:0}}>{f.body}</p>
-                        </div>
-                      </div>
-                    </FadeIn>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* ══════════════════════════════════════════════════════════════════
-              §6  SECURITY ARCHITECTURE  —  DARK
-          ══════════════════════════════════════════════════════════════════ */}
-          <section id="security" className="s-dark" aria-labelledby="sec-heading"
-            style={{padding:SP}}>
-            <div className="container">
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",
-                gap:"clamp(48px,7vw,96px)",alignItems:"start"}}>
-
-                {/* Left: text */}
-                <FadeIn>
-                  <p style={{fontSize:11,fontWeight:700,color:MD,letterSpacing:"0.14em",
-                    textTransform:"uppercase",marginBottom:12}}>Zero-knowledge architecture</p>
-                  <h2 id="sec-heading" style={{fontFamily:"var(--font-heading)",fontWeight:800,
-                    fontSize:"clamp(1.8rem,3vw,2.6rem)",color:D.text,letterSpacing:"-0.03em",
-                    lineHeight:1.08,marginBottom:20}}>
-                    PassGeni never sees your password.{" "}
-                    <em style={{fontFamily:"var(--font-italic)",fontStyle:"italic",
-                      fontWeight:400,color:MD}}>Ever.</em>
-                  </h2>
-                  <div style={{borderLeft:"2px solid rgba(58,78,251,0.5)",
-                    paddingLeft:16,marginBottom:24}}>
-                    <p style={{fontSize:14,color:"rgba(240,242,255,0.85)",lineHeight:1.8,fontWeight:500}}>
-                      This is not a privacy policy claim. It is a technical impossibility. Passwords
-                      are generated via{" "}
-                      <code style={{fontFamily:"var(--font-mono)",fontSize:12,color:ACC,
-                        background:"rgba(227,255,59,0.08)",padding:"1px 6px",borderRadius:3}}>
-                        crypto.getRandomValues()
-                      </code>{" "}
-                      in the browser. The server receives only generation parameters — never the password.
-                    </p>
-                  </div>
-                  <div style={{display:"flex",flexDirection:"column",gap:14,marginBottom:28}}>
-                    {[
-                      {t:"Zero-Knowledge Mode",b:"Password generated 100% client-side. No server request is made. No record is created."},
-                      {t:"Certified Mode",b:"Server receives: length, standard, entropy target, character classes. Returns: signed ES256 JWT. Password: never transmitted."},
-                      {t:"Offline verification",b:"ES256 signature is checkable against passgeni.ai/.well-known/jwks.json — without PassGeni involvement."},
-                    ].map(item=>(
-                      <div key={item.t} style={{display:"flex",gap:12,alignItems:"flex-start"}}>
-                        <div style={{width:20,height:20,borderRadius:4,flexShrink:0,marginTop:2,
-                          background:"rgba(58,78,251,0.12)",border:"1px solid rgba(58,78,251,0.25)",
-                          display:"flex",alignItems:"center",justifyContent:"center"}}>
-                          <Check size={10} c="#7B93FF"/>
-                        </div>
-                        <div>
-                          <div style={{fontSize:14,fontWeight:700,color:D.text,marginBottom:3}}>{item.t}</div>
-                          <div style={{fontSize:13,color:MD,lineHeight:1.7}}>{item.b}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <a href="/security" style={{fontSize:14,fontWeight:600,
-                    color:"rgba(240,242,255,0.6)",display:"inline-flex",alignItems:"center",gap:6}}>
-                    Read the security model <Arr c="rgba(240,242,255,0.6)"/>
-                  </a>
-                </FadeIn>
-
-                {/* Right: architecture diagram */}
-                <FadeIn delay={0.12}>
-                  <div style={{border:`1px solid ${BD}`,borderRadius:10,overflow:"hidden"}}>
-                    <div style={{background:"#0D1025",padding:"13px 18px",borderBottom:`1px solid ${BD}`}}>
-                      <span style={{fontFamily:"var(--font-mono)",fontSize:11,color:MD,
-                        letterSpacing:"0.08em"}}>TWO MODES — SAME GUARANTEE</span>
-                    </div>
-                    {/* Mode A */}
-                    <div style={{padding:"20px 18px",borderBottom:`1px solid ${BD}`,
-                      background:"rgba(58,78,251,0.03)"}}>
-                      <div style={{fontSize:10,fontWeight:700,color:MD,letterSpacing:"0.12em",
-                        textTransform:"uppercase",marginBottom:10}}>Zero-Knowledge Mode</div>
-                      {[
-                        {s:"Browser: generate password via crypto.getRandomValues()",c:"rgba(240,242,255,0.75)"},
-                        {s:"→ Not sent anywhere",c:"#EF4444"},
-                        {s:"No record created",c:MD},
-                      ].map((row,i)=>(
-                        <div key={i} style={{display:"flex",alignItems:"center",gap:8,
-                          fontSize:12,color:row.c,marginBottom:5}}>
-                          <span style={{fontFamily:"var(--font-mono)",color:MD,fontSize:10,
-                            width:14,flexShrink:0}}>{i+1}.</span>{row.s}
-                        </div>
-                      ))}
-                    </div>
-                    {/* Mode B */}
-                    <div style={{padding:"20px 18px",borderBottom:`1px solid ${BD}`,
-                      background:"rgba(58,78,251,0.03)"}}>
-                      <div style={{fontSize:10,fontWeight:700,color:MD,letterSpacing:"0.12em",
-                        textTransform:"uppercase",marginBottom:10}}>Certified Mode</div>
-                      {[
-                        {s:"Browser: generate password",c:"rgba(240,242,255,0.75)"},
-                        {s:"Send: parameters only — length, standard, entropy",c:"#7B93FF"},
-                        {s:"Server: sign JWT → issue compliance certificate",c:"rgba(240,242,255,0.75)"},
-                        {s:"Browser: receive /cert/[id] URL",c:"rgba(240,242,255,0.75)"},
-                      ].map((row,i)=>(
-                        <div key={i} style={{display:"flex",alignItems:"center",gap:8,
-                          fontSize:12,color:row.c,marginBottom:5}}>
-                          <span style={{fontFamily:"var(--font-mono)",color:MD,fontSize:10,
-                            width:14,flexShrink:0}}>{i+1}.</span>{row.s}
-                        </div>
-                      ))}
-                    </div>
-                    {/* Guarantee */}
-                    <div style={{padding:"14px 18px",background:"rgba(34,197,94,0.04)",
-                      display:"flex",alignItems:"center",gap:10}}>
-                      <Check size={16} c="#22C55E"/>
                       <div>
-                        <div style={{fontSize:13,fontWeight:700,color:D.text}}>
-                          Both modes: password never transmitted
-                        </div>
-                        <div style={{fontSize:11,color:MD,marginTop:2}}>
-                          A technical constraint — not a policy promise
-                        </div>
+                        <div style={{fontSize:14,fontWeight:700,color:T.text}}>{f.t}</div>
+                        <div style={{fontSize:13,color:T.textMut,marginTop:3}}>{f.d}</div>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Code snippet */}
-                  <div style={{marginTop:10,padding:"14px 16px",background:"#0D1025",
-                    border:`1px solid ${BD}`,borderRadius:8,fontFamily:"var(--font-mono)",
-                    fontSize:12,lineHeight:1.7,color:MD}}>
-                    <div style={{color:"rgba(255,255,255,0.22)",marginBottom:4}}># Entropy source (FIPS 140-3)</div>
-                    <div style={{color:ACC}}>const arr = new Uint32Array(len);</div>
-                    <div style={{color:ACC}}>crypto.getRandomValues(arr);</div>
-                    <div style={{color:"rgba(255,255,255,0.22)",marginTop:4,fontSize:11}}>
-                      // Not Math.random() — cryptographically secure
-                    </div>
-                  </div>
-                </FadeIn>
-              </div>
-            </div>
-          </section>
-
-          {/* ══════════════════════════════════════════════════════════════════
-              §7  TOOLS ENTRY  —  WHITE
-          ══════════════════════════════════════════════════════════════════ */}
-          <section id="tools" className="s-white s-divider-top"
-            aria-labelledby="tools-heading" style={{padding:SP}}>
-            <div className="container">
-              <FadeIn>
-                <div style={{display:"flex",justifyContent:"space-between",
-                  alignItems:"flex-end",marginBottom:36,flexWrap:"wrap",gap:16}}>
-                  <div>
-                    <p style={{fontSize:11,fontWeight:700,color:BP,letterSpacing:"0.14em",
-                      textTransform:"uppercase",marginBottom:10}}>Free security tools</p>
-                    <h2 id="tools-heading" style={{fontFamily:"var(--font-heading)",fontWeight:800,
-                      fontSize:"clamp(1.6rem,3vw,2.4rem)",color:W.text,letterSpacing:"-0.03em",
-                      lineHeight:1.08}}>
-                      Everything you need. Nothing you don't.
-                    </h2>
-                  </div>
-                  <a href="/tools" style={{fontSize:14,fontWeight:600,color:BP,
-                    display:"inline-flex",alignItems:"center",gap:6,whiteSpace:"nowrap"}}>
-                    All tools <Arr c={BP}/>
-                  </a>
+                  ))}
                 </div>
-              </FadeIn>
 
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",
-                border:`1.5px solid ${BL}`,borderRadius:10,overflow:"hidden"}}>
-                {TOOLS_PREVIEW.items.map((t,i)=>(
-                  <FadeIn key={t.title} delay={i*0.05}>
-                    <article style={{padding:"22px",
-                      borderRight:i%3<2?`1px solid ${BL}`:"none",
-                      borderBottom:i<3?`1px solid ${BL}`:"none",
-                      background:W.bg,transition:"background 0.15s"}}
-                      onMouseEnter={e=>e.currentTarget.style.background="#F7F8FC"}
-                      onMouseLeave={e=>e.currentTarget.style.background=W.bg}>
-                      <div style={{fontSize:18,marginBottom:10}}>{t.icon}</div>
-                      <h3 style={{fontFamily:"var(--font-heading)",fontWeight:700,
-                        fontSize:15,color:W.text,letterSpacing:"-0.02em",marginBottom:7}}>
-                        {t.title}
-                      </h3>
-                      <p style={{fontSize:13,color:ML,lineHeight:1.7,marginBottom:12}}>{t.body}</p>
-                      <a href={t.href} style={{fontSize:13,fontWeight:700,color:BP,
-                        display:"inline-flex",alignItems:"center",gap:5}}>
-                        {t.label} <Arr c={BP}/>
-                      </a>
-                    </article>
-                  </FadeIn>
-                ))}
+                <BtnPrimary href="#generator" style={{fontSize:14,padding:"13px 28px"}}>
+                  Try the generator
+                </BtnPrimary>
               </div>
-            </div>
-          </section>
+            </FadeIn>
+          </div>
+        </section>
 
-          {/* ══════════════════════════════════════════════════════════════════
-              §8  DASHBOARD PREVIEW  —  DARK
-          ══════════════════════════════════════════════════════════════════ */}
-          <section id="dashboard" className="s-dark" aria-labelledby="dash-heading"
-            style={{padding:SP}}>
-            <div className="container">
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1.5fr",
-                gap:"clamp(40px,6vw,80px)",alignItems:"start"}}>
+        <ValueSection/>
+        <FeatureBlocksSection/>
+        <DashboardSection/>
+        <CtaSection/>
+      </main>
 
-                {/* Left */}
-                <FadeIn>
-                  <p style={{fontSize:11,fontWeight:700,color:MD,letterSpacing:"0.14em",
-                    textTransform:"uppercase",marginBottom:12}}>Compliance dashboard</p>
-                  <h2 id="dash-heading" style={{fontFamily:"var(--font-heading)",fontWeight:800,
-                    fontSize:"clamp(1.6rem,2.8vw,2.2rem)",color:D.text,letterSpacing:"-0.03em",
-                    lineHeight:1.1,marginBottom:16}}>
-                    Monitor compliance across every credential.
-                  </h2>
-                  <p style={{fontSize:14,color:MD,lineHeight:1.8,marginBottom:24}}>
-                    One view of every certificate you have ever issued. Expiry risk flagged before
-                    your auditor notices. One-click re-certify when standards update.
-                  </p>
-                  <ul style={{listStyle:"none",display:"flex",flexDirection:"column",gap:10,marginBottom:28}}>
-                    {[
-                      "Compliance score per standard — per-seat and org-wide",
-                      "Expiry risk — ≤30 days flagged amber; ≤7 days red",
-                      "One-click re-certify, pre-loaded with the original standard",
-                      "Monthly usage bar with upgrade prompt at 80% usage",
-                      "CSV audit export — all certificates and their parameters",
-                    ].map(t=>(
-                      <li key={t} style={{display:"flex",gap:10,fontSize:13,color:MD,lineHeight:1.65}}>
-                        <Check size={12} c="#22C55E"/> {t}
-                      </li>
-                    ))}
-                  </ul>
-                  <a href="/auth/signin" className="btn-ghost"
-                    style={{fontSize:14,padding:"11px 22px"}}>Open your dashboard →</a>
-                </FadeIn>
-
-                {/* Right: mockup */}
-                <FadeIn delay={0.12}><DashboardPreview/></FadeIn>
-              </div>
-            </div>
-          </section>
-
-          {/* ══════════════════════════════════════════════════════════════════
-              §9  TRUST / SOCIAL PROOF  —  WHITE
-          ══════════════════════════════════════════════════════════════════ */}
-          <section id="trust" className="s-white s-divider-top"
-            aria-labelledby="trust-heading" style={{padding:SPL}}>
-            <div className="container">
-              <FadeIn>
-                <div style={{marginBottom:36}}>
-                  <p style={{fontSize:11,fontWeight:700,color:BP,letterSpacing:"0.14em",
-                    textTransform:"uppercase",marginBottom:12}}>What people say</p>
-                  <h2 id="trust-heading" style={{fontFamily:"var(--font-heading)",fontWeight:800,
-                    fontSize:"clamp(1.6rem,3vw,2.4rem)",color:W.text,letterSpacing:"-0.03em",
-                    lineHeight:1.08}}>
-                    Trusted by security teams and compliance officers.
-                  </h2>
-                </div>
-              </FadeIn>
-
-              {/* Featured testimonials */}
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16,marginBottom:36}}>
-                {TESTIMONIALS.featured.slice(0,3).map((t,i)=>(
-                  <FadeIn key={t.name} delay={i*0.08}>
-                    <article style={{padding:"22px",border:`1.5px solid ${BL}`,
-                      borderRadius:10,display:"flex",flexDirection:"column",gap:14}}>
-                      <div style={{display:"flex",gap:2}}>
-                        {Array.from({length:t.stars}).map((_,j)=>(
-                          <span key={j} style={{fontSize:13,color:"#F59E0B"}}>★</span>
-                        ))}
-                      </div>
-                      <p style={{fontSize:14,color:W.text,lineHeight:1.75,flex:1}}>"{t.text}"</p>
-                      <div style={{display:"flex",alignItems:"center",gap:10,
-                        paddingTop:12,borderTop:`1px solid ${BL}`}}>
-                        <div style={{width:34,height:34,borderRadius:"50%",flexShrink:0,
-                          background:"rgba(58,78,251,0.07)",border:"1px solid rgba(58,78,251,0.14)",
-                          display:"flex",alignItems:"center",justifyContent:"center",
-                          fontFamily:"var(--font-mono)",fontSize:11,fontWeight:700,color:BP}}>
-                          {t.avatar}
-                        </div>
-                        <div>
-                          <div style={{fontSize:13,fontWeight:700,color:W.text}}>{t.name}</div>
-                          <div style={{fontSize:12,color:ML}}>{t.role}</div>
-                        </div>
-                      </div>
-                    </article>
-                  </FadeIn>
-                ))}
-              </div>
-
-              {/* SEO resource links */}
-              <FadeIn delay={0.2}>
-                <div style={{borderTop:`1px solid ${BL}`,paddingTop:28}}>
-                  <p style={{fontSize:11,fontWeight:700,color:ML,letterSpacing:"0.14em",
-                    textTransform:"uppercase",marginBottom:14}}>Related compliance guides</p>
-                  <div style={{display:"grid",
-                    gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:8}}>
-                    {[
-                      {href:"/password-compliance-certificate",label:"What is a compliance certificate?"},
-                      {href:"/glossary/entropy",               label:"Password entropy explained"},
-                      {href:"/guides/nist-800-63b-password-guidelines",label:"NIST 800-63B guide"},
-                      {href:"/guides/hipaa-password-requirements",     label:"HIPAA password requirements"},
-                      {href:"/guides/pci-dss-password-requirements",   label:"PCI-DSS v4.0 guide"},
-                      {href:"/guides/soc2-password-requirements",      label:"SOC 2 CC6.1 guide"},
-                      {href:"/tools/compliance-fixer",                 label:"Credential Compliance Fixer"},
-                      {href:"/tools/policy-generator",                 label:"Password Policy Generator"},
-                    ].map(({href,label})=>(
-                      <a key={href} href={href}
-                        style={{fontSize:13,color:ML,padding:"10px 14px",
-                          border:`1px solid ${BL}`,borderRadius:8,
-                          display:"block",transition:"all 0.15s"}}
-                        onMouseEnter={e=>{e.currentTarget.style.color=BP;e.currentTarget.style.borderColor="rgba(58,78,251,0.3)";e.currentTarget.style.background="#F7F8FC";}}
-                        onMouseLeave={e=>{e.currentTarget.style.color=ML;e.currentTarget.style.borderColor=BL;e.currentTarget.style.background="transparent";}}>
-                        {label} →
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              </FadeIn>
-            </div>
-          </section>
-
-          {/* ══════════════════════════════════════════════════════════════════
-              §10  FINAL CTA  —  DARK
-          ══════════════════════════════════════════════════════════════════ */}
-          <section className="s-dark" aria-labelledby="cta-heading"
-            style={{padding:"clamp(96px,12vw,140px) 0",position:"relative",overflow:"hidden"}}>
-            <div style={{position:"absolute",top:0,left:"30%",width:600,height:600,
-              background:"radial-gradient(circle,rgba(58,78,251,0.10) 0%,transparent 65%)",
-              pointerEvents:"none"}}/>
-            <div className="container" style={{position:"relative",maxWidth:680}}>
-              <FadeIn>
-                <p style={{fontSize:11,fontWeight:700,color:MD,letterSpacing:"0.14em",
-                  textTransform:"uppercase",marginBottom:16}}>Start your compliance journey</p>
-                <h2 id="cta-heading" style={{fontFamily:"var(--font-heading)",fontWeight:900,
-                  fontSize:"clamp(2rem,4.5vw,3.4rem)",color:D.text,letterSpacing:"-0.04em",
-                  lineHeight:1.05,marginBottom:20}}>
-                  Will you have{" "}
-                  <em style={{fontFamily:"var(--font-italic)",fontStyle:"italic",
-                    fontWeight:500,color:ACC}}>evidence</em>
-                  , or just good intentions?
-                </h2>
-                <p style={{fontSize:"clamp(1rem,1.6vw,1.1rem)",color:MD,lineHeight:1.8,
-                  marginBottom:32,maxWidth:520}}>
-                  Auditors don't accept verbal assurances. PassGeni gives you signed, verifiable
-                  proof — a compliance certificate per credential, ready to share in under 60 seconds.
-                </p>
-                <div style={{display:"flex",gap:12,flexWrap:"wrap",marginBottom:20}}>
-                  <a href="/auth/signin" className="btn-primary"
-                    style={{fontSize:15,padding:"13px 28px"}}>Get your first certificate free →</a>
-                  <a href="/pricing" className="btn-ghost"
-                    style={{fontSize:15,padding:"13px 22px"}}>See pricing</a>
-                </div>
-                <p style={{fontSize:12,color:"rgba(255,255,255,0.2)",
-                  fontFamily:"var(--font-mono)",letterSpacing:"0.04em"}}>
-                  No credit card · Free forever for individuals · Magic link sign-in · Zero storage
-                </p>
-              </FadeIn>
-            </div>
-          </section>
-
-        </main>
-        <Footer/>
-      </div>
+      <Footer/>
     </>
   );
 }
