@@ -282,6 +282,29 @@ export default function AuditToolPage() {
               Replace weak passwords →
             </motion.a>
           </div>
+
+          {/* Compliance linkage */}
+          <div style={{ marginTop: 40, background: "#0a0a0c", border: "1px solid #1e1e22", borderRadius: 14, padding: "24px 28px" }}>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#555", letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 14 }}>
+              Audit found weak credentials?
+            </div>
+            <p style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "#777", lineHeight: 1.8, marginBottom: 18 }}>
+              Use the{" "}
+              <a href="/tools/compliance-fixer" style={{ color: "#C8FF00", textDecoration: "none" }}>Credential Compliance Fixer</a>{" "}
+              to automatically generate compliant replacements and issue{" "}
+              <a href="/password-compliance-certificate" style={{ color: "#C8FF00", textDecoration: "none" }}>ES256-signed compliance certificates</a>{" "}
+              for each one. Give auditors a certificate URL per credential instead of a spreadsheet.
+              {" "}<a href="/glossary/password-compliance" style={{ color: "#888", textDecoration: "none", fontSize: 13 }}>What is password compliance? →</a>
+            </p>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <a href="/tools/compliance-fixer" style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#C8FF00", background: "rgba(200,255,0,0.06)", border: "1px solid rgba(200,255,0,0.2)", borderRadius: 8, padding: "9px 16px", textDecoration: "none" }}>
+                Fix & certify →
+              </a>
+              <a href="/tools/policy-generator" style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#888", background: "#050507", border: "1px solid #1a1a1a", borderRadius: 8, padding: "9px 16px", textDecoration: "none" }}>
+                Generate written policy →
+              </a>
+            </div>
+          </div>
         </>
       )}
     </ToolPage>

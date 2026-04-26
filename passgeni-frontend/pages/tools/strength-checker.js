@@ -210,12 +210,38 @@ export default function StrengthCheckerPage() {
           { q: "What crack time estimates are based on?", a: "Estimates assume a dedicated attacker using a modern GPU cluster capable of approximately 10 billion guesses per second — the realistic threat model for offline attacks on stolen credential databases. Online attacks are limited to a few thousand per second by rate limiting." },
           { q: "Why might a long password still score poorly?", a: "Length alone is not enough if the characters are predictable. 'aaaaaaaaaaaaaaaa' is 16 characters but has near-zero entropy because it contains only one character. Good passwords combine length with genuine randomness across multiple character classes." },
           { q: "What is the DNA Score?", a: "PassGeni's proprietary 7-point quality audit. It checks length thresholds (12+ and 16+ characters), presence of uppercase, lowercase, numbers, and symbols, and absence of triple-repeat patterns. Each check is weighted by security impact and combined into a 0–100 score graded A+ to C." },
+          { q: "Does this tool prove compliance for an audit?", a: "Strength analysis shows whether a credential meets quality thresholds, but does not constitute audit evidence on its own. To obtain machine-verifiable proof for HIPAA, PCI-DSS, SOC 2, or ISO 27001 auditors, use the Credential Compliance Fixer and issue an ES256-signed compliance certificate." },
         ].map(({ q, a }, i) => (
           <div key={i} style={{ borderBottom: "1px solid #111", padding: "20px 0" }}>
             <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 16, color: "#fff", marginBottom: 10 }}>{q}</h3>
             <p style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "#aaa", lineHeight: 1.8, margin: 0 }}>{a}</p>
           </div>
         ))}
+      </div>
+
+      {/* Compliance linkage */}
+      <div style={{ marginTop: 48, background: "#0a0a0c", border: "1px solid #1e1e22", borderRadius: 14, padding: "24px 28px" }}>
+        <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#555", letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 14 }}>
+          From analysis to proof
+        </div>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "#777", lineHeight: 1.8, marginBottom: 18 }}>
+          Strength analysis tells you a credential is strong. A{" "}
+          <a href="/password-compliance-certificate" style={{ color: "#C8FF00", textDecoration: "none" }}>compliance certificate</a>
+          {" "}tells your auditor it was generated correctly. Use the{" "}
+          <a href="/tools/compliance-fixer" style={{ color: "#C8FF00", textDecoration: "none" }}>Credential Compliance Fixer</a>{" "}
+          to check this credential against NIST, HIPAA, PCI-DSS, SOC 2, ISO 27001, or FIPS 140-3 and issue an ES256-signed certificate.
+        </p>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <a href="/tools/compliance-fixer" style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#C8FF00", background: "rgba(200,255,0,0.06)", border: "1px solid rgba(200,255,0,0.2)", borderRadius: 8, padding: "9px 16px", textDecoration: "none" }}>
+            Compliance Fixer →
+          </a>
+          <a href="/glossary/entropy" style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#888", background: "#050507", border: "1px solid #1a1a1a", borderRadius: 8, padding: "9px 16px", textDecoration: "none" }}>
+            What is entropy? →
+          </a>
+          <a href="/guides/nist-800-63b-password-guidelines" style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#888", background: "#050507", border: "1px solid #1a1a1a", borderRadius: 8, padding: "9px 16px", textDecoration: "none" }}>
+            NIST 800-63B guide →
+          </a>
+        </div>
       </div>
     </ToolPage>
   );

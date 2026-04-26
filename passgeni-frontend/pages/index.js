@@ -1055,6 +1055,34 @@ export default function HomePage() {
             </div>
           </section>
 
+          {/* ── SEO: Resource links ─────────────────────────── */}
+          <section style={{ maxWidth: 900, margin: "0 auto", padding: "0 var(--page-pad) 80px" }}>
+            <div style={{ borderTop: "1px solid rgba(200,255,0,0.07)", paddingTop: 48, display: "flex", flexDirection: "column", gap: 24 }}>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "rgba(200,255,0,0.3)", letterSpacing: "0.18em", textTransform: "uppercase" }}>
+                Learn more
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 }}>
+                {[
+                  { href: "/password-compliance-certificate", label: "What is a compliance certificate?" },
+                  { href: "/glossary/entropy", label: "Password entropy explained" },
+                  { href: "/guides/nist-800-63b-password-guidelines", label: "NIST 800-63B guide" },
+                  { href: "/guides/hipaa-password-requirements", label: "HIPAA password requirements" },
+                  { href: "/guides/pci-dss-password-requirements", label: "PCI-DSS v4.0 guide" },
+                  { href: "/guides/soc2-password-requirements", label: "SOC 2 CC6.1 guide" },
+                  { href: "/tools/compliance-fixer", label: "Credential Compliance Fixer" },
+                  { href: "/tools/policy-generator", label: "Password Policy Generator" },
+                ].map(({ href, label }) => (
+                  <a key={href} href={href} style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none", padding: "10px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: 8, transition: "color 0.15s, border-color 0.15s" }}
+                    onMouseEnter={e => { e.currentTarget.style.color = "rgba(200,255,0,0.8)"; e.currentTarget.style.borderColor = "rgba(200,255,0,0.15)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.35)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.04)"; }}
+                  >
+                    {label} →
+                  </a>
+                ))}
+              </div>
+            </div>
+          </section>
+
         </main>
         <Footer />
       </div>

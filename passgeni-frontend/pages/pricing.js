@@ -336,6 +336,34 @@ export default function PricingPage() {
             </div>
           </section>
 
+          {/* ── SEO: Compliance guides ──────────────────────── */}
+          <section style={{ maxWidth: 900, margin: "0 auto", padding: "0 var(--page-pad) 64px" }}>
+            <div style={{ borderTop: "1px solid rgba(200,255,0,0.07)", paddingTop: 40 }}>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "rgba(200,255,0,0.3)", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 20 }}>
+                Compliance resources
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {[
+                  { href: "/password-compliance-certificate", label: "What is a compliance certificate?" },
+                  { href: "/guides/hipaa-password-requirements", label: "HIPAA requirements" },
+                  { href: "/guides/pci-dss-password-requirements", label: "PCI-DSS v4.0" },
+                  { href: "/guides/soc2-password-requirements", label: "SOC 2 CC6.1" },
+                  { href: "/guides/nist-800-63b-password-guidelines", label: "NIST 800-63B" },
+                  { href: "/guides/iso-27001-password-requirements", label: "ISO 27001" },
+                  { href: "/glossary/password-compliance", label: "Password compliance glossary" },
+                  { href: "/glossary/audit-trail", label: "Audit trail glossary" },
+                ].map(({ href, label }) => (
+                  <a key={href} href={href} style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "rgba(255,255,255,0.3)", textDecoration: "none", padding: "7px 12px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: 7, transition: "color 0.15s" }}
+                    onMouseEnter={e => e.currentTarget.style.color = "rgba(200,255,0,0.7)"}
+                    onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.3)"}
+                  >
+                    {label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </section>
+
         </main>
         <Footer />
       </div>

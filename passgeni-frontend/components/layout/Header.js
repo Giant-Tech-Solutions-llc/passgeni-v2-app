@@ -50,11 +50,11 @@ const GUIDES_MENU={
       {label:"Finance & Legal",href:"/guides/finance-legal-password-security"},
       {label:"Educators & HR",href:"/guides/education-hr-password-security"},
     ]},
-    {label:"Fundamentals",items:[
+    {label:"Reference",items:[
       {label:"What is Password Entropy",href:"/guides/what-is-password-entropy"},
       {label:"Passphrase vs Password",href:"/guides/passphrase-vs-password"},
-      {label:"Zero-Knowledge Security",href:"/guides/zero-knowledge-security"},
-      {label:"Post-Quantum Passwords",href:"/guides/post-quantum-passwords"},
+      {label:"Compliance Certificate Explained",href:"/password-compliance-certificate"},
+      {label:"Security Glossary",href:"/glossary"},
     ]},
   ],
   featured:{
@@ -250,7 +250,7 @@ function GuidesDropdown(){
           ))}
         </div>
         <div style={{borderTop:"1px solid rgba(255,255,255,.05)",paddingTop:14,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
-          <span style={{fontFamily:"var(--font-body)",fontSize:11,color:"#333"}}>Free compliance guides · Updated 2024</span>
+          <span style={{fontFamily:"var(--font-body)",fontSize:11,color:"#333"}}>Free compliance guides · Updated 2026</span>
           <a href={GUIDES_MENU.footer.href}
             style={{fontFamily:"var(--font-body)",fontSize:12,fontWeight:600,color:"rgba(200,255,0,.7)",textDecoration:"none",transition:"color .15s"}}
             onMouseEnter={e=>e.currentTarget.style.color="#C8FF00"}
