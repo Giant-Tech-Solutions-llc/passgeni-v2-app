@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Mono:ital,wght@0,400;0,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500;1,6..72,600&family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
 
 :root{
   /* ── Brand ─────────────────────────────────── */
@@ -51,8 +51,9 @@
   --danger:#EF4444;
 
   /* ── Fonts ─────────────────────────────────── */
-  --font-heading:'Syne',sans-serif;
-  --font-body:'DM Sans',sans-serif;
+  --font-heading:'Outfit',sans-serif;
+  --font-italic:'Newsreader',serif;
+  --font-body:'Outfit',sans-serif;
   --font-mono:'Space Mono',monospace;
 
   /* ── Spacing ───────────────────────────────── */
@@ -156,10 +157,13 @@ input[type="range"]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;b
 .container{width:100%;max-width:var(--max-w);margin:0 auto;padding:0 var(--pad)}
 
 /* Section rhythm helpers */
-.s-white{background:#FFFFFF}
-.s-off{background:#F7F8FC}
-.s-dark{background:var(--bg-dark)}
-.s-dark-2{background:var(--bg-dark-elevated)}
+.s-white{background:#FFFFFF;color:#0B0D17}
+.s-off{background:#F7F8FC;color:#0B0D17}
+.s-dark{background:var(--bg-dark);color:#F0F2FF}
+.s-dark-2{background:var(--bg-dark-elevated);color:#F0F2FF}
+/* White section typography resets */
+.s-white h1,.s-white h2,.s-white h3,.s-white h4,.s-white p,
+.s-off h1,.s-off h2,.s-off h3,.s-off h4,.s-off p{color:inherit}
 
 /* Dividers */
 .s-divider-top{border-top:1px solid var(--border-light)}
