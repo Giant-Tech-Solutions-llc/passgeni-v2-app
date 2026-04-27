@@ -86,13 +86,13 @@ function Card({ label, title, body, metric, metricSub, children, style }) {
         ...style,
       }}>
       {label && <Label>{label}</Label>}
-      {title && <div style={{fontSize:14,fontWeight:700,color:C.text,lineHeight:1.35}}>{title}</div>}
-      {body  && <div style={{fontSize:13,color:C.textSub,lineHeight:1.7,flex:1}}>{body}</div>}
+      {title && <div style={{fontSize:16,fontWeight:700,color:C.text,lineHeight:1.3,fontFamily:"'Bricolage Grotesque',sans-serif"}}>{title}</div>}
+      {body  && <div style={{fontSize:14,color:C.textSub,lineHeight:1.75,flex:1}}>{body}</div>}
       {children}
       {metric && (
-        <div style={{marginTop:8,paddingTop:12,borderTop:`1px solid ${C.border}`}}>
-          <div style={{fontSize:26,fontWeight:900,color:C.blue,letterSpacing:"-0.04em",fontFamily:"'Outfit',sans-serif",lineHeight:1}}>{metric}</div>
-          {metricSub && <div style={{fontSize:11,color:C.textMut,marginTop:3}}>{metricSub}</div>}
+        <div style={{marginTop:8,paddingTop:14,borderTop:`1px solid ${C.border}`}}>
+          <div style={{fontSize:30,fontWeight:900,color:C.blue,letterSpacing:"-0.05em",fontFamily:"'Bricolage Grotesque',sans-serif",lineHeight:1}}>{metric}</div>
+          {metricSub && <div style={{fontSize:12,color:C.textMut,marginTop:4}}>{metricSub}</div>}
         </div>
       )}
     </div>
@@ -163,8 +163,8 @@ function Hero() {
 
           <FI d={0.06}>
             <h1 style={{
-              fontFamily:"'Outfit',sans-serif",fontWeight:900,
-              fontSize:"clamp(52px,5.5vw,68px)",
+              fontFamily:"'Bricolage Grotesque',sans-serif",fontWeight:900,
+              fontSize:"clamp(58px,6vw,76px)",
               letterSpacing:"-0.05em",lineHeight:0.96,
               color:C.text,marginBottom:24,maxWidth:540,
             }}>
@@ -207,78 +207,89 @@ function Hero() {
 
         {/* ── Right: layered product cards ── */}
         <FI d={0.1} className="hero-cards-col">
-          <div style={{ position:"relative", height:480 }}>
+          <div style={{ position:"relative", height:520, paddingRight:8 }}>
 
-            {/* Back card — Certificate */}
+            {/* Card 1 — Certificate (back, rotated) */}
             <div style={{
-              position:"absolute",top:0,left:20,right:-12,
-              background:C.elevated,border:`1px solid ${C.border}`,borderRadius:14,
-              boxShadow:C.sh3,padding:"20px 22px",zIndex:1,
-              transform:"rotate(-1.8deg)",
+              position:"absolute",top:0,left:32,right:-16,
+              background:C.elevated,border:`1px solid ${C.border}`,borderRadius:16,
+              boxShadow:"0 16px 48px rgba(16,24,40,0.12)",
+              padding:"22px 24px",zIndex:1,
+              transform:"rotate(-2.5deg) translateY(0)",
             }}>
-              <Label>Compliance Certificate</Label>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:16 }}>
-                <div>
-                  <div style={{ fontSize:13, fontWeight:700, color:C.text, marginBottom:4 }}>PG-8841 · HIPAA §164.312</div>
-                  <div style={{ fontSize:11, color:C.textMut, fontFamily:C.mono }}>Issued 2024-01-15 · Valid 90 days</div>
-                </div>
-                <span style={{ fontSize:10, fontWeight:700, color:C.green, background:C.greenBg, padding:"3px 10px", borderRadius:20 }}>ACTIVE</span>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+                <Label>Compliance Certificate · PG-8841</Label>
+                <span style={{ fontSize:10,fontWeight:700,color:C.green,background:C.greenBg,padding:"3px 10px",borderRadius:20,flexShrink:0 }}>VERIFIED</span>
               </div>
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10 }}>
-                {[{l:"Entropy",v:"128 bits"},{l:"DNA Score",v:"A+"},{l:"RNG",v:"FIPS 140-3"}].map(s=>(
-                  <div key={s.l} style={{ background:C.surf2, borderRadius:8, padding:"10px 12px" }}>
-                    <div style={{ fontSize:10, color:C.textMut, marginBottom:4 }}>{s.l}</div>
-                    <div style={{ fontSize:14, fontWeight:800, color:C.text, fontFamily:"'Outfit',sans-serif", letterSpacing:"-0.03em" }}>{s.v}</div>
+              <div style={{ fontSize:12, color:C.textMut, fontFamily:C.mono, marginBottom:14 }}>
+                HIPAA §164.312 · Issued 2024-01-15 · Expires 2024-04-15
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:8 }}>
+                {[{l:"Entropy",v:"128 bits",hi:true},{l:"DNA Score",v:"A+",hi:true},{l:"RNG Source",v:"FIPS 140-3"},{l:"Sig",v:"ES256"}].map(s=>(
+                  <div key={s.l} style={{ background:s.hi?C.blueSoft:C.surf2, borderRadius:8, padding:"9px 10px" }}>
+                    <div style={{ fontSize:9,color:s.hi?C.blue:C.textMut,marginBottom:3,fontWeight:600 }}>{s.l}</div>
+                    <div style={{ fontSize:13,fontWeight:800,color:s.hi?C.blue:C.text,fontFamily:"'Bricolage Grotesque',sans-serif",letterSpacing:"-0.03em" }}>{s.v}</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Middle card — Generator output */}
+            {/* Card 2 — Generator output (middle, straight) */}
             <div style={{
-              position:"absolute",top:120,left:0,right:0,
-              background:C.elevated,border:`1px solid ${C.border}`,borderRadius:14,
-              boxShadow:C.sh3,padding:"20px 22px",zIndex:2,
+              position:"absolute",top:138,left:0,right:8,
+              background:C.elevated,border:`1px solid ${C.border}`,borderRadius:16,
+              boxShadow:"0 16px 48px rgba(16,24,40,0.10)",
+              padding:"22px 24px",zIndex:2,
             }}>
-              <Label>Generator Output</Label>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+                <Label>Generator Output · Physician</Label>
+                <div style={{ display:"flex",gap:5 }}>
+                  {["#F87171","#FBBF24","#34D399"].map(c=><div key={c} style={{width:8,height:8,borderRadius:"50%",background:c}}/>)}
+                </div>
+              </div>
               <div style={{
-                background:"#0F1222",borderRadius:10,padding:"14px 16px",
-                fontFamily:C.mono,fontSize:13,color:"#E3FF3B",
-                letterSpacing:"0.04em",wordBreak:"break-all",marginBottom:12,
+                background:"#0F1222",borderRadius:10,padding:"13px 16px",
+                fontFamily:C.mono,fontSize:14,color:"#E3FF3B",
+                letterSpacing:"0.06em",wordBreak:"break-all",marginBottom:12,
               }}>
                 C0rt3x#Pr0t0c@l!9Zq
               </div>
-              <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:12 }}>
-                <div style={{ flex:1, height:4, borderRadius:2, background:C.surf2, overflow:"hidden" }}>
-                  <div style={{ width:"88%", height:"100%", borderRadius:2, background:`linear-gradient(90deg,${C.blue},#33A4FA)` }}/>
+              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
+                <div style={{ flex:1, height:5, borderRadius:3, background:C.surf2, overflow:"hidden" }}>
+                  <div style={{ width:"88%",height:"100%",borderRadius:3,background:`linear-gradient(90deg,${C.blue},#33A4FA)` }}/>
                 </div>
-                <span style={{ fontSize:11, fontWeight:700, color:C.blue, whiteSpace:"nowrap", fontFamily:C.mono }}>128 bits</span>
+                <span style={{ fontSize:12,fontWeight:700,color:C.blue,whiteSpace:"nowrap",fontFamily:C.mono }}>128 bits</span>
               </div>
               <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-                {["NIST","HIPAA","PCI-DSS","SOC 2"].map(f=>(
-                  <span key={f} style={{ fontSize:10, fontWeight:700, color:C.green, background:C.greenBg, padding:"2px 9px", borderRadius:20 }}>{f} ✓</span>
+                {["NIST ✓","HIPAA ✓","PCI-DSS ✓","SOC 2 ✓"].map(f=>(
+                  <span key={f} style={{ fontSize:10,fontWeight:700,color:C.green,background:C.greenBg,padding:"2px 9px",borderRadius:20 }}>{f}</span>
                 ))}
               </div>
             </div>
 
-            {/* Front card — Audit snippet */}
+            {/* Card 3 — Audit log (front, slight opposite tilt) */}
             <div style={{
-              position:"absolute",top:300,left:24,right:-8,
-              background:C.elevated,border:`1px solid ${C.border}`,borderRadius:14,
-              boxShadow:C.sh3,padding:"20px 22px",zIndex:3,
-              transform:"rotate(0.8deg)",
+              position:"absolute",top:332,left:20,right:-8,
+              background:C.elevated,border:`1px solid ${C.border}`,borderRadius:16,
+              boxShadow:"0 16px 48px rgba(16,24,40,0.12)",
+              padding:"20px 22px",zIndex:3,
+              transform:"rotate(1.2deg)",
             }}>
-              <Label>Open Audit — Generation Log</Label>
-              <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+                <Label>Open Audit Log</Label>
+                <span style={{ fontSize:10,fontWeight:700,color:C.blue,background:C.blueSoft,padding:"2px 9px",borderRadius:20 }}>COMPLETE</span>
+              </div>
+              <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                 {[
-                  { tag:"RNG", v:"crypto.getRandomValues(Uint32Array)" },
-                  { tag:"POOL", v:"upper + lower + sym + num → 94 chars" },
-                  { tag:"ENT",  v:"H = 20 × log₂(94) = 128.4 bits" },
-                  { tag:"SEED", v:"'cortex' injected (physician)" },
+                  { tag:"RNG",  v:"crypto.getRandomValues(Uint32Array[20])", ok:true },
+                  { tag:"POOL", v:"94 chars · upper+lower+sym+num",          ok:true },
+                  { tag:"ENT",  v:"H = 20 × log₂(94) = 128.4 bits",         ok:true },
+                  { tag:"SEED", v:"'cortex' (physician seed, injected)",      ok:true },
                 ].map(l=>(
-                  <div key={l.tag} style={{ display:"flex", gap:8, alignItems:"baseline" }}>
-                    <span style={{ fontSize:9, fontWeight:700, color:C.blue, background:C.blueSoft, padding:"1px 6px", borderRadius:4, fontFamily:C.mono, flexShrink:0 }}>{l.tag}</span>
-                    <span style={{ fontSize:10, color:C.textSub, fontFamily:C.mono, lineHeight:1.6 }}>{l.v}</span>
+                  <div key={l.tag} style={{ display:"flex",gap:8,alignItems:"center" }}>
+                    <span style={{ fontSize:9,fontWeight:700,color:C.blue,background:C.blueSoft,padding:"2px 7px",borderRadius:4,fontFamily:C.mono,flexShrink:0,minWidth:40,textAlign:"center" }}>{l.tag}</span>
+                    <span style={{ fontSize:10,color:C.textSub,fontFamily:C.mono,lineHeight:1.5,flex:1 }}>{l.v}</span>
+                    <span style={{ fontSize:9,color:C.green,flexShrink:0 }}>●</span>
                   </div>
                 ))}
               </div>
@@ -375,7 +386,7 @@ function HowItWorks() {
         <FI>
           <div style={{ marginBottom:52 }}>
             <Eyebrow>How it works</Eyebrow>
-            <h2 style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:"clamp(32px,4vw,42px)", letterSpacing:"-0.04em", color:C.text, lineHeight:1.06, maxWidth:560 }}>
+            <h2 style={{ fontFamily:"'Bricolage Grotesque',sans-serif", fontWeight:800, fontSize:"clamp(36px,4.2vw,48px)", letterSpacing:"-0.04em", color:C.text, lineHeight:1.06, maxWidth:560 }}>
               Three inputs. One certified password.
             </h2>
           </div>
@@ -568,7 +579,7 @@ function ProductSplit() {
         <FI d={0.1} y={8}>
           <div>
             <Eyebrow>Live generator</Eyebrow>
-            <h2 style={{ fontFamily:"'Outfit',sans-serif",fontWeight:800,fontSize:"clamp(30px,3.8vw,40px)",letterSpacing:"-0.04em",color:C.text,lineHeight:1.06,marginBottom:20,maxWidth:440 }}>
+            <h2 style={{ fontFamily:"'Bricolage Grotesque',sans-serif",fontWeight:800,fontSize:"clamp(34px,4vw,44px)",letterSpacing:"-0.04em",color:C.text,lineHeight:1.06,marginBottom:20,maxWidth:440 }}>
               Generate in 3 seconds.{" "}
               <em style={{fontFamily:"'Newsreader',serif",fontStyle:"italic",fontWeight:600}}>Certify</em>{" "}
               in one click.
@@ -613,7 +624,7 @@ function ValueGrid() {
         <FI>
           <div style={{ marginBottom:52 }}>
             <Eyebrow>Why PassGeni</Eyebrow>
-            <h2 style={{ fontFamily:"'Outfit',sans-serif",fontWeight:800,fontSize:"clamp(32px,4vw,42px)",letterSpacing:"-0.04em",color:C.text,lineHeight:1.06,maxWidth:560 }}>
+            <h2 style={{ fontFamily:"'Bricolage Grotesque',sans-serif",fontWeight:800,fontSize:"clamp(36px,4.2vw,48px)",letterSpacing:"-0.04em",color:C.text,lineHeight:1.06,maxWidth:560 }}>
               What your password{" "}
               <em style={{fontFamily:"'Newsreader',serif",fontStyle:"italic",fontWeight:600}}>actually</em>{" "}
               needs to pass audits.
@@ -728,7 +739,7 @@ function Dashboard() {
           <div style={{ marginBottom:48, display:"flex", justifyContent:"space-between", alignItems:"flex-end", flexWrap:"wrap", gap:16 }}>
             <div>
               <Eyebrow>Compliance dashboard</Eyebrow>
-              <h2 style={{ fontFamily:"'Outfit',sans-serif",fontWeight:800,fontSize:"clamp(30px,3.8vw,40px)",letterSpacing:"-0.04em",color:C.text,lineHeight:1.06,maxWidth:480 }}>
+              <h2 style={{ fontFamily:"'Bricolage Grotesque',sans-serif",fontWeight:800,fontSize:"clamp(34px,4vw,44px)",letterSpacing:"-0.04em",color:C.text,lineHeight:1.06,maxWidth:480 }}>
                 Every certificate. Every score. One view.
               </h2>
             </div>
@@ -788,7 +799,7 @@ function Dashboard() {
                 ))}
                 <div style={{ marginTop:24,padding:"16px",borderRadius:12,background:C.elevated,border:`1px solid ${C.border}` }}>
                   <div style={{ fontSize:10,fontWeight:600,color:C.textMut,marginBottom:4 }}>Overall grade</div>
-                  <div style={{ fontSize:40,fontWeight:900,color:C.blue,fontFamily:"'Outfit',sans-serif",letterSpacing:"-0.05em",lineHeight:1 }}>A<span style={{color:C.text}}>+</span></div>
+                  <div style={{ fontSize:40,fontWeight:900,color:C.blue,fontFamily:"'Bricolage Grotesque',sans-serif",letterSpacing:"-0.05em",lineHeight:1 }}>A<span style={{color:C.text}}>+</span></div>
                   <div style={{ fontSize:10,color:C.textMut,marginTop:4 }}>4/4 frameworks passing</div>
                 </div>
               </div>
@@ -810,7 +821,7 @@ function Cta() {
       <div style={{ maxWidth:680, margin:"0 auto", textAlign:"center" }}>
         <FI>
           <Eyebrow>Get started</Eyebrow>
-          <h2 style={{ fontFamily:"'Outfit',sans-serif",fontWeight:900,fontSize:"clamp(38px,5vw,56px)",letterSpacing:"-0.045em",lineHeight:0.97,color:C.text,marginBottom:22 }}>
+          <h2 style={{ fontFamily:"'Bricolage Grotesque',sans-serif",fontWeight:900,fontSize:"clamp(44px,5.5vw,64px)",letterSpacing:"-0.045em",lineHeight:0.97,color:C.text,marginBottom:22 }}>
             Your next password is{" "}
             <em style={{fontFamily:"'Newsreader',serif",fontStyle:"italic",fontWeight:600,color:C.blue}}>three seconds away.</em>
           </h2>
@@ -849,6 +860,10 @@ export default function HomePage() {
         <meta name="description" content="PassGeni generates cryptographically strong, profession-aware passwords — entirely in your browser. Zero data storage. NIST SP 800-63B, HIPAA, PCI-DSS, SOC 2 compliant. Free forever."/>
         <meta name="viewport" content="width=device-width,initial-scale=1"/>
         <link rel="canonical" href="https://passgeni.ai"/>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+        <link rel="preconnect" href="https://fonts.googleapis.com"/>
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous"/>
+        <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet"/>
         <meta property="og:type"        content="website"/>
         <meta property="og:url"         content="https://passgeni.ai"/>
         <meta property="og:title"       content="PassGeni — AI Password Generator | Zero Storage, NIST Compliant"/>

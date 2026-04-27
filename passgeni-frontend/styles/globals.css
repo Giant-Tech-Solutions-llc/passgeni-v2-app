@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500;1,6..72,600&family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500;1,6..72,600&family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
 
 :root{
   /* ── Brand ─────────────────────────────────── */
@@ -51,7 +51,7 @@
   --danger:#EF4444;
 
   /* ── Fonts ─────────────────────────────────── */
-  --font-heading:'Outfit',sans-serif;
+  --font-heading:'Bricolage Grotesque',sans-serif;
   --font-italic:'Newsreader',serif;
   --font-body:'Outfit',sans-serif;
   --font-mono:'Space Mono',monospace;
@@ -68,15 +68,15 @@
   --gap:clamp(8px,0.8vw,14px);
   --max-w:1280px;
 
-  /* ── Type scale ────────────────────────────── */
-  --text-xs:clamp(10px,1.1vw,11px);
-  --text-sm:clamp(13px,1.3vw,14px);
-  --text-base:clamp(15px,1.5vw,16px);
-  --text-md:clamp(16px,1.7vw,18px);
-  --text-lg:clamp(18px,2vw,20px);
-  --text-xl:clamp(20px,2.4vw,24px);
-  --text-2xl:clamp(28px,3.2vw,40px);
-  --text-3xl:clamp(36px,4.5vw,56px);
+  /* ── Type scale (bumped +1–2px across board) ── */
+  --text-xs:clamp(11px,1.1vw,12px);
+  --text-sm:clamp(14px,1.4vw,15px);
+  --text-base:clamp(16px,1.6vw,17px);
+  --text-md:clamp(18px,1.8vw,20px);
+  --text-lg:clamp(20px,2.1vw,22px);
+  --text-xl:clamp(22px,2.5vw,26px);
+  --text-2xl:clamp(32px,3.5vw,44px);
+  --text-3xl:clamp(40px,5vw,60px);
   --text-hero:clamp(48px,6vw,72px)
 }
 
@@ -87,7 +87,7 @@ img,video{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
 button{cursor:pointer;font-family:inherit;background:transparent;border:none;appearance:none;-webkit-appearance:none;color:inherit}
 input,textarea,select{font-family:var(--font-body);font-size:var(--text-base)}
-h1,h2,h3,h4,h5,h6{font-family:var(--font-heading);font-weight:800;letter-spacing:-0.025em;color:var(--text);line-height:1.08}
+h1,h2,h3,h4,h5,h6{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;letter-spacing:-0.03em;color:var(--text);line-height:1.06}
 p{font-size:var(--text-base);line-height:1.8;color:var(--text)}
 input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:3px;background:var(--border);outline:none;cursor:pointer}
 input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--blue-primary);cursor:pointer;border:none}
