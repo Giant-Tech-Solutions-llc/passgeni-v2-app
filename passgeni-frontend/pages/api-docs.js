@@ -589,7 +589,7 @@ $passwords = $data["passwords"]; // array of password strings`}
                 },
                 {
                   name:     "Team",
-                  price:    "$29/mo",
+                  price:    "$45/mo",
                   color:    "#C8FF00",
                   featured: true,
                   badge:    "14-day free trial",
