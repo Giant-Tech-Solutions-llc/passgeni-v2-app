@@ -240,7 +240,7 @@ export const PRICING = {
     },
     {
       name:     "Team",
-      price:    "$29",
+      price:    "$45",
       period:   "/month",
       tagline:  "For teams and developers who generate credentials at scale.",
       color:    "#C8FF00",
